@@ -10,7 +10,7 @@
 
         <!-- Rolling File Appender -->
         <RollingFile name="FileAppender" fileName="logs/barco-admin-api.log"
-                 filePattern="logs/barco-auth-%d{yyyy-MM-dd}-%i.log">
+                 filePattern="logs/barco-admin-api-%d{yyyy-MM-dd}-%i.log">
             <PatternLayout><Pattern>${LOG_PATTERN}</Pattern></PatternLayout>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" />
