@@ -16,12 +16,12 @@ public class SessionHandlerWithNoResponse extends StompSessionHandlerAdapter {
 
     public Logger logger = LogManager.getLogger(SessionHandlerWithNoResponse.class);
 
-    private final String WS_TOPIC_DESTINATION_PREFIX = "/topic";
-    private final String WS_TOPIC_NO_RESPONSE = WS_TOPIC_DESTINATION_PREFIX+"/messagesNoResponse";
+    private final String WS_TOPIC_NO_RESPONSE = "/topic/messagesNoResponse";
+    private final String SAMPLE_ENDPOINT_WITHOUT_RESPONSE_MESSAGE_MAPPING = "/app/sampleEndpointWithoutResponse";
 
-    public void subscribeAndSend(StompSession session,String utl, Object payload) {
+    public void subscribeAndSend(StompSession session, Object payload) {
         session.subscribe(WS_TOPIC_NO_RESPONSE, this);
-        session.send(utl, payload);
+        session.send(SAMPLE_ENDPOINT_WITHOUT_RESPONSE_MESSAGE_MAPPING, payload);
     }
 
     @Override

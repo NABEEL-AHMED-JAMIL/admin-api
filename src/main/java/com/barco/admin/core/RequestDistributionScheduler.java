@@ -3,7 +3,7 @@ package com.barco.admin.core;
 import com.barco.admin.sesssion.SessionHandlerWithNoResponse;
 import com.barco.admin.sesssion.SessionHandlerWithResponse;
 import com.barco.common.utility.ExceptionUtil;
-import com.barco.model.RequestMessage;
+import com.barco.model.wsm.RequestMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 
 @Component
@@ -24,7 +22,11 @@ public class RequestDistributionScheduler {
 
     public final Logger logger = LogManager.getLogger(RequestDistributionScheduler.class);
 
-    private String HEADER_NAME = "X-Authorization";
+    // STOM HEADER DETAIL
+    private String USERNAME = "username";
+    private String PASSWORD = "password";
+    private String USER = "nabeel.amd93@gmail.com";
+    private String PASS = "B@llistic1";
 
     @Value("${server.service1-with-response}")
     private String service1WithResponse;
@@ -46,67 +48,61 @@ public class RequestDistributionScheduler {
 
     @Autowired
     private WebSocketStompClient stompClient;
-
     @Autowired
     private SessionHandlerWithNoResponse sessionHandlerWithNoResponse;
     @Autowired
     private SessionHandlerWithResponse sessionHandlerWithResponse;
 
     @Scheduled(fixedDelay=5000)
-    public void requestDistribution() {
+    public void requestDistributionWithStompHeader() {
         StompSession stompSession = null;
         try {
             int service = 1;
             switch (service) {
                 case 1:
-                    stompSession = this.stompClient.connect(this.service1WithResponse, new WebSocketHttpHeaders(),
-                            this.getTokenForStompHeaders(), this.sessionHandlerWithResponse).get(1, TimeUnit.SECONDS);
-                    this.sessionHandlerWithResponse.subscribeAndSend(stompSession,
-                            this.service1WithResponse, new RequestMessage(UUID.randomUUID().toString()));
+                    stompSession = this.stompClient.connect(this.service1WithResponse, new WebSocketHttpHeaders(), this.getConnectHeaders(),
+                            this.sessionHandlerWithResponse).get();
+                    this.sessionHandlerWithResponse.subscribeAndSend(stompSession, new RequestMessage(UUID.randomUUID().toString()));
                     // stop session for other service
-//                    stompSession = this.stompClient.connect(this.service1WithResponse,
-//                            this.sessionHandlerWithNoResponse).get(1, TimeUnit.SECONDS);
-//                    this.sessionHandlerWithResponse.subscribeAndSend(stompSession,
-//                            this.service1WithResponse, new RequestMessage(UUID.randomUUID().toString()));
+                    stompSession = this.stompClient.connect(this.service1WithResponse, new WebSocketHttpHeaders(), this.getConnectHeaders(),
+                            this.sessionHandlerWithNoResponse).get();
+                    this.sessionHandlerWithNoResponse.subscribeAndSend(stompSession, new RequestMessage(UUID.randomUUID().toString()));
                     break;
                 case 2:
-                    stompSession = this.stompClient.connect(this.service2WithResponse,
-                            this.sessionHandlerWithResponse).get(1, TimeUnit.SECONDS);;
-                    this.sessionHandlerWithResponse.subscribeAndSend(stompSession,
-                            this.service1WithResponse, new RequestMessage(UUID.randomUUID().toString()));
+                    stompSession = this.stompClient.connect(this.service2WithResponse, new WebSocketHttpHeaders(), this.getConnectHeaders(),
+                            this.sessionHandlerWithResponse).get();
+                    this.sessionHandlerWithResponse.subscribeAndSend(stompSession, new RequestMessage(UUID.randomUUID().toString()));
                     // stop session for other service
-//                    stompSession = this.stompClient.connect(this.service2WithNoResponse,
-//                            this.sessionHandlerWithNoResponse).get(1, TimeUnit.SECONDS);;
-//                    this.sessionHandlerWithResponse.subscribeAndSend(stompSession,
-//                            this.service1WithResponse, new RequestMessage(UUID.randomUUID().toString()));
+                    stompSession = this.stompClient.connect(this.service2WithNoResponse,new WebSocketHttpHeaders(), this.getConnectHeaders(),
+                            this.sessionHandlerWithNoResponse).get();
+                    this.sessionHandlerWithNoResponse.subscribeAndSend(stompSession, new RequestMessage(UUID.randomUUID().toString()));
                     break;
                 case 3:
-                    stompSession = this.stompClient.connect(this.service3WithResponse,
-                            this.sessionHandlerWithResponse).get(1, TimeUnit.SECONDS);;
-                    this.sessionHandlerWithResponse.subscribeAndSend(stompSession,
-                            this.service1WithResponse, new RequestMessage(UUID.randomUUID().toString()));
+                    stompSession = this.stompClient.connect(this.service3WithResponse, new WebSocketHttpHeaders(), this.getConnectHeaders(),
+                            this.sessionHandlerWithResponse).get();
+                    this.sessionHandlerWithResponse.subscribeAndSend(stompSession, new RequestMessage(UUID.randomUUID().toString()));
                     // stop session for other service
-//                    stompSession = this.stompClient.connect(this.service3WithNoResponse,
-//                            this.sessionHandlerWithNoResponse).get(1, TimeUnit.SECONDS);;
-//                    this.sessionHandlerWithResponse.subscribeAndSend(stompSession,
-//                            this.service1WithResponse, new RequestMessage(UUID.randomUUID().toString()));
+                    stompSession = this.stompClient.connect(this.service3WithNoResponse, new WebSocketHttpHeaders(), this.getConnectHeaders(),
+                            this.sessionHandlerWithNoResponse).get();
+                    this.sessionHandlerWithNoResponse.subscribeAndSend(stompSession, new RequestMessage(UUID.randomUUID().toString()));
                     break;
             }
         } catch (Exception ex) {
             logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
         } finally {
             // afer send reqeust discount session
-            if(stompSession != null) {
-                stompSession.disconnect();
-            }
+            //if(stompSession != null) {
+                //logger.info("Stomp Session Close for Session ID {}", stompSession.getSessionId());
+                //stompSession.disconnect();
+            //}
         }
     }
 
-    // here we cache our token for specif time after that we re-login
-    // 10 minutes
-    public StompHeaders getTokenForStompHeaders() {
+    // stomp header
+    private StompHeaders getConnectHeaders() {
         StompHeaders connectHeaders = new StompHeaders();
-        connectHeaders.add(HEADER_NAME, "Pakistan Zindabad");
+        connectHeaders.add(USERNAME, USER);
+        connectHeaders.add(PASSWORD, PASS);
         return connectHeaders;
     }
 
