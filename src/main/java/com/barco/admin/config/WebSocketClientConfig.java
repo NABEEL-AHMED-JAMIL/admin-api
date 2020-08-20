@@ -23,7 +23,7 @@ public class WebSocketClientConfig {
     @Bean
     public WebSocketClient webSocketClient() {
         logger.info(">============WebSocketClient==============<");
-        List<Transport> transports = new ArrayList<>();
+        List<Transport> transports = new ArrayList<>(1);
         transports.add(new WebSocketTransport( new StandardWebSocketClient()) );
         return new SockJsClient(transports);
     }
