@@ -8,7 +8,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,10 +24,6 @@ import javax.annotation.PreDestroy;
 public class RequestDistributionScheduler {
 
     public Logger logger = LogManager.getLogger(RequestDistributionScheduler.class);
-
-    // HTTP HEADER DETAIL
-    private String Authorization = "Authorization";
-    private String BEARER = "Bearer ";
 
     // STOM HEADER DETAIL
     private String USERNAME = "username";
@@ -55,7 +50,7 @@ public class RequestDistributionScheduler {
     private String service3WithNoResponse;
 
     @Autowired
-    private WebSocketStompClient stompClient;
+    private WebSocketStompClient webSocketStompClient;
 
     @Autowired
     private SessionHandlerWithNoResponse sessionHandlerWithNoResponse;
@@ -72,21 +67,21 @@ public class RequestDistributionScheduler {
     private void postConstruct() {
         logger.info("+================Service-Session-Init-Start====================+");
         try {
-            this.stompSessionService1 = this.stompClient.connect(this.service1WithResponse, new WebSocketHttpHeaders(),
+            this.stompSessionService1 = this.webSocketStompClient.connect(this.service1WithResponse, new WebSocketHttpHeaders(),
                 this.getConnectHeaders(), this.sessionHandlerWithNoResponse).get();
         } catch (Exception ex) {
             logger.error("Session Service 1 not running");
             logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
         }
         try {
-            this.stompSessionService2 = this.stompClient.connect(this.service2WithResponse, new WebSocketHttpHeaders(),
+            this.stompSessionService2 = this.webSocketStompClient.connect(this.service2WithResponse, new WebSocketHttpHeaders(),
                 this.getConnectHeaders(), this.sessionHandlerWithNoResponse).get();
         } catch (Exception ex) {
             logger.error("Session Service 2 not running");
             logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
         }
         try {
-            this.stompSessionService3 = this.stompClient.connect(this.service3WithNoResponse, new WebSocketHttpHeaders(),
+            this.stompSessionService3 = this.webSocketStompClient.connect(this.service3WithNoResponse, new WebSocketHttpHeaders(),
                 this.getConnectHeaders(), this.sessionHandlerWithNoResponse).get();
         } catch (Exception ex) {
             logger.error("Session Service 3 not running");
@@ -96,7 +91,7 @@ public class RequestDistributionScheduler {
     }
 
 
-    @Scheduled(fixedDelay=1000)
+    @Scheduled(fixedDelay=100)
     public void requestDistributionWithStompHeader() {
         try {
             int service = this.getRandomNumberUsingInts(1, 4);
@@ -144,15 +139,6 @@ public class RequestDistributionScheduler {
         } catch (Exception ex) {
             logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
         }
-    }
-
-    // 10 minutes
-    // here we cache our token for specif time after that we re-login
-    public HttpHeaders getTokenForHttpHeaders() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(Authorization, BEARER +
-            "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJiYXJjbyIsInN1YiI6IntcInVzZXJJZFwiOjEwMTgsXCJ1c2VyTmFtZVwiOlwibmFiZWVsLmFtZDkzQGdtYWlsLmNvbVwiLFwiZmlyc3ROYW1lXCI6XCJYWVpcIixcImxhc3ROYW1lXCI6XCJYWVpcIixcInVzZXJUeXBlXCI6XCJMT0NBTFwifSIsImlhdCI6MTU5ODI5OTcxMiwiZXhwIjoxNTk4MzAwMzEyfQ.idHpawzJ1dOO2Z_eURF8mwccwDXVF6-PARgq7lgPl-PlrM-shx5f2pWkaIXlfxHU-rkRitM2sl3WXKPtp9PGrQ");
-        return httpHeaders;
     }
 
     // stomp header
