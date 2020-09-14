@@ -2,7 +2,9 @@ package com.barco.admin.controller;
 
 import com.barco.common.utility.ApplicationConstants;
 import com.barco.model.dto.ResponseDTO;
+import com.barco.model.dto.TaskDto;
 import com.barco.model.enums.ApiCode;
+import com.barco.model.enums.Status;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -22,7 +24,7 @@ public class TaskRestController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/createTask", method = RequestMethod.POST)
     @ApiOperation(value = "Create Task", notes = "Task is use in the job.")
-    public @ResponseBody ResponseDTO createTask() {
+    public @ResponseBody ResponseDTO createTask(@RequestBody TaskDto taskDto) {
         try {
             return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
         } catch (Exception ex) {
@@ -32,9 +34,9 @@ public class TaskRestController {
 
     // get task by id
     @ResponseStatus(HttpStatus.OK)
-    @RequestMapping(value = "/getTask", method = RequestMethod.POST)
+    @RequestMapping(value = "/getTask", method = RequestMethod.GET)
     @ApiOperation(value = "Get Task", notes = "Get Task by Id.")
-    public @ResponseBody ResponseDTO getTask() {
+    public @ResponseBody ResponseDTO getTask(@RequestParam(name = "id") Long taskId) {
         try {
             return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
         } catch (Exception ex) {
@@ -47,7 +49,8 @@ public class TaskRestController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/changeStatus", method = RequestMethod.POST)
     @ApiOperation(value = "Change Status", notes = "Change Status by id for job.")
-    public @ResponseBody ResponseDTO statusChange() {
+    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long taskId,
+        @RequestParam(name = "status") Status taskStatus) {
         try {
             return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
         } catch (Exception ex) {

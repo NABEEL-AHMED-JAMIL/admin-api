@@ -3,6 +3,7 @@ package com.barco.admin.controller;
 import com.barco.common.utility.ApplicationConstants;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.enums.ApiCode;
+import com.barco.model.enums.Status;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -32,9 +33,9 @@ public class JobRestController {
 
     // get job by id
     @ResponseStatus(HttpStatus.OK)
-    @RequestMapping(value = "/getJob", method = RequestMethod.POST)
+    @RequestMapping(value = "/getJob", method = RequestMethod.GET)
     @ApiOperation(value = "Get Job", notes = "Get job by Id.")
-    public @ResponseBody ResponseDTO getJob() {
+    public @ResponseBody ResponseDTO getJob(@RequestParam(name = "id") Long jobId) {
         try {
             return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
         } catch (Exception ex) {
@@ -47,7 +48,8 @@ public class JobRestController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/changeStatus", method = RequestMethod.POST)
     @ApiOperation(value = "Change Status", notes = "Change Status by id for job.")
-    public @ResponseBody ResponseDTO statusChange() {
+    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long jobId,
+        @RequestParam(name = "status") Status jobStatus) {
         try {
             return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
         } catch (Exception ex) {

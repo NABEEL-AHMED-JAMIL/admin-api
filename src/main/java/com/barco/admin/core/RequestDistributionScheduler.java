@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,6 +22,7 @@ import javax.annotation.PreDestroy;
 
 
 @Component
+@Scope("prototype")
 public class RequestDistributionScheduler {
 
     public Logger logger = LogManager.getLogger(RequestDistributionScheduler.class);
