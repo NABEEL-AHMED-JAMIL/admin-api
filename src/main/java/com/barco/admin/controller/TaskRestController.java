@@ -1,17 +1,22 @@
 package com.barco.admin.controller;
 
+import com.barco.admin.service.impl.TaskServiceImpl;
 import com.barco.common.utility.ApplicationConstants;
+import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.dto.TaskDto;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
+import com.barco.model.pojo.pagination.PaginationDetail;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping(value = "/task.json", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -20,28 +25,39 @@ public class TaskRestController {
 
     private Logger logger = LoggerFactory.getLogger(TaskRestController.class);
 
+    @Autowired
+    private TaskServiceImpl taskService;
+
     // create task
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/createTask", method = RequestMethod.POST)
     @ApiOperation(value = "Create Task", notes = "Task is use in the job.")
     public @ResponseBody ResponseDTO createTask(@RequestBody TaskDto taskDto) {
+        ResponseDTO response = null;
         try {
-            return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
+            logger.info("Request for createTask  " + taskDto);
+            response = this.taskService.createTask(taskDto);
         } catch (Exception ex) {
-            return new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            logger.info("Error during createTask " + ExceptionUtil.getRootCause(ex));
+            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
         }
+        return response;
     }
 
     // get task by id
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/getTask", method = RequestMethod.GET)
     @ApiOperation(value = "Get Task", notes = "Get Task by Id.")
-    public @ResponseBody ResponseDTO getTask(@RequestParam(name = "id") Long taskId) {
+    public @ResponseBody ResponseDTO getTask(@RequestParam(name = "id") Long taskId, @RequestParam(name = "appUserId") Long appUserId) {
+        ResponseDTO response = null;
         try {
-            return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
+            logger.info(String.format("Request for getTask Task Id %d And App User Id %d ", taskId, appUserId));
+            response = this.taskService.getTask(taskId, appUserId);
         } catch (Exception ex) {
-            return new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            logger.info("Error during getTask " + ExceptionUtil.getRootCause(ex));
+            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
         }
+        return response;
     }
 
     // change status task by id
@@ -49,25 +65,31 @@ public class TaskRestController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/changeStatus", method = RequestMethod.POST)
     @ApiOperation(value = "Change Status", notes = "Change Status by id for job.")
-    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long taskId,
-        @RequestParam(name = "status") Status taskStatus) {
+    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long taskId, @RequestParam(name = "status") Status taskStatus) {
+        ResponseDTO response = null;
         try {
-            return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
+            logger.info(String.format("Request for statusChange Task Id %d And Status %s ", taskId, taskStatus));
+            response = this.taskService.statusChange(taskId, taskStatus);
         } catch (Exception ex) {
-            return new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            logger.info("Error during statusChange " + ExceptionUtil.getRootCause(ex));
+            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
         }
+        return response;
     }
 
     // fetch all task
     @ResponseStatus(HttpStatus.OK)
-    @RequestMapping(value = "/fetchAllTask", method = RequestMethod.POST)
-    @ApiOperation(value = "Fetch All Task", notes = "Fetch all task with pagination.")
-    public @ResponseBody ResponseDTO fetchAllTask() {
+    @RequestMapping(value = "/findAllTaskByAppUserIdInPagination", method = RequestMethod.POST)
+    @ApiOperation(value = "Fetch All Task", notes = "Fetch all task with app user id in pagination.")
+    public @ResponseBody ResponseDTO findAllTaskByAppUserIdInPagination(@PathVariable Long appUserId, PaginationDetail paginationDetail) {
+        ResponseDTO response = null;
         try {
-            return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
+            logger.info(String.format("Request for findAllTaskByAppUserIdInPagination with AppUserId %d and Pagination Detail %s", appUserId, paginationDetail));
+            response = this.taskService.findAllTaskByAppUserIdInPagination(appUserId, paginationDetail);
         } catch (Exception ex) {
-            return new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            logger.info("Error during findAllTaskByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
+            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
         }
+        return response;
     }
-
 }
