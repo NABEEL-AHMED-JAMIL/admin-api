@@ -39,7 +39,7 @@ public class TaskRestController {
             response = this.taskService.createTask(taskDto);
         } catch (Exception ex) {
             logger.info("Error during createTask " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -55,7 +55,7 @@ public class TaskRestController {
             response = this.taskService.getTask(taskId, appUserId);
         } catch (Exception ex) {
             logger.info("Error during getTask " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -72,7 +72,7 @@ public class TaskRestController {
             response = this.taskService.statusChange(taskId, taskStatus);
         } catch (Exception ex) {
             logger.info("Error during statusChange " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -88,7 +88,7 @@ public class TaskRestController {
             response = this.taskService.findAllTaskByAppUserIdInPagination(appUserId, paginationDetail);
         } catch (Exception ex) {
             logger.info("Error during findAllTaskByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }

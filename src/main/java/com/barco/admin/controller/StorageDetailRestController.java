@@ -30,7 +30,7 @@ public class StorageDetailRestController {
     private Logger logger = LoggerFactory.getLogger(StorageDetailRestController.class);
 
     @Autowired
-    private StorageDetailServiceImpl keyService;
+    private StorageDetailServiceImpl storageDetailService;
 
     // create task
     @ResponseStatus(HttpStatus.OK)
@@ -40,10 +40,10 @@ public class StorageDetailRestController {
         ResponseDTO response = null;
         try {
             logger.info("Request for createKey " + storageDetailDto);
-            response = this.keyService.createKey(storageDetailDto);
+            response = this.storageDetailService.createKey(storageDetailDto);
         } catch (Exception ex) {
             logger.info("Error during createKey " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -56,10 +56,10 @@ public class StorageDetailRestController {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for getKey StorageDetail Id %d And App User Id %d ", keyId, appUserId));
-            response = this.keyService.getKey(keyId, appUserId);
+            response = this.storageDetailService.getKey(keyId, appUserId);
         } catch (Exception ex) {
             logger.info("Error during getKey " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -73,10 +73,10 @@ public class StorageDetailRestController {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for statusChange StorageDetail Id %d And Status %s ", keyId, taskStatus));
-            response = this.keyService.statusChange(keyId, taskStatus);
+            response = this.storageDetailService.statusChange(keyId, taskStatus);
         } catch (Exception ex) {
             logger.info("Error during statusChange " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -89,10 +89,25 @@ public class StorageDetailRestController {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for findAllKeyByAppUserIdInPagination with AppUserId %d and Pagination Detail %s", appUserId, paginationDetail));
-            response = this.keyService.findAllKeyByAppUserIdInPagination(appUserId, paginationDetail);
+            response = this.storageDetailService.findAllKeyByAppUserIdInPagination(appUserId, paginationDetail);
         } catch (Exception ex) {
             logger.info("Error during findAllKeyByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
+        }
+        return response;
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @RequestMapping(value = "/pingStorage", method = RequestMethod.POST)
+    @ApiOperation(value = "Ping Storage", notes = "Ping Storage help to check the connection.")
+    public @ResponseBody ResponseDTO pingStorage(@RequestBody StorageDetailDto storageDetailDto) {
+        ResponseDTO response = null;
+        try {
+            logger.info(String.format("Request for pingStorage %s ", storageDetailDto));
+            response = this.storageDetailService.pingStorage(storageDetailDto);
+        } catch (Exception ex) {
+            logger.info("Error during pingStorage " + ExceptionUtil.getRootCause(ex));
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }

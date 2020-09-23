@@ -7,9 +7,11 @@ import com.barco.model.dto.TaskDto;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
 import com.barco.model.pojo.AppUser;
+import com.barco.model.pojo.StorageDetail;
 import com.barco.model.pojo.Task;
 import com.barco.model.pojo.pagination.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
+import com.barco.model.repository.StorageDetailRepository;
 import com.barco.model.repository.TaskRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -33,6 +35,8 @@ public class TaskServiceImpl implements ITaskService {
     private TaskRepository taskRepository;
     @Autowired
     private AppUserRepository appUserRepository;
+    @Autowired
+    private StorageDetailRepository storageDetailRepository;
 
     @Override
     public ResponseDTO createTask(TaskDto taskDto) throws Exception {
@@ -55,6 +59,14 @@ public class TaskServiceImpl implements ITaskService {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.TASK_JSON_MISSING);
         }
         task.setTaskDetailJson(taskDto.getTaskDetailJson());
+        if (taskDto.getStorageDetail() != null) {
+            if(taskDto.getStorageDetail().getId() != null) {
+                Optional<StorageDetail> storageDetail = this.storageDetailRepository.findById(taskDto.getStorageDetail().getId());
+                if (storageDetail.isPresent()) {
+                    task.setStorageDetail(storageDetail.get());
+                }
+            }
+        }
         task.setStatus(Status.Active);
         task = this.taskRepository.saveAndFlush(task);
         return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, task);

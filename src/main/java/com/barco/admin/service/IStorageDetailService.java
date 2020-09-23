@@ -18,4 +18,6 @@ public interface IStorageDetailService {
 
     public ResponseDTO findAllKeyByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception;
 
+    public ResponseDTO pingStorage(StorageDetailDto storageDetailDto) throws Exception;
+
 }

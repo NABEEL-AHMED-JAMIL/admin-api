@@ -1,6 +1,7 @@
 package com.barco.admin.controller;
 
 import com.barco.common.utility.ApplicationConstants;
+import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.enums.ApiCode;
 import io.swagger.annotations.Api;
@@ -22,11 +23,15 @@ public class TestController {
     @RequestMapping(value = "/test1", method = RequestMethod.POST)
     @ApiOperation(value = "Test 1", notes = "Test secure api.")
     public @ResponseBody ResponseDTO test1PostMethod() {
+        ResponseDTO response = null;
         try {
-            return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
+            logger.info("Request for test1PostMethod.");
+            response = new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
         } catch (Exception ex) {
-            return new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            logger.info("Error during test1PostMethod " + ExceptionUtil.getRootCause(ex));
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
+        return response;
     }
 
 
@@ -34,10 +39,14 @@ public class TestController {
     @RequestMapping(value = "/test2", method = RequestMethod.GET)
     @ApiOperation(value = "Test 2", notes = "Test secure api.")
     public @ResponseBody ResponseDTO test2PostMethod() {
+        ResponseDTO response = null;
         try {
-            return new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
+            logger.info("Request for test2PostMethod.");
+            response = new ResponseDTO(ApiCode.SUCCESS, "Pakistan Zindabad");
         } catch (Exception ex) {
-            return new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            logger.info("Error during test2PostMethod " + ExceptionUtil.getRootCause(ex));
+            response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
+        return response;
     }
 }

@@ -37,7 +37,7 @@ public class JobRestController {
             response = this.jobService.createJob();
         } catch (Exception ex) {
             logger.info("Error during createTask " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO(ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -53,7 +53,7 @@ public class JobRestController {
             response = this.jobService.getJob(jobId);
         } catch (Exception ex) {
             logger.info("Error during getJob " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO(ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -71,7 +71,7 @@ public class JobRestController {
             response = this.jobService.statusChange(jobId, jobStatus);
         } catch (Exception ex) {
             logger.info("Error during statusChange " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO(ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -88,7 +88,7 @@ public class JobRestController {
             response = this.jobService.findAllJobByAppUserIdInPagination(appUserId, paginationDetail);
         } catch (Exception ex) {
             logger.info("Error during findAllJobByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO(ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -104,7 +104,7 @@ public class JobRestController {
             response = this.jobService.runJob(jobId, appUserId);
         } catch (Exception ex) {
             logger.info("Error during runJob " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO(ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
@@ -120,7 +120,7 @@ public class JobRestController {
             response = this.jobService.skipNextOccurrence(jobId, appUserId);
         } catch (Exception ex) {
             logger.info("Error during skipNextOccurrence " + ExceptionUtil.getRootCause(ex));
-            response = new ResponseDTO(ApiCode.ERROR, ApplicationConstants.INVALID_CREDENTIAL_MSG);
+            response = new ResponseDTO(ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
