@@ -11,9 +11,10 @@ public interface ITaskService {
     public ResponseDTO createTask(TaskDto taskDto) throws Exception;
 
     // get task by id
-    public ResponseDTO getTask(Long taskId, Long createBy) throws Exception;
+    public ResponseDTO getTaskById(Long taskId, Long createBy) throws Exception;
 
-    // change status task by id Inactive(0), Active(1), Delete(3),
+    // change status task by id
+    // Inactive(0), Active(1), Delete(3),
     public ResponseDTO statusChange(Long taskId, Status taskStatus) throws Exception;
 
     public ResponseDTO findAllTaskByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception;

@@ -40,40 +40,58 @@ public class TaskServiceImpl implements ITaskService {
 
     @Override
     public ResponseDTO createTask(TaskDto taskDto) throws Exception {
-        Task task = new Task();
         if (StringUtils.isEmpty(taskDto.getTaskName())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.TASK_NAME_MISSING);
-        } else if (this.taskRepository.findByTaskNameAndStatus(taskDto.getTaskName(), Status.Active).isPresent()) {
+        } else if (this.taskRepository.findByTaskNameAndStatus(taskDto.getTaskName(), Status.Active).isPresent()
+                && taskDto.getId() == null) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.TASK_ALREADY_EXIST);
         } else if (StringUtils.isEmpty(taskDto.getClassName())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.CLASS_NAME_MISSING);
+        } else if (taskDto.getTaskDetailJson() == null) {
+            return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.TASK_JSON_MISSING);
         }
-        task.setTaskName(taskDto.getTaskName());
-        task.setClassName(taskDto.getClassName());
+        // app user find
         Optional<AppUser> appUser = this.appUserRepository.findByIdAndStatus(taskDto.getCreatedBy(), Status.Active);
         if (!appUser.isPresent()) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.USER_NOT_FOUND);
         }
-        task.setCreatedBy(appUser.get().getId());
-        if (taskDto.getTaskDetailJson() == null) {
-            return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.TASK_JSON_MISSING);
+        // task create and update
+        Task task = null;
+        if (taskDto.getId() != null) {
+            task = this.taskRepository.findByIdAndStatus(taskDto.getId(), Status.Active);
+            if (task != null) {
+                task.setModifiedBy(appUser.get().getId());
+            } else {
+                return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.TASK_NOT_FOUND);
+            }
+        } else {
+            task = new Task();
+            task.setCreatedBy(appUser.get().getId());
+            task.setStatus(Status.Active);
         }
+        task.setTaskName(taskDto.getTaskName());
+        task.setClassName(taskDto.getClassName());
         task.setTaskDetailJson(taskDto.getTaskDetailJson());
         if (taskDto.getStorageDetail() != null) {
             if(taskDto.getStorageDetail().getId() != null) {
                 Optional<StorageDetail> storageDetail = this.storageDetailRepository.findById(taskDto.getStorageDetail().getId());
                 if (storageDetail.isPresent()) {
                     task.setStorageDetail(storageDetail.get());
+                } else {
+                    return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_NOT_FOUND);
                 }
             }
+        } else {
+            task.setStorageDetail(null);
         }
-        task.setStatus(Status.Active);
+        // save the detail and send back the info
         task = this.taskRepository.saveAndFlush(task);
-        return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, task);
+        taskDto.setId(task.getId());
+        return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, taskDto);
     }
 
     @Override
-    public ResponseDTO getTask(Long taskId, Long appUserId) throws Exception  {
+    public ResponseDTO getTaskById(Long taskId, Long appUserId) throws Exception  {
         Optional<Task> task = this.taskRepository.findByIdAndCreatedByAndStatus(taskId, appUserId, Status.Active);
         if (task.isPresent()) {
             return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, task);

@@ -23,7 +23,8 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping(value = "/key.json", produces = MediaType.APPLICATION_JSON_VALUE)
+@CrossOrigin(origins = "*")
+@RequestMapping(value = "/storage.json", produces = MediaType.APPLICATION_JSON_VALUE)
 @Api(tags = { "Barco-StorageDetail := Barco-StorageDetail EndPoint" })
 public class StorageDetailRestController {
 
@@ -32,48 +33,48 @@ public class StorageDetailRestController {
     @Autowired
     private StorageDetailServiceImpl storageDetailService;
 
-    // create task
-    @ResponseStatus(HttpStatus.OK)
-    @RequestMapping(value = "/createKey", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK) // create storage and update its work for both
+    @RequestMapping(value = "/createStorage", method = RequestMethod.POST)
     @ApiOperation(value = "Create StorageDetail", notes = "StorageDetail is use in the task.")
-    public @ResponseBody ResponseDTO createKey(@RequestBody StorageDetailDto storageDetailDto) {
+    public @ResponseBody ResponseDTO createStorage(@RequestBody StorageDetailDto storageDetailDto) {
         ResponseDTO response = null;
         try {
-            logger.info("Request for createKey " + storageDetailDto);
-            response = this.storageDetailService.createKey(storageDetailDto);
+            logger.info("Request for createStorage " + storageDetailDto);
+            response = this.storageDetailService.createStorage(storageDetailDto);
         } catch (Exception ex) {
-            logger.info("Error during createKey " + ExceptionUtil.getRootCause(ex));
+            logger.info("Error during createStorage " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
 
-    // get key by id
+    // get storage by id
     @ResponseStatus(HttpStatus.OK)
-    @RequestMapping(value = "/getKey", method = RequestMethod.GET)
+    @RequestMapping(value = "/getStorageById", method = RequestMethod.GET)
     @ApiOperation(value = "Get StorageDetail", notes = "Get StorageDetail by Id.")
-    public @ResponseBody ResponseDTO getKey(@RequestParam(name = "id") Long keyId, @RequestParam(name = "appUserId") Long appUserId) {
+    public @ResponseBody ResponseDTO getStorageById(@RequestParam(name = "id") Long storageId, @RequestParam(name = "appUserId") Long appUserId) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for getKey StorageDetail Id %d And App User Id %d ", keyId, appUserId));
-            response = this.storageDetailService.getKey(keyId, appUserId);
+            logger.info(String.format("Request for getStorageById StorageDetail Id %d And App User Id %d ", storageId, appUserId));
+            response = this.storageDetailService.getStorageById(storageId, appUserId);
         } catch (Exception ex) {
-            logger.info("Error during getKey " + ExceptionUtil.getRootCause(ex));
+            logger.info("Error during getStorageById " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
+
 
     // change status task by id
     // Inactive(0), Active(1), Delete(3),
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/changeStatus", method = RequestMethod.POST)
     @ApiOperation(value = "Change Status", notes = "Change Status by id for StorageDetail.")
-    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long keyId, @RequestParam(name = "status") Status taskStatus) {
+    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long storageId, @RequestParam(name = "status") Status taskStatus) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for statusChange StorageDetail Id %d And Status %s ", keyId, taskStatus));
-            response = this.storageDetailService.statusChange(keyId, taskStatus);
+            logger.info(String.format("Request for statusChange StorageDetail Id %d And Status %s ", storageId, taskStatus));
+            response = this.storageDetailService.statusChange(storageId, taskStatus);
         } catch (Exception ex) {
             logger.info("Error during statusChange " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
@@ -83,15 +84,15 @@ public class StorageDetailRestController {
 
     // fetch all task
     @ResponseStatus(HttpStatus.OK)
-    @RequestMapping(value = "/findAllKeyByAppUserIdInPagination", method = RequestMethod.POST)
+    @RequestMapping(value = "/findAllStorageByAppUserIdInPagination", method = RequestMethod.POST)
     @ApiOperation(value = "Fetch All StorageDetail", notes = "Fetch all key with app user id in pagination.")
-    public @ResponseBody ResponseDTO findAllKeyByAppUserIdInPagination(@PathVariable Long appUserId, PaginationDetail paginationDetail) {
+    public @ResponseBody ResponseDTO findAllStorageByAppUserIdInPagination(@PathVariable Long appUserId, PaginationDetail paginationDetail) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for findAllKeyByAppUserIdInPagination with AppUserId %d and Pagination Detail %s", appUserId, paginationDetail));
-            response = this.storageDetailService.findAllKeyByAppUserIdInPagination(appUserId, paginationDetail);
+            logger.info(String.format("Request for findAllStorageByAppUserIdInPagination with AppUserId %d and Pagination Detail %s", appUserId, paginationDetail));
+            response = this.storageDetailService.findAllStorageByAppUserIdInPagination(appUserId, paginationDetail);
         } catch (Exception ex) {
-            logger.info("Error during findAllKeyByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
+            logger.info("Error during findAllStorageByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;

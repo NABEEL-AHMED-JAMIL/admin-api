@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping(value = "/task.json", produces = MediaType.APPLICATION_JSON_VALUE)
 @Api(tags = { "Barco-Task := Barco-Task EndPoint" })
 public class TaskRestController {
@@ -46,15 +47,15 @@ public class TaskRestController {
 
     // get task by id
     @ResponseStatus(HttpStatus.OK)
-    @RequestMapping(value = "/getTask", method = RequestMethod.GET)
+    @RequestMapping(value = "/getTaskById", method = RequestMethod.GET)
     @ApiOperation(value = "Get Task", notes = "Get Task by Id.")
-    public @ResponseBody ResponseDTO getTask(@RequestParam(name = "id") Long taskId, @RequestParam(name = "appUserId") Long appUserId) {
+    public @ResponseBody ResponseDTO getTaskById(@RequestParam(name = "id") Long taskId, @RequestParam(name = "appUserId") Long appUserId) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for getTask Task Id %d And App User Id %d ", taskId, appUserId));
-            response = this.taskService.getTask(taskId, appUserId);
+            logger.info(String.format("Request for getTaskById Task Id %d And App User Id %d ", taskId, appUserId));
+            response = this.taskService.getTaskById(taskId, appUserId);
         } catch (Exception ex) {
-            logger.info("Error during getTask " + ExceptionUtil.getRootCause(ex));
+            logger.info("Error during getTaskById " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;

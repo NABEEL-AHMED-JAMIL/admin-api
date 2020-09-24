@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping(value = "/batch.json", produces = MediaType.APPLICATION_JSON_VALUE)
 @Api(tags = { "Batch-File-Process := Batch File Process Rest-EndPoint" })
 public class BatchFileProcessRestController {

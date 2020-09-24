@@ -11,9 +11,7 @@ import com.barco.model.pojo.StorageDetail;
 import com.barco.model.pojo.pagination.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.StorageDetailRepository;
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.enums.EnumUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,15 +34,16 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
     private StorageDetailRepository storageDetailRepository;
 
     @Override // method use for create and update both
-    public ResponseDTO createKey(StorageDetailDto storageDetailDto) throws Exception {
-        if(StringUtils.isEmpty(storageDetailDto.getStorageKeyName())) {
+    public ResponseDTO createStorage(StorageDetailDto storageDetailDto) throws Exception {
+        if (StringUtils.isEmpty(storageDetailDto.getStorageKeyName())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_NAME_MISSING);
-        } else if (this.storageDetailRepository.findByStorageKeyNameAndStatus(storageDetailDto.getStorageKeyName(), Status.Active).isPresent()) {
+        } else if (this.storageDetailRepository.findByStorageKeyNameAndStatus(storageDetailDto.getStorageKeyName(), Status.Active).isPresent()
+                && storageDetailDto.getId() == null) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_ALREADY_EXIST);
-        } else if (storageDetailDto.getStorageDetailJson() == null) {
-            return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_JSON_MISSING);
         } else if (storageDetailDto.getKeyType() == null) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_TYPE_MISSING);
+        } else if (storageDetailDto.getStorageDetailJson() == null) {
+            return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_JSON_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByIdAndStatus(storageDetailDto.getCreatedBy(), Status.Active);
         if (!appUser.isPresent()) {
@@ -52,10 +51,11 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
         }
         StorageDetail storageDetail = null;
         if (storageDetailDto.getId() != null) {
-            storageDetail = this.storageDetailRepository.findById(storageDetailDto.getId()).get();
-            storageDetail.setModifiedBy(appUser.get().getId());
-            if (storageDetailDto.getStatus() != null) {
-                storageDetail.setStatus(storageDetailDto.getStatus());
+            storageDetail = this.storageDetailRepository.findByIdAndStatus(storageDetailDto.getId(), Status.Active);
+            if (storageDetail != null) {
+                storageDetail.setModifiedBy(appUser.get().getId());
+            } else {
+                return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_NOT_FOUND);
             }
         } else {
             storageDetail = new StorageDetail();
@@ -65,24 +65,28 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
         storageDetail.setStorageKeyName(storageDetailDto.getStorageKeyName());
         storageDetail.setStorageDetailJson(storageDetailDto.getStorageDetailJson());
         storageDetail.setKeyType(storageDetailDto.getKeyType());
+        // save the detail and send back the info
+        storageDetail = this.storageDetailRepository.saveAndFlush(storageDetail);
+        storageDetailDto.setId(storageDetail.getId());
+        return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, storageDetailDto);
+    }
 
-        this.storageDetailRepository.save(storageDetail);
+    @Override
+    public ResponseDTO getStorageById(Long storageId, Long appUserId) throws Exception {
+        Optional<StorageDetail> storage = this.storageDetailRepository.findByIdAndCreatedByAndStatus(storageId, appUserId, Status.Active);
+        if (storage.isPresent()) {
+            return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, storage);
+        }
+        return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.HTTP_404_MSG);
+    }
 
+    @Override
+    public ResponseDTO statusChange(Long storageId, Status taskStatus) throws Exception {
         return null;
     }
 
     @Override
-    public ResponseDTO getKey(Long keyId, Long appUserId) throws Exception {
-        return null;
-    }
-
-    @Override
-    public ResponseDTO statusChange(Long keyId, Status taskStatus) throws Exception {
-        return null;
-    }
-
-    @Override
-    public ResponseDTO findAllKeyByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception {
+    public ResponseDTO findAllStorageByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception {
         return null;
     }
 

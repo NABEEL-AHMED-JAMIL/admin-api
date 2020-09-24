@@ -3,6 +3,7 @@ package com.barco.admin.controller;
 import com.barco.admin.service.impl.JobServiceImpl;
 import com.barco.common.utility.ApplicationConstants;
 import com.barco.common.utility.ExceptionUtil;
+import com.barco.model.dto.JobDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
@@ -17,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping(value = "/job.json", produces = MediaType.APPLICATION_JSON_VALUE)
 @Api(tags = { "Barco-Job := Barco-Job EndPoint" })
 public class JobRestController {
@@ -30,11 +32,11 @@ public class JobRestController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/createJob", method = RequestMethod.POST)
     @ApiOperation(value = "Create Job", notes = "Create job for run.")
-    public @ResponseBody ResponseDTO createJob() {
+    public @ResponseBody ResponseDTO createJob(@RequestBody JobDto jobDto) {
         ResponseDTO response = null;
         try {
             logger.info("Request for createJob ");
-            response = this.jobService.createJob();
+            response = this.jobService.createJob(jobDto);
         } catch (Exception ex) {
             logger.info("Error during createTask " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO(ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
@@ -44,15 +46,15 @@ public class JobRestController {
 
     // get job by id
     @ResponseStatus(HttpStatus.OK)
-    @RequestMapping(value = "/getJob", method = RequestMethod.GET)
+    @RequestMapping(value = "/getJobById", method = RequestMethod.GET)
     @ApiOperation(value = "Get Job", notes = "Get job by Id.")
-    public @ResponseBody ResponseDTO getJob(@RequestParam(name = "id") Long jobId, @RequestParam(name = "appUserId") Long appUserId) {
+    public @ResponseBody ResponseDTO getJobById(@RequestParam(name = "id") Long jobId, @RequestParam(name = "appUserId") Long appUserId) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for getJob Job Id %d And App User Id %d ", jobId, appUserId));
-            response = this.jobService.getJob(jobId);
+            logger.info(String.format("Request for getJobById Job Id %d And App User Id %d ", jobId, appUserId));
+            response = this.jobService.getJobById(jobId, appUserId);
         } catch (Exception ex) {
-            logger.info("Error during getJob " + ExceptionUtil.getRootCause(ex));
+            logger.info("Error during getJobById " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO(ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
