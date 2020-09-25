@@ -11,6 +11,7 @@ import com.barco.model.pojo.StorageDetail;
 import com.barco.model.pojo.pagination.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.StorageDetailRepository;
+import com.barco.model.repository.TaskRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,9 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
     private AppUserRepository appUserRepository;
     @Autowired
     private StorageDetailRepository storageDetailRepository;
+    @Autowired
+    private TaskRepository taskRepository;
+
 
     @Override // method use for create and update both
     public ResponseDTO createStorage(StorageDetailDto storageDetailDto) throws Exception {
@@ -81,8 +85,28 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
     }
 
     @Override
-    public ResponseDTO statusChange(Long storageId, Status taskStatus) throws Exception {
-        return null;
+    public ResponseDTO statusChange(Long storageId, Long appUserId, Status storageStatus) throws Exception {
+        // get the storage attache with task
+        Optional<StorageDetail> storageDetail = this.storageDetailRepository.findByIdAndStatusNot(storageId, Status.Delete);
+        if (storageDetail.isPresent() && storageStatus.equals(Status.Active)) {
+            // active storage if storage disable
+            if (storageDetail.get().getStatus().equals(Status.Inactive) ||
+                    storageDetail.get().getStatus().equals(Status.Active)) {
+                storageDetail.get().setStatus(storageStatus);
+                storageDetail.get().setModifiedBy(appUserId);
+                return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
+            }
+        } else if (storageDetail.isPresent() && (storageStatus.equals(Status.Delete) || storageStatus.equals(Status.Inactive))) {
+            Long storageAttacheCount = this.taskRepository.countByStorageId(storageId);
+            if (storageAttacheCount > 0) {
+                return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_ATTACHE_WITH_TASK);
+            } else {
+                storageDetail.get().setStatus(storageStatus);
+                storageDetail.get().setModifiedBy(appUserId);
+                return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
+            }
+        }
+        return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.HTTP_404_MSG);
     }
 
     @Override

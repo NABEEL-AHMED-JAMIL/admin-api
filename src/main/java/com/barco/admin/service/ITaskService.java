@@ -15,7 +15,7 @@ public interface ITaskService {
 
     // change status task by id
     // Inactive(0), Active(1), Delete(3),
-    public ResponseDTO statusChange(Long taskId, Status taskStatus) throws Exception;
+    public ResponseDTO statusChange(Long taskId, Long appUserId, Status taskStatus) throws Exception;
 
     public ResponseDTO findAllTaskByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception;
 }

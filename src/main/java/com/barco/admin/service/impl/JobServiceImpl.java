@@ -6,6 +6,7 @@ import com.barco.common.utility.ApplicationConstants;
 import com.barco.model.dto.JobDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.enums.ApiCode;
+import com.barco.model.enums.JobStatus;
 import com.barco.model.enums.Status;
 import com.barco.model.pojo.*;
 import com.barco.model.pojo.pagination.PaginationDetail;
@@ -100,8 +101,28 @@ public class JobServiceImpl implements IJobService {
     }
 
     @Override
-    public ResponseDTO statusChange(Long jobId, Status jobStatus) throws Exception  {
-        return null;
+    public ResponseDTO statusChange(Long jobId, Long appUserId, Status jobStatus) throws Exception  {
+        Optional<Job> jobDetail = this.jobRepository.findByIdAndStatusNot(jobId, Status.Delete);
+        if (jobDetail.isPresent() && jobStatus.equals(Status.Active)) {
+            // active storage if storage disable
+            if (jobDetail.get().getStatus().equals(Status.Inactive) ||
+                    jobDetail.get().getStatus().equals(Status.Active)) {
+                jobDetail.get().setStatus(jobStatus);
+                jobDetail.get().setModifiedBy(appUserId);
+                return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
+            }
+        } else if (jobDetail.isPresent() && (jobStatus.equals(Status.Delete) || jobStatus.equals(Status.Inactive))) {
+            // here
+            if (jobDetail.get().getJobStatus().status.equals(JobStatus.Queue) ||
+                    jobDetail.get().getJobStatus().status.equals(JobStatus.Running)) {
+                return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.JOB_RUNNING_STAGE);
+            } else {
+                jobDetail.get().setStatus(jobStatus);
+                jobDetail.get().setModifiedBy(appUserId);
+                return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
+            }
+        }
+        return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.HTTP_404_MSG);
     }
 
     @Override

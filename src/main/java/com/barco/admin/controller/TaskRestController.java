@@ -66,11 +66,12 @@ public class TaskRestController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/changeStatus", method = RequestMethod.POST)
     @ApiOperation(value = "Change Status", notes = "Change Status by id for job.")
-    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long taskId, @RequestParam(name = "status") Status taskStatus) {
+    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long taskId, @RequestParam(name = "appUserId") Long appUserId,
+        @RequestParam(name = "status") Status taskStatus) {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for statusChange Task Id %d And Status %s ", taskId, taskStatus));
-            response = this.taskService.statusChange(taskId, taskStatus);
+            response = this.taskService.statusChange(taskId, appUserId, taskStatus);
         } catch (Exception ex) {
             logger.info("Error during statusChange " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);

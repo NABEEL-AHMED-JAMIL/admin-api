@@ -16,7 +16,7 @@ public interface IJobService {
 
     // change status task by id
     // Inactive(0), Active(1), Delete(3),
-    public ResponseDTO statusChange(Long jobId, Status jobStatus) throws Exception;
+    public ResponseDTO statusChange(Long jobId, Long appUserId, Status jobStatus) throws Exception;
 
     // fetch all job
     public ResponseDTO findAllJobByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception;

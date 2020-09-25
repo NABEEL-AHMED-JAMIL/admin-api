@@ -70,11 +70,12 @@ public class StorageDetailRestController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/changeStatus", method = RequestMethod.POST)
     @ApiOperation(value = "Change Status", notes = "Change Status by id for StorageDetail.")
-    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long storageId, @RequestParam(name = "status") Status taskStatus) {
+    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long storageId, @RequestParam(name = "appUserId") Long appUserId,
+        @RequestParam(name = "status") Status storageStatus) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for statusChange StorageDetail Id %d And Status %s ", storageId, taskStatus));
-            response = this.storageDetailService.statusChange(storageId, taskStatus);
+            logger.info(String.format("Request for statusChange StorageDetail Id %d And Status %s ", storageId, storageStatus));
+            response = this.storageDetailService.statusChange(storageId, appUserId, storageStatus);
         } catch (Exception ex) {
             logger.info("Error during statusChange " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);

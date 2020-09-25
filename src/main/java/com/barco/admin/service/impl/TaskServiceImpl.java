@@ -11,6 +11,7 @@ import com.barco.model.pojo.StorageDetail;
 import com.barco.model.pojo.Task;
 import com.barco.model.pojo.pagination.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
+import com.barco.model.repository.JobRepository;
 import com.barco.model.repository.StorageDetailRepository;
 import com.barco.model.repository.TaskRepository;
 import org.apache.commons.lang.StringUtils;
@@ -31,6 +32,8 @@ public class TaskServiceImpl implements ITaskService {
 
     private Logger logger = LoggerFactory.getLogger(TaskServiceImpl.class);
 
+    @Autowired
+    private JobRepository jobRepository;
     @Autowired
     private TaskRepository taskRepository;
     @Autowired
@@ -100,8 +103,28 @@ public class TaskServiceImpl implements ITaskService {
     }
 
     @Override
-    public ResponseDTO statusChange(Long taskId, Status taskStatus) throws Exception  {
-        return null;
+    public ResponseDTO statusChange(Long taskId, Long appUserId, Status taskStatus) throws Exception  {
+        // get the storage attache with task
+        Optional<Task> taskDetail = this.taskRepository.findByIdAndStatusNot(taskId, Status.Delete);
+        if (taskDetail.isPresent() && taskStatus.equals(Status.Active)) {
+            // active storage if storage disable
+            if (taskDetail.get().getStatus().equals(Status.Inactive) ||
+                    taskDetail.get().getStatus().equals(Status.Active)) {
+                taskDetail.get().setStatus(taskStatus);
+                taskDetail.get().setModifiedBy(appUserId);
+                return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
+            }
+        } else if (taskDetail.isPresent() && (taskStatus.equals(Status.Delete) || taskStatus.equals(Status.Inactive))) {
+            Long storageAttacheCount = this.jobRepository.countByTaskId(taskId);
+            if (storageAttacheCount > 0) {
+                return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.Task_ATTACHE_WITH_TASK);
+            } else {
+                taskDetail.get().setStatus(taskStatus);
+                taskDetail.get().setModifiedBy(appUserId);
+                return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
+            }
+        }
+        return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.HTTP_404_MSG);
     }
 
     @Override
