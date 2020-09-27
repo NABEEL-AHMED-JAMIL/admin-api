@@ -95,17 +95,17 @@ public class JobRestController {
         return response;
     }
 
-    // run job
+    // addJob To Queue
     @ResponseStatus(HttpStatus.OK)
-    @RequestMapping(value = "/runJob", method = RequestMethod.POST)
+    @RequestMapping(value = "/addJobToQueue", method = RequestMethod.POST)
     @ApiOperation(value = "Run Job", notes = "Run job.")
-    public @ResponseBody ResponseDTO runJob(@RequestParam(name = "id") Long jobId, @RequestParam(name = "appUserId") Long appUserId) {
+    public @ResponseBody ResponseDTO addJobToQueue(@RequestParam(name = "id") Long jobId, @RequestParam(name = "appUserId") Long appUserId) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for runJob with job Id %d And App User Id %s ", jobId, appUserId));
-            response = this.jobService.runJob(jobId, appUserId);
+            logger.info(String.format("Request for addJobToQueue with job Id %d And App User Id %s ", jobId, appUserId));
+            response = this.jobService.addJobToQueue(jobId, appUserId);
         } catch (Exception ex) {
-            logger.info("Error during runJob " + ExceptionUtil.getRootCause(ex));
+            logger.info("Error during addJobToQueue " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO(ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;

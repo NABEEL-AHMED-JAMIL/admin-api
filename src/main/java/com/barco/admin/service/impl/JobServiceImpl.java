@@ -42,6 +42,9 @@ public class JobServiceImpl implements IJobService {
     private SchedulerRepository schedulerRepository;
 
     @Autowired
+    private JobQueueServiceImpl jobQueueService;
+
+    @Autowired
     private AppUserRepository appUserRepository;
 
 
@@ -131,8 +134,8 @@ public class JobServiceImpl implements IJobService {
     }
 
     @Override
-    public ResponseDTO runJob(Long jobId, Long appUserId) throws Exception  {
-        return null;
+    public ResponseDTO addJobToQueue(Long jobId, Long appUserId) throws Exception  {
+        return this.jobQueueService.addJobToQueue(jobId, appUserId, null);
     }
 
     @Override

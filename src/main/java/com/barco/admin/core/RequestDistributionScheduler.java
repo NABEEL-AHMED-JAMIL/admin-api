@@ -2,6 +2,7 @@ package com.barco.admin.core;
 
 import com.barco.admin.core.sesssion.SessionHandlerWithNoResponse;
 import com.barco.admin.core.sesssion.SessionHandlerWithResponse;
+import com.barco.admin.service.impl.JobServiceImpl;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.wsm.RequestMessage;
 import org.apache.logging.log4j.LogManager;
@@ -15,6 +16,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
+
+import java.sql.Date;
 import java.util.Random;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
@@ -32,6 +35,7 @@ public class RequestDistributionScheduler {
     private String PASSWORD = "password";
     private String USER = "nabeel.amd93@gmail.com";
     private String PASS = "B@llistic1";
+    private static final int SCHEDULER_CRON_TIME_IN_MINUTES = 2;
 
     @Value("${server.service1-with-response}")
     private String service1WithResponse;
@@ -50,6 +54,9 @@ public class RequestDistributionScheduler {
 
     @Value("${server.service3-no-response}")
     private String service3WithNoResponse;
+
+    @Autowired
+    private JobServiceImpl jobService;
 
     @Autowired
     private WebSocketStompClient webSocketStompClient;

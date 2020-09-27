@@ -22,7 +22,7 @@ public interface IJobService {
     public ResponseDTO findAllJobByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception;
 
     // run job
-    public ResponseDTO runJob(Long jobId, Long appUserId) throws Exception;
+    public ResponseDTO addJobToQueue(Long jobId, Long appUserId) throws Exception;
 
     // skip next occurrence
     public ResponseDTO skipNextOccurrence(Long jobId, Long appUserId) throws Exception;

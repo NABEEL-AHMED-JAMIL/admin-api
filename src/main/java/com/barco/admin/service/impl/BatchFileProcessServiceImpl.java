@@ -6,7 +6,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+
 @Service
+@Transactional
 @Scope("prototype")
 public class BatchFileProcessServiceImpl implements IBatchFileProcessService {
 
