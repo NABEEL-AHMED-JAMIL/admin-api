@@ -16,7 +16,7 @@ import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
-import com.barco.model.pojo.pagination.PaginationDetail;
+import com.barco.model.searchspec.PaginationDetail;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

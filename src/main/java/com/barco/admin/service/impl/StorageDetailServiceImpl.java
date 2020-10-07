@@ -8,7 +8,7 @@ import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
 import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.StorageDetail;
-import com.barco.model.pojo.pagination.PaginationDetail;
+import com.barco.model.searchspec.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.StorageDetailRepository;
 import com.barco.model.repository.TaskRepository;
@@ -37,12 +37,12 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
     private TaskRepository taskRepository;
 
 
-    @Override // method use for create and update both
+    @Override
     public ResponseDTO createStorage(StorageDetailDto storageDetailDto) throws Exception {
         if (StringUtils.isEmpty(storageDetailDto.getStorageKeyName())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_NAME_MISSING);
-        } else if (this.storageDetailRepository.findByStorageKeyNameAndStatus(storageDetailDto.getStorageKeyName(), Status.Active).isPresent()
-                && storageDetailDto.getId() == null) {
+        } else if (this.storageDetailRepository.findByStorageKeyNameAndCreatedByAndStatus(storageDetailDto.getStorageKeyName(),
+                storageDetailDto.getCreatedBy(), Status.Active).isPresent() && storageDetailDto.getId() == null) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_ALREADY_EXIST);
         } else if (storageDetailDto.getKeyType() == null) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_TYPE_MISSING);
@@ -69,8 +69,7 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
         storageDetail.setStorageKeyName(storageDetailDto.getStorageKeyName());
         storageDetail.setStorageDetailJson(storageDetailDto.getStorageDetailJson());
         storageDetail.setKeyType(storageDetailDto.getKeyType());
-        // save the detail and send back the info
-        storageDetail = this.storageDetailRepository.saveAndFlush(storageDetail);
+        this.storageDetailRepository.saveAndFlush(storageDetail);
         storageDetailDto.setId(storageDetail.getId());
         return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, storageDetailDto);
     }
@@ -79,7 +78,7 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
     public ResponseDTO getStorageById(Long storageId, Long appUserId) throws Exception {
         Optional<StorageDetail> storage = this.storageDetailRepository.findByIdAndCreatedByAndStatus(storageId, appUserId, Status.Active);
         if (storage.isPresent()) {
-            return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, storage);
+            return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, storage.get());
         }
         return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.HTTP_404_MSG);
     }
@@ -87,15 +86,12 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
     @Override
     public ResponseDTO statusChange(Long storageId, Long appUserId, Status storageStatus) throws Exception {
         // get the storage attache with task
-        Optional<StorageDetail> storageDetail = this.storageDetailRepository.findByIdAndStatusNot(storageId, Status.Delete);
+        Optional<StorageDetail> storageDetail = this.storageDetailRepository.findByIdAndCreatedByAndStatusNot(storageId, appUserId, Status.Delete);
         if (storageDetail.isPresent() && storageStatus.equals(Status.Active)) {
             // active storage if storage disable
-            if (storageDetail.get().getStatus().equals(Status.Inactive) ||
-                    storageDetail.get().getStatus().equals(Status.Active)) {
-                storageDetail.get().setStatus(storageStatus);
-                storageDetail.get().setModifiedBy(appUserId);
-                return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
-            }
+            storageDetail.get().setStatus(storageStatus);
+            storageDetail.get().setModifiedBy(appUserId);
+            return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
         } else if (storageDetail.isPresent() && (storageStatus.equals(Status.Delete) || storageStatus.equals(Status.Inactive))) {
             Long storageAttacheCount = this.taskRepository.countByStorageId(storageId);
             if (storageAttacheCount > 0) {

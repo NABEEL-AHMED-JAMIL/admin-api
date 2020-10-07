@@ -3,7 +3,7 @@ package com.barco.admin.service;
 import com.barco.model.dto.JobDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.enums.Status;
-import com.barco.model.pojo.pagination.PaginationDetail;
+import com.barco.model.searchspec.PaginationDetail;
 
 
 public interface IJobService {

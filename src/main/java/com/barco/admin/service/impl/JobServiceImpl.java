@@ -9,7 +9,7 @@ import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.JobStatus;
 import com.barco.model.enums.Status;
 import com.barco.model.pojo.*;
-import com.barco.model.pojo.pagination.PaginationDetail;
+import com.barco.model.searchspec.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.JobRepository;
 import com.barco.model.repository.SchedulerRepository;
@@ -52,7 +52,8 @@ public class JobServiceImpl implements IJobService {
     public ResponseDTO createJob(JobDto jobDto) throws Exception {
         if (StringUtils.isEmpty(jobDto.getJobName())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.JOB_NAME_MISSING);
-        } else if (this.jobRepository.findByJobNameAndStatus(jobDto.getJobName(), Status.Active).isPresent() && jobDto.getId() == null) {
+        } else if (this.jobRepository.findByJobNameAndCreatedByAndStatus(jobDto.getJobName(), jobDto.getCreatedBy(),
+                Status.Active).isPresent() && jobDto.getId() == null) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.JOB_NAME_ALREADY_EXIST);
         } else if (jobDto.getExecutionType() == null) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.JOB_EXECUTION_TYPE);
@@ -88,7 +89,8 @@ public class JobServiceImpl implements IJobService {
         job.setTask(task);
         // scheduler will impl after first flow complete
         job.setNotification(jobDto.getNotification());
-        job = this.jobRepository.saveAndFlush(job);
+        this.jobRepository.saveAndFlush(job);
+        //
         jobDto.setId(job.getId());
         return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, jobDto);
     }
@@ -108,14 +110,10 @@ public class JobServiceImpl implements IJobService {
         Optional<Job> jobDetail = this.jobRepository.findByIdAndStatusNot(jobId, Status.Delete);
         if (jobDetail.isPresent() && jobStatus.equals(Status.Active)) {
             // active storage if storage disable
-            if (jobDetail.get().getStatus().equals(Status.Inactive) ||
-                    jobDetail.get().getStatus().equals(Status.Active)) {
-                jobDetail.get().setStatus(jobStatus);
-                jobDetail.get().setModifiedBy(appUserId);
-                return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
-            }
+            jobDetail.get().setStatus(jobStatus);
+            jobDetail.get().setModifiedBy(appUserId);
+            return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
         } else if (jobDetail.isPresent() && (jobStatus.equals(Status.Delete) || jobStatus.equals(Status.Inactive))) {
-            // here
             if (jobDetail.get().getJobStatus().status.equals(JobStatus.Queue) ||
                     jobDetail.get().getJobStatus().status.equals(JobStatus.Running)) {
                 return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.JOB_RUNNING_STAGE);

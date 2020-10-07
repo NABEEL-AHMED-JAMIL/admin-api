@@ -7,7 +7,7 @@ import com.barco.model.dto.ResponseDTO;
 import com.barco.model.dto.TaskDto;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
-import com.barco.model.pojo.pagination.PaginationDetail;
+import com.barco.model.searchspec.PaginationDetail;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;

@@ -9,7 +9,7 @@ import com.barco.model.enums.Status;
 import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.StorageDetail;
 import com.barco.model.pojo.Task;
-import com.barco.model.pojo.pagination.PaginationDetail;
+import com.barco.model.searchspec.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.JobRepository;
 import com.barco.model.repository.StorageDetailRepository;
@@ -45,8 +45,8 @@ public class TaskServiceImpl implements ITaskService {
     public ResponseDTO createTask(TaskDto taskDto) throws Exception {
         if (StringUtils.isEmpty(taskDto.getTaskName())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.TASK_NAME_MISSING);
-        } else if (this.taskRepository.findByTaskNameAndStatus(taskDto.getTaskName(), Status.Active).isPresent()
-                && taskDto.getId() == null) {
+        } else if (this.taskRepository.findByTaskNameAndCreatedByAndStatus(taskDto.getTaskName(), taskDto.getCreatedBy(),
+                Status.Active).isPresent() && taskDto.getId() == null) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.TASK_ALREADY_EXIST);
         } else if (StringUtils.isEmpty(taskDto.getClassName())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.CLASS_NAME_MISSING);
@@ -75,20 +75,23 @@ public class TaskServiceImpl implements ITaskService {
         task.setTaskName(taskDto.getTaskName());
         task.setClassName(taskDto.getClassName());
         task.setTaskDetailJson(taskDto.getTaskDetailJson());
+        // storage detail are optional
         if (taskDto.getStorageDetail() != null) {
             if(taskDto.getStorageDetail().getId() != null) {
-                Optional<StorageDetail> storageDetail = this.storageDetailRepository.findById(taskDto.getStorageDetail().getId());
-                if (storageDetail.isPresent()) {
-                    task.setStorageDetail(storageDetail.get());
+                StorageDetail storageDetail = this.storageDetailRepository.findByIdAndStatus(
+                        taskDto.getStorageDetail().getId(), Status.Active);
+                if (storageDetail != null) {
+                    task.setStorageDetail(storageDetail);
                 } else {
                     return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_NOT_FOUND);
                 }
             }
         } else {
+            // handle the update case for un-assign the storage
             task.setStorageDetail(null);
         }
         // save the detail and send back the info
-        task = this.taskRepository.saveAndFlush(task);
+        this.taskRepository.saveAndFlush(task);
         taskDto.setId(task.getId());
         return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, taskDto);
     }
@@ -97,7 +100,7 @@ public class TaskServiceImpl implements ITaskService {
     public ResponseDTO getTaskById(Long taskId, Long appUserId) throws Exception  {
         Optional<Task> task = this.taskRepository.findByIdAndCreatedByAndStatus(taskId, appUserId, Status.Active);
         if (task.isPresent()) {
-            return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, task);
+            return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, task.get());
         }
         return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.HTTP_404_MSG);
     }
@@ -108,16 +111,13 @@ public class TaskServiceImpl implements ITaskService {
         Optional<Task> taskDetail = this.taskRepository.findByIdAndStatusNot(taskId, Status.Delete);
         if (taskDetail.isPresent() && taskStatus.equals(Status.Active)) {
             // active storage if storage disable
-            if (taskDetail.get().getStatus().equals(Status.Inactive) ||
-                    taskDetail.get().getStatus().equals(Status.Active)) {
-                taskDetail.get().setStatus(taskStatus);
-                taskDetail.get().setModifiedBy(appUserId);
-                return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
-            }
+            taskDetail.get().setStatus(taskStatus);
+            taskDetail.get().setModifiedBy(appUserId);
+            return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
         } else if (taskDetail.isPresent() && (taskStatus.equals(Status.Delete) || taskStatus.equals(Status.Inactive))) {
             Long storageAttacheCount = this.jobRepository.countByTaskId(taskId);
             if (storageAttacheCount > 0) {
-                return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.Task_ATTACHE_WITH_TASK);
+                return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.Task_ATTACHE_WITH_JOB);
             } else {
                 taskDetail.get().setStatus(taskStatus);
                 taskDetail.get().setModifiedBy(appUserId);
