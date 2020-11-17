@@ -4,7 +4,6 @@ import com.barco.admin.core.sesssion.SessionHandlerWithNoResponse;
 import com.barco.admin.core.sesssion.SessionHandlerWithResponse;
 import com.barco.admin.service.impl.JobServiceImpl;
 import com.barco.common.utility.ExceptionUtil;
-import com.barco.model.wsm.RequestMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,19 +109,19 @@ public class RequestDistributionScheduler {
                     /**
                     this.sessionHandlerWithResponse.subscribeAndSend(stompSession, new RequestMessage(UUID.randomUUID().toString()));
                      */
-                     this.sessionHandlerWithNoResponse.subscribeAndSend(this.stompSessionService1, new RequestMessage(UUID.randomUUID().toString()));
+                     //this.sessionHandlerWithNoResponse.subscribeAndSend(this.stompSessionService1, new RequestMessage(UUID.randomUUID().toString()));
                     break;
                 case 2:
                     /**
                     this.sessionHandlerWithResponse.subscribeAndSend(stompSession, new RequestMessage(UUID.randomUUID().toString()));
                      */
-                    this.sessionHandlerWithNoResponse.subscribeAndSend(this.stompSessionService2, new RequestMessage(UUID.randomUUID().toString()));
+                    //this.sessionHandlerWithNoResponse.subscribeAndSend(this.stompSessionService2, new RequestMessage(UUID.randomUUID().toString()));
                     break;
                 case 3:
                     /**
                     this.sessionHandlerWithResponse.subscribeAndSend(stompSession, new RequestMessage(UUID.randomUUID().toString()));
                     */
-                    this.sessionHandlerWithNoResponse.subscribeAndSend(this.stompSessionService3, new RequestMessage(UUID.randomUUID().toString()));
+                    //this.sessionHandlerWithNoResponse.subscribeAndSend(this.stompSessionService3, new RequestMessage(UUID.randomUUID().toString()));
                     break;
             }
         } catch (Exception ex) {

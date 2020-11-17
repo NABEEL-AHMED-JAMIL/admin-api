@@ -19,6 +19,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     public Logger logger = LogManager.getLogger(WebSecurityConfig.class);
 
+    private static final String[] AUTH_WHITELIST = {
+            "/v2/api-docs", "/swagger-resources",
+            "/swagger-resources/**", "/configuration/ui",
+            "/configuration/security", "/swagger-ui.html",
+            "/webjars/**","/public.json/**","/auth.json/**"
+    };
+
+
     @Bean
     public TokenAuthenticationFilter jwtAuthenticationTokenFilter() throws Exception {
         return new TokenAuthenticationFilter();
@@ -26,7 +34,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.cors().and().csrf().disable().authorizeRequests().anyRequest().authenticated()
+        http.cors().and().csrf().disable().authorizeRequests().antMatchers(AUTH_WHITELIST)
+        .permitAll().anyRequest().authenticated()
         .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.addFilterBefore(jwtAuthenticationTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     }
