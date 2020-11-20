@@ -27,8 +27,7 @@ public class AdminApiApplication {
 
 	@Bean
 	public CommandLineRunner commandLineRunner() {
-		return (args) -> {
-		};
+		return (args) -> {};
 	}
 
 }

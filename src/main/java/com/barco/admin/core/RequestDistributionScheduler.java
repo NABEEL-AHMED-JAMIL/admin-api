@@ -4,6 +4,7 @@ import com.barco.admin.core.sesssion.SessionHandlerWithNoResponse;
 import com.barco.admin.core.sesssion.SessionHandlerWithResponse;
 import com.barco.admin.service.impl.JobServiceImpl;
 import com.barco.common.utility.ExceptionUtil;
+//import com.barco.model.wsm.RequestMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,26 +130,6 @@ public class RequestDistributionScheduler {
         }
     }
 
-    @PreDestroy
-    public void preDestroy() {
-        try {
-             if(this.stompSessionService1 != null) {
-                 logger.info("Stomp Session Service-1 Close for Session ID {}", this.stompSessionService1.getSessionId());
-                 this.stompSessionService1.disconnect();
-             }
-             if(this.stompSessionService2 != null) {
-                 logger.info("Stomp Session Service-2 Close for Session ID {}", this.stompSessionService2.getSessionId());
-                 this.stompSessionService2.disconnect();
-             }
-             if(this.stompSessionService3 != null) {
-                 logger.info("Stomp Session Service-3 Close for Session ID {}", this.stompSessionService3.getSessionId());
-                 this.stompSessionService3.disconnect();
-             }
-        } catch (Exception ex) {
-            logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
-        }
-    }
-
     // stomp header
     private StompHeaders getConnectHeaders() {
         StompHeaders connectHeaders = new StompHeaders();
@@ -161,5 +142,26 @@ public class RequestDistributionScheduler {
         Random random = new Random();
         return random.ints(min, max).findFirst().getAsInt();
     }
+
+    @PreDestroy
+    public void preDestroy() {
+        try {
+            if(this.stompSessionService1 != null) {
+                logger.info("Stomp Session Service-1 Close for Session ID {}", this.stompSessionService1.getSessionId());
+                this.stompSessionService1.disconnect();
+            }
+            if(this.stompSessionService2 != null) {
+                logger.info("Stomp Session Service-2 Close for Session ID {}", this.stompSessionService2.getSessionId());
+                this.stompSessionService2.disconnect();
+            }
+            if(this.stompSessionService3 != null) {
+                logger.info("Stomp Session Service-3 Close for Session ID {}", this.stompSessionService3.getSessionId());
+                this.stompSessionService3.disconnect();
+            }
+        } catch (Exception ex) {
+            logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
+        }
+    }
+
 
 }

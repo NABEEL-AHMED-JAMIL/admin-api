@@ -1,17 +1,24 @@
 package com.barco.admin.service.impl;
 
 import com.barco.admin.service.IStorageDetailService;
+import com.barco.common.manager.aws.impl.AwsBucketManagerImpl;
+import com.barco.common.manager.aws.properties.AwsProperties;
+import com.barco.common.manager.ftp.FtpFileExchange;
 import com.barco.common.utility.ApplicationConstants;
 import com.barco.model.dto.StorageDetailDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.enums.ApiCode;
+import com.barco.model.enums.KeyType;
 import com.barco.model.enums.Status;
 import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.StorageDetail;
+import com.barco.model.pojo.ext.AWS;
+import com.barco.model.pojo.ext.FTP;
 import com.barco.model.searchspec.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.StorageDetailRepository;
 import com.barco.model.repository.TaskRepository;
+import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +27,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -37,7 +45,7 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
     private TaskRepository taskRepository;
 
 
-    @Override
+    @Override // all json detail should be encrypted store
     public ResponseDTO createStorage(StorageDetailDto storageDetailDto) throws Exception {
         if (StringUtils.isEmpty(storageDetailDto.getStorageKeyName())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_NAME_MISSING);
@@ -91,6 +99,7 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
             // active storage if storage disable
             storageDetail.get().setStatus(storageStatus);
             storageDetail.get().setModifiedBy(appUserId);
+            this.storageDetailRepository.saveAndFlush(storageDetail.get());
             return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
         } else if (storageDetail.isPresent() && (storageStatus.equals(Status.Delete) || storageStatus.equals(Status.Inactive))) {
             Long storageAttacheCount = this.taskRepository.countByStorageId(storageId);
@@ -99,6 +108,7 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
             } else {
                 storageDetail.get().setStatus(storageStatus);
                 storageDetail.get().setModifiedBy(appUserId);
+                this.storageDetailRepository.saveAndFlush(storageDetail.get());
                 return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
             }
         }
@@ -112,7 +122,42 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
 
     @Override
     public ResponseDTO pingStorage(StorageDetailDto storageDetailDto) throws Exception {
-        return null;
+        ResponseDTO responseDTO = null;
+        Gson gson = new Gson();
+        if (storageDetailDto.getKeyType().equals(KeyType.AWS)) {
+            AWS aws = gson.fromJson(storageDetailDto.getStorageDetailJson().toString(), AWS.class);
+            AwsBucketManagerImpl awsBucketManager = new AwsBucketManagerImpl();
+            if (aws != null) {
+                if (StringUtils.isEmpty(aws.getAccessKey()) || StringUtils.isEmpty(aws.getSecretKey()) || StringUtils.isEmpty(aws.getRegion())) {
+                    responseDTO = new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.AWS_DETAIL_MISSING);
+                } else {
+                    awsBucketManager.amazonS3(new AwsProperties(aws.getRegion(), aws.getAccessKey(), aws.getSecretKey()));
+                    for(Map.Entry<String, String> bucket:aws.getBucketName().entrySet()) {
+                        if (!awsBucketManager.isBucketExist(bucket.getKey())) {
+                            responseDTO = new ResponseDTO(ApiCode.INVALID_REQUEST,
+                                    String.format(ApplicationConstants.AWS_BUCKET_NOT_EXIST, bucket.getKey()));
+                            break;
+                        }
+                    }
+                    if (responseDTO == null) {
+                        responseDTO = new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
+                    }
+                }
+            }
+        } else if (storageDetailDto.getKeyType().equals(KeyType.FTP)) {
+            FTP ftp = gson.fromJson(storageDetailDto.getStorageDetailJson().toString(), FTP.class);
+            FtpFileExchange fileExchange = new FtpFileExchange().setHost(ftp.getHost()).setUser(ftp.getUser())
+                .setPassword(ftp.getPassword()).setPort(ftp.getPort());
+            if (StringUtils.isEmpty(ftp.getHost()) || StringUtils.isEmpty(ftp.getUser()) || StringUtils.isEmpty(ftp.getPassword())) {
+                responseDTO = new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.FTP_DETAIL_MISSING);
+            } else if (fileExchange.connectionOpen()) {
+                fileExchange.close();
+                responseDTO = new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
+            } else {
+                responseDTO = new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.FTP_NOT_CONNECT);
+            }
+        }
+        return responseDTO;
     }
 
 }
