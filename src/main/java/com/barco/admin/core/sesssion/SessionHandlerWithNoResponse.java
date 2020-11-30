@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Type;
 
 
+/**
+ * @author Nabeel Ahmed
+ */
 @Component
 @Scope("prototype")
 public class SessionHandlerWithNoResponse extends StompSessionHandlerAdapter {

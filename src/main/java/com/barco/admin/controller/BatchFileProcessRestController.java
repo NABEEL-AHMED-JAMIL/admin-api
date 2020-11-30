@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * @author Nabeel Ahmed
+ */
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping(value = "/batch.json", produces = MediaType.APPLICATION_JSON_VALUE)

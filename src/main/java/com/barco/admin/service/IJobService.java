@@ -7,7 +7,9 @@ import com.barco.model.dto.SearchTextDto;
 import com.barco.model.enums.Status;
 import com.barco.model.searchspec.PaginationDetail;
 
-
+/**
+ * @author Nabeel Ahmed
+ */
 public interface IJobService {
 
     // create job

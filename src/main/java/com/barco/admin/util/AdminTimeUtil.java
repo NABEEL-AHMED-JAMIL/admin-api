@@ -3,6 +3,10 @@ package com.barco.admin.util;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+
+/**
+ * @author Nabeel Ahmed
+ */
 public class AdminTimeUtil {
 
     public static void main(String args[]) {

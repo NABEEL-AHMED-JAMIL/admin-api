@@ -9,7 +9,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import javax.annotation.PostConstruct;
 import java.util.TimeZone;
 
-
+/**
+ * @author Nabeel Ahmed
+ */
 @EnableScheduling
 @SpringBootApplication
 @ComponentScan(basePackages = { "com.barco.*" })

@@ -14,7 +14,9 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * @author Nabeel Ahmed
+ */
 @Configuration
 public class WebSocketClientConfig {
 

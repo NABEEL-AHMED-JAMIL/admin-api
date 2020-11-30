@@ -24,6 +24,9 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * @author Nabeel Ahmed
+ */
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping(value = "/storage.json", produces = MediaType.APPLICATION_JSON_VALUE)
