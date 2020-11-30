@@ -1,7 +1,9 @@
 package com.barco.admin.controller;
 
 import com.barco.admin.service.impl.StorageDetailServiceImpl;
+import com.barco.model.dto.SearchTextDto;
 import com.barco.model.dto.StorageDetailDto;
+import com.barco.model.util.PaggingUtil;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,11 +110,16 @@ public class StorageDetailRestController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/findAllStorageByAppUserIdInPagination", method = RequestMethod.POST)
     @ApiOperation(value = "Fetch All StorageDetail", notes = "Fetch all key with app user id in pagination.")
-    public ResponseDTO findAllStorageByAppUserIdInPagination(@PathVariable Long appUserId, PaginationDetail paginationDetail) {
+    public ResponseDTO findAllStorageByAppUserIdInPagination(@RequestParam(value = "appUserId", required = false) Long appUserId,
+         @RequestParam(value = "page", required = false) Long page, @RequestParam(value = "limit", required = false) Long limit,
+         @RequestParam(value = "startDate", required = false) String startDate, @RequestParam(value = "endDate", required = false) String endDate,
+         @RequestParam(value = "columnName", required = false) String columnName, @RequestParam(value = "order", required = false) String order,
+         @RequestBody SearchTextDto searchTextDto) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for findAllStorageByAppUserIdInPagination with AppUserId %d and Pagination Detail %s", appUserId, paginationDetail));
-            response = this.storageDetailService.findAllStorageByAppUserIdInPagination(appUserId, paginationDetail);
+            logger.info(String.format("Request for findAllStorageByAppUserIdInPagination with AppUserId %d ", appUserId));
+            response = this.storageDetailService.findAllStorageByAppUserIdInPagination(PaggingUtil.ApplyPagging(page, limit, order, columnName),
+                    appUserId ,searchTextDto, startDate, endDate);
         } catch (Exception ex) {
             logger.info("Error during findAllStorageByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);

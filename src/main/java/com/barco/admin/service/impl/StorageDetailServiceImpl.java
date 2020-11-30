@@ -5,6 +5,8 @@ import com.barco.common.manager.aws.impl.AwsBucketManagerImpl;
 import com.barco.common.manager.aws.properties.AwsProperties;
 import com.barco.common.manager.ftp.FtpFileExchange;
 import com.barco.common.utility.ApplicationConstants;
+import com.barco.model.dto.PaggingDto;
+import com.barco.model.dto.SearchTextDto;
 import com.barco.model.dto.StorageDetailDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.enums.ApiCode;
@@ -116,7 +118,8 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
     }
 
     @Override
-    public ResponseDTO findAllStorageByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception {
+    public ResponseDTO findAllStorageByAppUserIdInPagination(PaggingDto pagging, Long adminId, SearchTextDto searchTextDto,
+         String startDate, String endDate) throws Exception {
         return null;
     }
 

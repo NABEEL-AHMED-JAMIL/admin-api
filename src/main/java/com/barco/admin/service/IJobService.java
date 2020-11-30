@@ -1,7 +1,9 @@
 package com.barco.admin.service;
 
 import com.barco.model.dto.JobDto;
+import com.barco.model.dto.PaggingDto;
 import com.barco.model.dto.ResponseDTO;
+import com.barco.model.dto.SearchTextDto;
 import com.barco.model.enums.Status;
 import com.barco.model.searchspec.PaginationDetail;
 
@@ -19,7 +21,8 @@ public interface IJobService {
     public ResponseDTO statusChange(Long jobId, Long appUserId, Status jobStatus) throws Exception;
 
     // fetch all job
-    public ResponseDTO findAllJobByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception;
+    public ResponseDTO findAllJobByAppUserIdInPagination(PaggingDto pagging, Long adminId, SearchTextDto searchTextDto,
+         String startDate, String endDate) throws Exception;
 
     // run job
     public ResponseDTO addJobToQueue(Long jobId, Long appUserId) throws Exception;

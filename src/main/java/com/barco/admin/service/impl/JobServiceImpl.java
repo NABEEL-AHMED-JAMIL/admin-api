@@ -4,7 +4,9 @@ import com.barco.admin.mapper.JobMapper;
 import com.barco.admin.service.IJobService;
 import com.barco.common.utility.ApplicationConstants;
 import com.barco.model.dto.JobDto;
+import com.barco.model.dto.PaggingDto;
 import com.barco.model.dto.ResponseDTO;
+import com.barco.model.dto.SearchTextDto;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.JobStatus;
 import com.barco.model.enums.Status;
@@ -127,7 +129,8 @@ public class JobServiceImpl implements IJobService {
     }
 
     @Override
-    public ResponseDTO findAllJobByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception  {
+    public ResponseDTO findAllJobByAppUserIdInPagination(PaggingDto pagging, Long adminId, SearchTextDto searchTextDto,
+         String startDate, String endDate) throws Exception  {
         return null;
     }
 

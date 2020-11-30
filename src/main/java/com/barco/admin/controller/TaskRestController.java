@@ -4,10 +4,12 @@ import com.barco.admin.service.impl.TaskServiceImpl;
 import com.barco.common.utility.ApplicationConstants;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.ResponseDTO;
+import com.barco.model.dto.SearchTextDto;
 import com.barco.model.dto.TaskDto;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
 import com.barco.model.searchspec.PaginationDetail;
+import com.barco.model.util.PaggingUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -79,19 +81,24 @@ public class TaskRestController {
         return response;
     }
 
-    // fetch all task
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/findAllTaskByAppUserIdInPagination", method = RequestMethod.POST)
-    @ApiOperation(value = "Fetch All Task", notes = "Fetch all task with app user id in pagination.")
-    public @ResponseBody ResponseDTO findAllTaskByAppUserIdInPagination(@PathVariable Long appUserId, PaginationDetail paginationDetail) {
+    @ApiOperation(value = "Get Users Api", notes = "Get list of all Users Linked to current user.")
+    public @ResponseBody ResponseDTO findAllTaskByAppUserIdInPagination(@RequestParam(value = "appUserId", required = false) Long appUserId,
+       @RequestParam(value = "page", required = false) Long page, @RequestParam(value = "limit", required = false) Long limit,
+       @RequestParam(value = "startDate", required = false) String startDate, @RequestParam(value = "endDate", required = false) String endDate,
+       @RequestParam(value = "columnName", required = false) String columnName, @RequestParam(value = "order", required = false) String order,
+       @RequestBody SearchTextDto searchTextDto) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for findAllTaskByAppUserIdInPagination with AppUserId %d and Pagination Detail %s", appUserId, paginationDetail));
-            response = this.taskService.findAllTaskByAppUserIdInPagination(appUserId, paginationDetail);
+            logger.info("Request for get findAllTaskByAppUserIdInPagination " + appUserId);
+            response = this.taskService.findAllTaskByAppUserIdInPagination(PaggingUtil.ApplyPagging(page, limit, order, columnName),
+                    appUserId ,searchTextDto, startDate, endDate);
         } catch (Exception ex) {
             logger.info("Error during findAllTaskByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
         }
         return response;
     }
+
 }

@@ -5,9 +5,11 @@ import com.barco.common.utility.ApplicationConstants;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.JobDto;
 import com.barco.model.dto.ResponseDTO;
+import com.barco.model.dto.SearchTextDto;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
 import com.barco.model.searchspec.PaginationDetail;
+import com.barco.model.util.PaggingUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -82,12 +84,16 @@ public class JobRestController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/findAllJobByAppUserIdInPagination", method = RequestMethod.POST)
     @ApiOperation(value = "Fetch All Job", notes = "Fetch all job with pagination.")
-    public @ResponseBody ResponseDTO findAllJobByAppUserIdInPagination(@PathVariable Long appUserId, PaginationDetail paginationDetail) {
+    public @ResponseBody ResponseDTO findAllJobByAppUserIdInPagination(@RequestParam(value = "appUserId", required = false) Long appUserId,
+       @RequestParam(value = "page", required = false) Long page, @RequestParam(value = "limit", required = false) Long limit,
+       @RequestParam(value = "startDate", required = false) String startDate, @RequestParam(value = "endDate", required = false) String endDate,
+       @RequestParam(value = "columnName", required = false) String columnName, @RequestParam(value = "order", required = false) String order,
+       @RequestBody SearchTextDto searchTextDto) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for findAllJobByAppUserIdInPagination with AppUserId %d and Pagination Detail %s",
-                    appUserId, paginationDetail));
-            response = this.jobService.findAllJobByAppUserIdInPagination(appUserId, paginationDetail);
+            logger.info(String.format("Request for findAllJobByAppUserIdInPagination with AppUserId %d ", appUserId));
+            response = this.jobService.findAllJobByAppUserIdInPagination(PaggingUtil.ApplyPagging(page, limit, order, columnName),
+                    appUserId ,searchTextDto, startDate, endDate);
         } catch (Exception ex) {
             logger.info("Error during findAllJobByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO(ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);

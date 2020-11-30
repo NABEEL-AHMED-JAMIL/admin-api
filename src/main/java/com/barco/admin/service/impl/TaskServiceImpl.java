@@ -2,7 +2,9 @@ package com.barco.admin.service.impl;
 
 import com.barco.admin.service.ITaskService;
 import com.barco.common.utility.ApplicationConstants;
+import com.barco.model.dto.PaggingDto;
 import com.barco.model.dto.ResponseDTO;
+import com.barco.model.dto.SearchTextDto;
 import com.barco.model.dto.TaskDto;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
@@ -20,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.transaction.Transactional;
 import java.util.Optional;
@@ -73,7 +77,6 @@ public class TaskServiceImpl implements ITaskService {
             task.setStatus(Status.Active);
         }
         task.setTaskName(taskDto.getTaskName());
-        task.setClassName(taskDto.getClassName());
         task.setTaskDetailJson(taskDto.getTaskDetailJson());
         // storage detail are optional
         if (taskDto.getStorageDetail() != null) {
@@ -128,7 +131,7 @@ public class TaskServiceImpl implements ITaskService {
     }
 
     @Override
-    public ResponseDTO findAllTaskByAppUserIdInPagination(Long appUserId, PaginationDetail paginationDetail) throws Exception  {
+    public ResponseDTO findAllTaskByAppUserIdInPagination(PaggingDto pagging, Long adminId, SearchTextDto searchTextDto, String startDate, String endDate) {
         return null;
     }
 }
