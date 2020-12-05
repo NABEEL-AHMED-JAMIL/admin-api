@@ -8,7 +8,6 @@ import com.barco.model.dto.ResponseDTO;
 import com.barco.model.dto.SearchTextDto;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
-import com.barco.model.searchspec.PaginationDetail;
 import com.barco.model.util.PaggingUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

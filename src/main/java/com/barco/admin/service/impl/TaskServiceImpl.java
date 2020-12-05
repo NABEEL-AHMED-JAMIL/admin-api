@@ -11,7 +11,6 @@ import com.barco.model.enums.Status;
 import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.StorageDetail;
 import com.barco.model.pojo.Task;
-import com.barco.model.searchspec.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.JobRepository;
 import com.barco.model.repository.StorageDetailRepository;
@@ -22,9 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-
 import javax.transaction.Transactional;
 import java.util.Optional;
 

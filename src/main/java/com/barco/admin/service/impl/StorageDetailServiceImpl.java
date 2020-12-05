@@ -16,7 +16,6 @@ import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.StorageDetail;
 import com.barco.model.pojo.ext.AWS;
 import com.barco.model.pojo.ext.FTP;
-import com.barco.model.searchspec.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.StorageDetailRepository;
 import com.barco.model.repository.TaskRepository;

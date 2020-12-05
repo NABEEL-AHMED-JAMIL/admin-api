@@ -5,7 +5,6 @@ import com.barco.model.dto.PaggingDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.dto.SearchTextDto;
 import com.barco.model.enums.Status;
-import com.barco.model.searchspec.PaginationDetail;
 
 /**
  * @author Nabeel Ahmed

@@ -11,7 +11,6 @@ import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.JobStatus;
 import com.barco.model.enums.Status;
 import com.barco.model.pojo.*;
-import com.barco.model.searchspec.PaginationDetail;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.JobRepository;
 import com.barco.model.repository.SchedulerRepository;

@@ -5,9 +5,6 @@ import com.barco.model.dto.ResponseDTO;
 import com.barco.model.dto.SearchTextDto;
 import com.barco.model.dto.TaskDto;
 import com.barco.model.enums.Status;
-import com.barco.model.searchspec.PaginationDetail;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * @author Nabeel Ahmed
