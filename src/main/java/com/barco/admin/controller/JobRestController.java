@@ -8,7 +8,7 @@ import com.barco.model.dto.ResponseDTO;
 import com.barco.model.dto.SearchTextDto;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
-import com.barco.model.util.PaggingUtil;
+import com.barco.model.util.PagingUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -94,7 +94,7 @@ public class JobRestController {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for findAllJobByAppUserIdInPagination with AppUserId %d ", appUserId));
-            response = this.jobService.findAllJobByAppUserIdInPagination(PaggingUtil.ApplyPagging(page, limit, order, columnName),
+            response = this.jobService.findAllJobByAppUserIdInPagination(PagingUtil.ApplyPaging(page, limit, order, columnName),
                     appUserId ,searchTextDto, startDate, endDate);
         } catch (Exception ex) {
             logger.info("Error during findAllJobByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));

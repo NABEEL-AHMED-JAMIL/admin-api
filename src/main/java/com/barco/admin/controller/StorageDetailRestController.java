@@ -3,7 +3,7 @@ package com.barco.admin.controller;
 import com.barco.admin.service.impl.StorageDetailServiceImpl;
 import com.barco.model.dto.SearchTextDto;
 import com.barco.model.dto.StorageDetailDto;
-import com.barco.model.util.PaggingUtil;
+import com.barco.model.util.PagingUtil;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,7 +120,7 @@ public class StorageDetailRestController {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for findAllStorageByAppUserIdInPagination with AppUserId %d ", appUserId));
-            response = this.storageDetailService.findAllStorageByAppUserIdInPagination(PaggingUtil.ApplyPagging(page, limit, order, columnName),
+            response = this.storageDetailService.findAllStorageByAppUserIdInPagination(PagingUtil.ApplyPaging(page, limit, order, columnName),
                     appUserId ,searchTextDto, startDate, endDate);
         } catch (Exception ex) {
             logger.info("Error during findAllStorageByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));

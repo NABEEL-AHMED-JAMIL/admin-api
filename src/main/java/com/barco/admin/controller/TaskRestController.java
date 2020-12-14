@@ -8,7 +8,7 @@ import com.barco.model.dto.SearchTextDto;
 import com.barco.model.dto.TaskDto;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
-import com.barco.model.util.PaggingUtil;
+import com.barco.model.util.PagingUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -93,7 +93,7 @@ public class TaskRestController {
         ResponseDTO response = null;
         try {
             logger.info("Request for get findAllTaskByAppUserIdInPagination " + appUserId);
-            response = this.taskService.findAllTaskByAppUserIdInPagination(PaggingUtil.ApplyPagging(page, limit, order, columnName),
+            response = this.taskService.findAllTaskByAppUserIdInPagination(PagingUtil.ApplyPaging(page, limit, order, columnName),
                     appUserId ,searchTextDto, startDate, endDate);
         } catch (Exception ex) {
             logger.info("Error during findAllTaskByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
