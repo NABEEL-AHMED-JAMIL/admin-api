@@ -1,8 +1,8 @@
 package com.barco.admin.service.impl;
 
+import com.barco.admin.repository.AccessServiceRepository;
 import com.barco.admin.service.ITaskService;
 import com.barco.common.utility.ApplicationConstants;
-import com.barco.model.dto.PaggingDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.dto.SearchTextDto;
 import com.barco.model.dto.TaskDto;
@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.Optional;
@@ -42,6 +43,8 @@ public class TaskServiceImpl implements ITaskService {
     private AppUserRepository appUserRepository;
     @Autowired
     private StorageDetailRepository storageDetailRepository;
+    @Autowired
+    private AccessServiceRepository accessServiceRepository;
 
     @Override
     public ResponseDTO createTask(TaskDto taskDto) throws Exception {
@@ -50,7 +53,8 @@ public class TaskServiceImpl implements ITaskService {
         } else if (this.taskRepository.findByTaskNameAndCreatedByAndStatus(taskDto.getTaskName(), taskDto.getCreatedBy(),
                 Status.Active).isPresent() && taskDto.getId() == null) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.TASK_ALREADY_EXIST);
-        } else if (StringUtils.isEmpty(taskDto.getClassName())) {
+        } else if (taskDto.getAccessService() == null && !this.accessServiceRepository.findByIdAndStatus(taskDto.getId(),
+                Status.Active).isPresent()) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.CLASS_NAME_MISSING);
         } else if (taskDto.getTaskDetailJson() == null) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.TASK_JSON_MISSING);
@@ -74,13 +78,14 @@ public class TaskServiceImpl implements ITaskService {
             task.setCreatedBy(appUser.get().getId());
             task.setStatus(Status.Active);
         }
+        task.setAccessService(this.accessServiceRepository.findByIdAndStatus(taskDto.getAccessService().getId(), Status.Active).get());
         task.setTaskName(taskDto.getTaskName());
         task.setTaskDetailJson(taskDto.getTaskDetailJson());
         // storage detail are optional
         if (taskDto.getStorageDetail() != null) {
             if(taskDto.getStorageDetail().getId() != null) {
-                StorageDetail storageDetail = this.storageDetailRepository.findByIdAndStatus(
-                        taskDto.getStorageDetail().getId(), Status.Active);
+                StorageDetail storageDetail = this.storageDetailRepository.findByIdAndStatus(taskDto.getStorageDetail().getId(),
+                        Status.Active);
                 if (storageDetail != null) {
                     task.setStorageDetail(storageDetail);
                 } else {
@@ -129,7 +134,8 @@ public class TaskServiceImpl implements ITaskService {
     }
 
     @Override
-    public ResponseDTO findAllTaskByAppUserIdInPagination(PaggingDto pagging, Long adminId, SearchTextDto searchTextDto, String startDate, String endDate) {
+    public ResponseDTO findAllTaskByAppUserIdInPagination(Pageable paging, Long adminId, SearchTextDto searchTextDto,
+                                                          String startDate, String endDate) {
         return null;
     }
 }

@@ -4,7 +4,7 @@ import com.barco.admin.mapper.JobMapper;
 import com.barco.admin.service.IJobService;
 import com.barco.common.utility.ApplicationConstants;
 import com.barco.model.dto.JobDto;
-import com.barco.model.dto.PaggingDto;
+import com.barco.model.dto.PagingDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.dto.SearchTextDto;
 import com.barco.model.enums.ApiCode;
@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -131,8 +132,8 @@ public class JobServiceImpl implements IJobService {
     }
 
     @Override
-    public ResponseDTO findAllJobByAppUserIdInPagination(PaggingDto pagging, Long adminId, SearchTextDto searchTextDto,
-         String startDate, String endDate) throws Exception  {
+    public ResponseDTO findAllJobByAppUserIdInPagination(Pageable paging, Long adminId, SearchTextDto searchTextDto,
+                                                         String startDate, String endDate) throws Exception  {
         return null;
     }
 

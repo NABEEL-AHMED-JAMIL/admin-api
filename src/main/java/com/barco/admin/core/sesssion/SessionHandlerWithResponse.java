@@ -29,7 +29,9 @@ public class SessionHandlerWithResponse extends StompSessionHandlerAdapter {
     }
 
     @Override
-    public Type getPayloadType(StompHeaders headers) { return Object.class; }
+    public Type getPayloadType(StompHeaders headers) {
+        return Object.class;
+    }
 
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {

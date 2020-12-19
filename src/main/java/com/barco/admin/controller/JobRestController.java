@@ -35,11 +35,11 @@ public class JobRestController {
     // create job
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/createJob", method = RequestMethod.POST)
-    @ApiOperation(value = "Create Job", notes = "Create job for run.")
+    @ApiOperation(value = "Create Job", notes = "Endpoint help to create job for run.")
     public @ResponseBody ResponseDTO createJob(@RequestBody JobDto jobDto) {
         ResponseDTO response = null;
         try {
-            logger.info("Request for createJob ");
+            logger.info("Request for createJob " + jobDto);
             response = this.jobService.createJob(jobDto);
         } catch (Exception ex) {
             logger.info("Error during createTask " + ExceptionUtil.getRootCause(ex));
@@ -51,8 +51,9 @@ public class JobRestController {
     // get job by id
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/getJobById", method = RequestMethod.GET)
-    @ApiOperation(value = "Get Job", notes = "Get job by Id.")
-    public @ResponseBody ResponseDTO getJobById(@RequestParam(name = "id") Long jobId, @RequestParam(name = "appUserId") Long appUserId) {
+    @ApiOperation(value = "Get Job", notes = "Endpoint help to get job by Id.")
+    public @ResponseBody ResponseDTO getJobById(@RequestParam(name = "id") Long jobId,
+        @RequestParam(name = "appUserId") Long appUserId) {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for getJobById Job Id %d And App User Id %d ", jobId, appUserId));
@@ -68,9 +69,9 @@ public class JobRestController {
     // Inactive(0), Active(1), Delete(3)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/changeStatus", method = RequestMethod.POST)
-    @ApiOperation(value = "Change Status", notes = "Change Status by id for job.")
-    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long jobId, @RequestParam(name = "appUserId") Long appUserId,
-        @RequestParam(name = "status") Status jobStatus) {
+    @ApiOperation(value = "Change Status", notes = "Endpoint help to change status by id for job.")
+    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long jobId,
+        @RequestParam(name = "appUserId") Long appUserId, @RequestParam(name = "status") Status jobStatus) {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for statusChange Job Id %d And Status %s ", jobId, jobStatus));
@@ -85,7 +86,7 @@ public class JobRestController {
     // fetch all job
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/findAllJobByAppUserIdInPagination", method = RequestMethod.POST)
-    @ApiOperation(value = "Fetch All Job", notes = "Fetch all job with pagination.")
+    @ApiOperation(value = "Fetch All Job", notes = "Endpoint help to fetch all job with pagination.")
     public @ResponseBody ResponseDTO findAllJobByAppUserIdInPagination(@RequestParam(value = "appUserId", required = false) Long appUserId,
        @RequestParam(value = "page", required = false) Long page, @RequestParam(value = "limit", required = false) Long limit,
        @RequestParam(value = "startDate", required = false) String startDate, @RequestParam(value = "endDate", required = false) String endDate,
@@ -94,7 +95,7 @@ public class JobRestController {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for findAllJobByAppUserIdInPagination with AppUserId %d ", appUserId));
-            response = this.jobService.findAllJobByAppUserIdInPagination(PagingUtil.ApplyPaging(page, limit, order, columnName),
+            response = this.jobService.findAllJobByAppUserIdInPagination(PagingUtil.ApplyPaging(page, limit),
                     appUserId ,searchTextDto, startDate, endDate);
         } catch (Exception ex) {
             logger.info("Error during findAllJobByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));

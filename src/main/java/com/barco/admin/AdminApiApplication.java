@@ -17,7 +17,6 @@ import java.util.TimeZone;
 @ComponentScan(basePackages = { "com.barco.*" })
 public class AdminApiApplication {
 
-
 	public static void main(String[] args) {
 		SpringApplication.run(AdminApiApplication.class, args);
 	}

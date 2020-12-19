@@ -9,7 +9,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +21,9 @@ public class JobMapper {
 
     public static JobDto jobToJobDto(Job job, List<Scheduler> schedulers) {
         JobDto jobDto = new JobDto();
-        if (job.getId() != null) { jobDto.setId(job.getId()); }
+        if (job.getId() != null) {
+            jobDto.setId(job.getId());
+        }
         if (StringUtils.isNotBlank(job.getJobName())) {
             jobDto.setJobName(job.getJobName());
         }

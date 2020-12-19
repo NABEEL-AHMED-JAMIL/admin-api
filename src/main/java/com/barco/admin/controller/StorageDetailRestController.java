@@ -120,8 +120,8 @@ public class StorageDetailRestController {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for findAllStorageByAppUserIdInPagination with AppUserId %d ", appUserId));
-            response = this.storageDetailService.findAllStorageByAppUserIdInPagination(PagingUtil.ApplyPaging(page, limit, order, columnName),
-                    appUserId ,searchTextDto, startDate, endDate);
+            response = this.storageDetailService.findAllStorageByAppUserIdInPagination(PagingUtil.ApplyPagingAndSorting(order, columnName, page, limit),
+                    appUserId ,searchTextDto, startDate, endDate, order, columnName);
         } catch (Exception ex) {
             logger.info("Error during findAllStorageByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);

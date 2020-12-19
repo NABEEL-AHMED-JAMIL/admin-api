@@ -1,10 +1,11 @@
 package com.barco.admin.service;
 
 import com.barco.model.dto.JobDto;
-import com.barco.model.dto.PaggingDto;
+import com.barco.model.dto.PagingDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.dto.SearchTextDto;
 import com.barco.model.enums.Status;
+import org.springframework.data.domain.Pageable;
 
 /**
  * @author Nabeel Ahmed
@@ -22,8 +23,8 @@ public interface IJobService {
     public ResponseDTO statusChange(Long jobId, Long appUserId, Status jobStatus) throws Exception;
 
     // fetch all job
-    public ResponseDTO findAllJobByAppUserIdInPagination(PaggingDto pagging, Long adminId, SearchTextDto searchTextDto,
-         String startDate, String endDate) throws Exception;
+    public ResponseDTO findAllJobByAppUserIdInPagination(Pageable paging, Long adminId, SearchTextDto searchTextDto,
+                 String startDate, String endDate) throws Exception;
 
     // run job
     public ResponseDTO addJobToQueue(Long jobId, Long appUserId) throws Exception;

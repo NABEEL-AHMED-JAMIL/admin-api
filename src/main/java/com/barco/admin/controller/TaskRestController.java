@@ -93,7 +93,7 @@ public class TaskRestController {
         ResponseDTO response = null;
         try {
             logger.info("Request for get findAllTaskByAppUserIdInPagination " + appUserId);
-            response = this.taskService.findAllTaskByAppUserIdInPagination(PagingUtil.ApplyPaging(page, limit, order, columnName),
+            response = this.taskService.findAllTaskByAppUserIdInPagination(PagingUtil.ApplyPaging(page, limit),
                     appUserId ,searchTextDto, startDate, endDate);
         } catch (Exception ex) {
             logger.info("Error during findAllTaskByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));

@@ -5,10 +5,7 @@ import com.barco.common.manager.aws.impl.AwsBucketManagerImpl;
 import com.barco.common.manager.aws.properties.AwsProperties;
 import com.barco.common.manager.ftp.FtpFileExchange;
 import com.barco.common.utility.ApplicationConstants;
-import com.barco.model.dto.PaggingDto;
-import com.barco.model.dto.SearchTextDto;
-import com.barco.model.dto.StorageDetailDto;
-import com.barco.model.dto.ResponseDTO;
+import com.barco.model.dto.*;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.KeyType;
 import com.barco.model.enums.Status;
@@ -19,15 +16,22 @@ import com.barco.model.pojo.ext.FTP;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.StorageDetailRepository;
 import com.barco.model.repository.TaskRepository;
+import com.barco.model.service.QueryServices;
+import com.barco.model.util.PagingUtil;
+import com.barco.model.util.QueryUtil;
 import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -47,6 +51,10 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
     private StorageDetailRepository storageDetailRepository;
     @Autowired
     private TaskRepository taskRepository;
+    @Autowired
+    private QueryServices queryServices;
+    @Autowired
+    private QueryUtil queryUtil;
 
 
     @Override // all json detail should be encrypted store
@@ -120,9 +128,40 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
     }
 
     @Override
-    public ResponseDTO findAllStorageByAppUserIdInPagination(PaggingDto pagging, Long adminId, SearchTextDto searchTextDto,
-         String startDate, String endDate) throws Exception {
-        return null;
+    public ResponseDTO findAllStorageByAppUserIdInPagination(Pageable paging, Long adminId, SearchTextDto searchTextDto,
+         String startDate, String endDate, String order, String columnName) throws Exception {
+        ResponseDTO responseDTO = null;
+        Object countQueryResult = this.queryServices.executeQueryForSingleResult(
+            this.queryUtil.adminStoreList(true, adminId, startDate, endDate, searchTextDto));
+        if (countQueryResult != null) {
+            /* fetch Record According to Pagination*/
+            List<Object[]> result = this.queryServices.executeQuery(
+                this.queryUtil.adminStoreList(false, adminId, startDate, endDate, searchTextDto), paging);
+            if (result != null && result.size() > 0) {
+                List<StorageDetailDto> storageDetailDtos = new ArrayList<>();
+                for(Object[] obj : result) {
+                    StorageDetailDto storageDetailDto = new StorageDetailDto();
+                    if (obj[0] != null) {
+                        storageDetailDto.setId(new Long(obj[0].toString()));
+                    }
+                    if (obj[1] != null) {
+                        storageDetailDto.setCreatedAt(Timestamp.valueOf(obj[1].toString()));
+                    }
+                    if (obj[2] != null) {
+                        storageDetailDto.setStorageKeyName(obj[2].toString());;
+                    }
+                    if (obj[3] != null) {
+                        storageDetailDto.setKeyType(KeyType.getKeyType(new Long(obj[3].toString())));
+                    }
+                    storageDetailDtos.add(storageDetailDto);
+                }
+                responseDTO = new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, storageDetailDtos,
+                        PagingUtil.convertEntityToPagingDTO(Long.valueOf(countQueryResult.toString()),paging));
+            }
+        } else {
+            responseDTO = new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, new ArrayList<>());
+        }
+        return responseDTO;
     }
 
     @Override
@@ -137,7 +176,7 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
                     responseDTO = new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.AWS_DETAIL_MISSING);
                 } else {
                     awsBucketManager.amazonS3(new AwsProperties(aws.getRegion(), aws.getAccessKey(), aws.getSecretKey()));
-                    for(Map.Entry<String, String> bucket:aws.getBucketName().entrySet()) {
+                    for (Map.Entry<String, String> bucket:aws.getBucketName().entrySet()) {
                         if (!awsBucketManager.isBucketExist(bucket.getKey())) {
                             responseDTO = new ResponseDTO(ApiCode.INVALID_REQUEST,
                                     String.format(ApplicationConstants.AWS_BUCKET_NOT_EXIST, bucket.getKey()));

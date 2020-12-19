@@ -9,13 +9,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class AdminTimeUtil {
 
-    public static void main(String args[]) {
-        String[] ids = TimeZone.getAvailableIDs();
-        for (String id : ids) {
-            System.out.println(displayTimeZone(TimeZone.getTimeZone(id)));
-        }
-    }
-
     private static String displayTimeZone(TimeZone tz) {
         long hours = TimeUnit.MILLISECONDS.toHours(tz.getRawOffset());
         long minutes = TimeUnit.MILLISECONDS.toMinutes(tz.getRawOffset()) - TimeUnit.HOURS.toMinutes(hours);
@@ -28,5 +21,12 @@ public class AdminTimeUtil {
             result = String.format("(GMT%d:%02d) %s", hours, minutes, tz.getID());
         }
         return result;
+    }
+
+    public static void main(String args[]) {
+        String[] ids = TimeZone.getAvailableIDs();
+        for (String id : ids) {
+            System.out.println(displayTimeZone(TimeZone.getTimeZone(id)));
+        }
     }
 }
