@@ -40,8 +40,8 @@ public class StorageDetailRestController {
     // admin and super admin can access this method
     @ResponseStatus(HttpStatus.OK) // create storage
     @RequestMapping(value = "/createStorage", method = RequestMethod.POST)
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADIM') or hasAuthority('ROLE_ADMIN')")
-    @ApiOperation(value = "Create StorageDetail", notes = "StorageDetail is use in the task.")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ADMIN')")
+    @ApiOperation(value = "Create StorageDetail", notes = "Endpoint help to create store.")
     public ResponseDTO createStorage(@RequestBody StorageDetailDto storageDetailDto) {
         ResponseDTO response = null;
         try {
@@ -57,8 +57,8 @@ public class StorageDetailRestController {
     // admin and super admin can access this method
     @ResponseStatus(HttpStatus.OK) // update storage
     @RequestMapping(value = "/updateStorage", method = RequestMethod.POST)
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADIM') or hasAuthority('ROLE_ADMIN')")
-    @ApiOperation(value = "Update StorageDetail", notes = "StorageDetail is use in the task.")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ADMIN')")
+    @ApiOperation(value = "Update StorageDetail", notes = "Endpoint help to update the store.")
     public ResponseDTO updateStorage(@RequestBody StorageDetailDto storageDetailDto) {
         ResponseDTO response = null;
         try {
@@ -71,12 +71,12 @@ public class StorageDetailRestController {
         return response;
     }
 
-    // get storage by storage detail by id and app user
-    // access by all role
+    // get storage by storage detail by id and app user access by all role
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/getStorageById", method = RequestMethod.GET)
-    @ApiOperation(value = "Get StorageDetail", notes = "Get StorageDetail by Id.")
-    public ResponseDTO getStorageById(@RequestParam(name = "id") Long storageId,@RequestParam(name = "appUserId") Long appUserId) {
+    @ApiOperation(value = "Get StorageDetail", notes = "Endpoint help to get storage detail by Id.")
+    public ResponseDTO getStorageById(@RequestParam(name = "id") Long storageId,
+        @RequestParam(name = "appUserId") Long appUserId) {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for getStorageById StorageDetail Id %d And App User Id %d ", storageId, appUserId));
@@ -93,8 +93,8 @@ public class StorageDetailRestController {
     // Inactive(0), Active(1), Delete(3),
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/changeStatus", method = RequestMethod.POST)
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADIM') or hasAuthority('ROLE_ADMIN')")
-    @ApiOperation(value = "Change Status", notes = "Change Status by id for StorageDetail.")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ADMIN')")
+    @ApiOperation(value = "Change Status", notes = "Endpoint help to change status by id for storage detail.")
     public ResponseDTO statusChange(@RequestParam(name = "id") Long storageId, @RequestParam(name = "appUserId") Long appUserId,
         @RequestParam(name = "status") Status storageStatus) {
         ResponseDTO response = null;
@@ -111,7 +111,7 @@ public class StorageDetailRestController {
     // fetch all task
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/findAllStorageByAppUserIdInPagination", method = RequestMethod.POST)
-    @ApiOperation(value = "Fetch All StorageDetail", notes = "Fetch all key with app user id in pagination.")
+    @ApiOperation(value = "Fetch All StorageDetail", notes = "Endpoint help to fetch all storage detail with app user id in pagination.")
     public ResponseDTO findAllStorageByAppUserIdInPagination(@RequestParam(value = "appUserId", required = false) Long appUserId,
          @RequestParam(value = "page", required = false) Long page, @RequestParam(value = "limit", required = false) Long limit,
          @RequestParam(value = "startDate", required = false) String startDate, @RequestParam(value = "endDate", required = false) String endDate,
@@ -120,8 +120,8 @@ public class StorageDetailRestController {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for findAllStorageByAppUserIdInPagination with AppUserId %d ", appUserId));
-            response = this.storageDetailService.findAllStorageByAppUserIdInPagination(PagingUtil.ApplyPagingAndSorting(order, columnName, page, limit),
-                    appUserId ,searchTextDto, startDate, endDate, order, columnName);
+            response = this.storageDetailService.findAllStorageByAppUserIdInPagination(PagingUtil.ApplyPagingAndSorting(order,
+                    columnName, page, limit), appUserId ,searchTextDto, startDate, endDate, order, columnName);
         } catch (Exception ex) {
             logger.info("Error during findAllStorageByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
@@ -131,7 +131,7 @@ public class StorageDetailRestController {
 
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/pingStorage", method = RequestMethod.POST)
-    @ApiOperation(value = "Ping Storage", notes = "Ping Storage help to check the connection.")
+    @ApiOperation(value = "Ping Storage", notes = "Endpoint help to ping storage help to check the connection.")
     public ResponseDTO pingStorage(@RequestBody StorageDetailDto storageDetailDto) {
         ResponseDTO response = null;
         try {

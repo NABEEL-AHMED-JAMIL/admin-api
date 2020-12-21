@@ -35,11 +35,11 @@ public class TaskRestController {
     // create task
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/createTask", method = RequestMethod.POST)
-    @ApiOperation(value = "Create Task", notes = "Task is use in the job.")
+    @ApiOperation(value = "Create Task", notes = "Endpoint help to create task.")
     public @ResponseBody ResponseDTO createTask(@RequestBody TaskDto taskDto) {
         ResponseDTO response = null;
         try {
-            logger.info("Request for createTask  " + taskDto);
+            logger.info("Request for createTask " + taskDto);
             response = this.taskService.createTask(taskDto);
         } catch (Exception ex) {
             logger.info("Error during createTask " + ExceptionUtil.getRootCause(ex));
@@ -51,8 +51,9 @@ public class TaskRestController {
     // get task by id
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/getTaskById", method = RequestMethod.GET)
-    @ApiOperation(value = "Get Task", notes = "Get Task by Id.")
-    public @ResponseBody ResponseDTO getTaskById(@RequestParam(name = "id") Long taskId, @RequestParam(name = "appUserId") Long appUserId) {
+    @ApiOperation(value = "Get Task", notes = "Endpoint help to get Task by Id.")
+    public @ResponseBody ResponseDTO getTaskById(@RequestParam(name = "id") Long taskId,
+        @RequestParam(name = "appUserId") Long appUserId) {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for getTaskById Task Id %d And App User Id %d ", taskId, appUserId));
@@ -64,13 +65,12 @@ public class TaskRestController {
         return response;
     }
 
-    // change status task by id
-    // Inactive(0), Active(1), Delete(3),
+    // change status task by id (Inactive(0), Active(1), Delete(3))
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/changeStatus", method = RequestMethod.POST)
-    @ApiOperation(value = "Change Status", notes = "Change Status by id for job.")
-    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long taskId, @RequestParam(name = "appUserId") Long appUserId,
-        @RequestParam(name = "status") Status taskStatus) {
+    @ApiOperation(value = "Change Status", notes = "Endpoint help to change status by id for task.")
+    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long taskId,
+        @RequestParam(name = "appUserId") Long appUserId, @RequestParam(name = "status") Status taskStatus) {
         ResponseDTO response = null;
         try {
             logger.info(String.format("Request for statusChange Task Id %d And Status %s ", taskId, taskStatus));
@@ -84,7 +84,7 @@ public class TaskRestController {
 
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/findAllTaskByAppUserIdInPagination", method = RequestMethod.POST)
-    @ApiOperation(value = "Get Users Api", notes = "Get list of all Users Linked to current user.")
+    @ApiOperation(value = "Get Users", notes = "Endpoint help to fetch all task with app user id in pagination.")
     public @ResponseBody ResponseDTO findAllTaskByAppUserIdInPagination(@RequestParam(value = "appUserId", required = false) Long appUserId,
        @RequestParam(value = "page", required = false) Long page, @RequestParam(value = "limit", required = false) Long limit,
        @RequestParam(value = "startDate", required = false) String startDate, @RequestParam(value = "endDate", required = false) String endDate,
@@ -93,8 +93,8 @@ public class TaskRestController {
         ResponseDTO response = null;
         try {
             logger.info("Request for get findAllTaskByAppUserIdInPagination " + appUserId);
-            response = this.taskService.findAllTaskByAppUserIdInPagination(PagingUtil.ApplyPaging(page, limit),
-                    appUserId ,searchTextDto, startDate, endDate);
+            response = this.taskService.findAllTaskByAppUserIdInPagination(PagingUtil.ApplyPagingAndSorting(order, columnName, page, limit),
+            appUserId ,searchTextDto, startDate, endDate, order, columnName);
         } catch (Exception ex) {
             logger.info("Error during findAllTaskByAppUserIdInPagination " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);

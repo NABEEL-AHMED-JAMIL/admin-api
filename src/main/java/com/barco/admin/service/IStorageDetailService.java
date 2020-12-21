@@ -5,7 +5,6 @@ import com.barco.model.dto.StorageDetailDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.enums.Status;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * @author Nabeel Ahmed

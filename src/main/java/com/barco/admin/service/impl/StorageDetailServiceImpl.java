@@ -5,6 +5,7 @@ import com.barco.common.manager.aws.impl.AwsBucketManagerImpl;
 import com.barco.common.manager.aws.properties.AwsProperties;
 import com.barco.common.manager.ftp.FtpFileExchange;
 import com.barco.common.utility.ApplicationConstants;
+import com.barco.common.utility.BarcoUtil;
 import com.barco.model.dto.*;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.KeyType;
@@ -62,11 +63,11 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
         if (StringUtils.isEmpty(storageDetailDto.getStorageKeyName())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_NAME_MISSING);
         } else if (this.storageDetailRepository.findByStorageKeyNameAndCreatedByAndStatus(storageDetailDto.getStorageKeyName(),
-                storageDetailDto.getCreatedBy(), Status.Active).isPresent() && storageDetailDto.getId() == null) {
+                storageDetailDto.getCreatedBy(), Status.Active).isPresent() && BarcoUtil.isNull(storageDetailDto.getId())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_ALREADY_EXIST);
-        } else if (storageDetailDto.getKeyType() == null) {
+        } else if (BarcoUtil.isNull(storageDetailDto.getKeyType())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_TYPE_MISSING);
-        } else if (storageDetailDto.getStorageDetailJson() == null) {
+        } else if (BarcoUtil.isNull(storageDetailDto.getStorageDetailJson())) {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_JSON_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByIdAndStatus(storageDetailDto.getCreatedBy(), Status.Active);
@@ -74,9 +75,9 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
             return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.USER_NOT_FOUND);
         }
         StorageDetail storageDetail = null;
-        if (storageDetailDto.getId() != null) {
+        if (!BarcoUtil.isNull(storageDetailDto.getId())) {
             storageDetail = this.storageDetailRepository.findByIdAndStatus(storageDetailDto.getId(), Status.Active);
-            if (storageDetail != null) {
+            if (!BarcoUtil.isNull(storageDetail)) {
                 storageDetail.setModifiedBy(appUser.get().getId());
             } else {
                 return new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.STORAGE_KEY_NOT_FOUND);
@@ -96,7 +97,7 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
 
     @Override
     public ResponseDTO getStorageById(Long storageId, Long appUserId) throws Exception {
-        Optional<StorageDetail> storage = this.storageDetailRepository.findByIdAndCreatedByAndStatus(storageId, appUserId, Status.Active);
+        Optional<StorageDetail> storage = this.storageDetailRepository.findByIdAndCreatedByAndStatus(storageId,appUserId, Status.Active);
         if (storage.isPresent()) {
             return new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG, storage.get());
         }
@@ -133,25 +134,28 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
         ResponseDTO responseDTO = null;
         Object countQueryResult = this.queryServices.executeQueryForSingleResult(
             this.queryUtil.adminStoreList(true, adminId, startDate, endDate, searchTextDto));
-        if (countQueryResult != null) {
+        if (!BarcoUtil.isNull(countQueryResult)) {
             /* fetch Record According to Pagination*/
             List<Object[]> result = this.queryServices.executeQuery(
                 this.queryUtil.adminStoreList(false, adminId, startDate, endDate, searchTextDto), paging);
-            if (result != null && result.size() > 0) {
+            if (!BarcoUtil.isNull(result) && result.size() > 0) {
                 List<StorageDetailDto> storageDetailDtos = new ArrayList<>();
                 for(Object[] obj : result) {
                     StorageDetailDto storageDetailDto = new StorageDetailDto();
-                    if (obj[0] != null) {
+                    if (!BarcoUtil.isNull(obj[0])) {
                         storageDetailDto.setId(new Long(obj[0].toString()));
                     }
-                    if (obj[1] != null) {
+                    if (!BarcoUtil.isNull(obj[1])) {
                         storageDetailDto.setCreatedAt(Timestamp.valueOf(obj[1].toString()));
                     }
-                    if (obj[2] != null) {
+                    if (!BarcoUtil.isNull(obj[2])) {
                         storageDetailDto.setStorageKeyName(obj[2].toString());;
                     }
-                    if (obj[3] != null) {
+                    if (!BarcoUtil.isNull(obj[3])) {
                         storageDetailDto.setKeyType(KeyType.getKeyType(new Long(obj[3].toString())));
+                    }
+                    if (!BarcoUtil.isNull(obj[4])) {
+                        storageDetailDto.setStatus(Status.getStatus(new Long(obj[4].toString())));
                     }
                     storageDetailDtos.add(storageDetailDto);
                 }
@@ -171,7 +175,7 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
         if (storageDetailDto.getKeyType().equals(KeyType.AWS)) {
             AWS aws = gson.fromJson(storageDetailDto.getStorageDetailJson().toString(), AWS.class);
             AwsBucketManagerImpl awsBucketManager = new AwsBucketManagerImpl();
-            if (aws != null) {
+            if (!BarcoUtil.isNull(aws)) {
                 if (StringUtils.isEmpty(aws.getAccessKey()) || StringUtils.isEmpty(aws.getSecretKey()) || StringUtils.isEmpty(aws.getRegion())) {
                     responseDTO = new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.AWS_DETAIL_MISSING);
                 } else {
@@ -183,7 +187,7 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
                             break;
                         }
                     }
-                    if (responseDTO == null) {
+                    if (BarcoUtil.isNull(responseDTO)) {
                         responseDTO = new ResponseDTO(ApiCode.SUCCESS, ApplicationConstants.SUCCESS_MSG);
                     }
                 }
@@ -200,6 +204,8 @@ public class StorageDetailServiceImpl implements IStorageDetailService {
             } else {
                 responseDTO = new ResponseDTO(ApiCode.INVALID_REQUEST, ApplicationConstants.FTP_NOT_CONNECT);
             }
+        } else if (storageDetailDto.getKeyType().equals(KeyType.DB)) {
+
         }
         return responseDTO;
     }

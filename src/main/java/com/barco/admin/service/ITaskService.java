@@ -17,10 +17,10 @@ public interface ITaskService {
     // get task by id
     public ResponseDTO getTaskById(Long taskId, Long createBy) throws Exception;
 
-    // change status task by id
-    // Inactive(0), Active(1), Delete(3),
+    // change status task by id (Inactive(0), Active(1), Delete(3))
     public ResponseDTO statusChange(Long taskId, Long appUserId, Status taskStatus) throws Exception;
 
     public ResponseDTO findAllTaskByAppUserIdInPagination(Pageable paging, Long adminId, SearchTextDto searchTextDto,
-                                                          String startDate, String endDate) throws Exception;
+          String startDate, String endDate,String order, String columnName) throws Exception;
+
 }
