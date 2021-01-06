@@ -1,6 +1,6 @@
 package com.barco.admin.controller;
 
-import com.barco.admin.service.impl.TaskServiceImpl;
+import com.barco.admin.service.ITaskService;
 import com.barco.common.utility.ApplicationConstants;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.ResponseDTO;
@@ -30,7 +30,7 @@ public class TaskRestController {
     private Logger logger = LoggerFactory.getLogger(TaskRestController.class);
 
     @Autowired
-    private TaskServiceImpl taskService;
+    private ITaskService taskService;
 
     // create task
     @ResponseStatus(HttpStatus.OK)

@@ -1,6 +1,6 @@
 package com.barco.admin.controller;
 
-import com.barco.admin.service.impl.StorageDetailServiceImpl;
+import com.barco.admin.service.IStorageDetailService;
 import com.barco.model.dto.SearchTextDto;
 import com.barco.model.dto.StorageDetailDto;
 import com.barco.model.util.PagingUtil;
@@ -35,7 +35,7 @@ public class StorageDetailRestController {
     private Logger logger = LoggerFactory.getLogger(StorageDetailRestController.class);
 
     @Autowired
-    private StorageDetailServiceImpl storageDetailService;
+    private IStorageDetailService storageDetailService;
 
     // admin and super admin can access this method
     @ResponseStatus(HttpStatus.OK) // create storage

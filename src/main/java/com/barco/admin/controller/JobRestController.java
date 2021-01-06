@@ -1,6 +1,6 @@
 package com.barco.admin.controller;
 
-import com.barco.admin.service.impl.JobServiceImpl;
+import com.barco.admin.service.IJobService;
 import com.barco.common.utility.ApplicationConstants;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.JobDto;
@@ -30,7 +30,7 @@ public class JobRestController {
     private Logger logger = LoggerFactory.getLogger(JobRestController.class);
 
     @Autowired
-    private JobServiceImpl jobService;
+    private IJobService jobService;
 
     // create job
     @ResponseStatus(HttpStatus.OK)

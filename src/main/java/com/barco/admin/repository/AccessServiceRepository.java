@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -24,4 +25,15 @@ public interface AccessServiceRepository extends JpaRepository<AccessService, Lo
             "inner join app_user on app_user.id = user_access_service.user_id\n" +
             "where user_access_service.user_id = 1000 and user_access_service.service_id = 1000", nativeQuery = true)
     Optional<AccessService> findByIdAndUserAccess(Long id, Long accessId);
+
+    List<AccessService> findAllByStatus(Status status);
+
+    Set<AccessService> findAllByIdInAndStatus(List<Long> ids, Status status);
+
+    Optional<AccessService> findByIdAndCreatedByAndStatusNot(Long id, Long appUserId, Status status);
+
+    @Transactional
+    // query give the total count for access-service with the active user
+    @Query(value = "select count(*) as service_access_count from user_access_service where service_id = ?;", nativeQuery = true)
+    Long countByAccessServiced(Long id);
 }
