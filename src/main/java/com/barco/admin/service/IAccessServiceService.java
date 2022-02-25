@@ -9,10 +9,10 @@ import com.barco.model.enums.Status;
  */
 public interface IAccessServiceService {
 
-    ResponseDTO createAccessService(AccessServiceDto accessService) throws Exception;
+    public ResponseDTO createAccessService(AccessServiceDto accessService);
 
-    // change status task by id (Inactive(0), Active(1), Delete(3))
-    ResponseDTO statusChange(Long accessServiceId, Long appUserId, Status accessServiceStatus) throws Exception;
+    public ResponseDTO statusChange(Long accessServiceId, Long appUserId, Status status);
 
-    ResponseDTO getAllAccessService() throws Exception;
+    public ResponseDTO getAllAccessService();
+
 }

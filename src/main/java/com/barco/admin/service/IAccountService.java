@@ -3,5 +3,5 @@ package com.barco.admin.service;
 /**
  * @author Nabeel Ahmed
  */
-public interface INotificationService {
+public interface IAccountService {
 }

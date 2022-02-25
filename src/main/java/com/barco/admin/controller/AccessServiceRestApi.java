@@ -7,12 +7,9 @@ import com.barco.model.dto.AccessServiceDto;
 import com.barco.model.dto.ResponseDTO;
 import com.barco.model.enums.ApiCode;
 import com.barco.model.enums.Status;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +19,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @CrossOrigin(origins = "*")
-@RequestMapping(value = "/access-service.json", produces = MediaType.APPLICATION_JSON_VALUE)
-@Api(tags = { "Barco-Access-Service := Barco-Access-Service EndPoint" })
+@RequestMapping(value = "/accessService.json", produces = MediaType.APPLICATION_JSON_VALUE)
 public class AccessServiceRestApi {
 
     public Logger logger = LogManager.getLogger(AccessServiceRestApi.class);
@@ -31,11 +27,8 @@ public class AccessServiceRestApi {
     @Autowired
     private IAccessServiceService accessServiceService;
 
-    // createAccessService q.a pass (11-21-2020)
-    @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
-    @RequestMapping(value = "/createAccessService", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Create Access Service.", notes = "Endpoint help create the access service for user.")
+    @RequestMapping(value = "/createAccessService", method = RequestMethod.POST)
     public ResponseDTO createAccessService(@RequestBody AccessServiceDto accessService) {
         ResponseDTO response = null;
         try {
@@ -48,18 +41,14 @@ public class AccessServiceRestApi {
         return response;
     }
 
-    // change status task by id (Inactive(0), Active(1), Delete(3))
-    // statusChange service q.a pass (11-21-2020)
-    @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
     @RequestMapping(value = "/changeStatus", method = RequestMethod.POST)
-    @ApiOperation(value = "Change Status", notes = "Endpoint help to change status by id for task.")
-    public @ResponseBody ResponseDTO statusChange(@RequestParam(name = "id") Long accessServiceId,
-        @RequestParam(name = "appUserId") Long appUserId, @RequestParam(name = "status") Status accessServiceStatus) {
+    public ResponseDTO statusChange(@RequestParam(name = "accessServiceId") Long accessServiceId,
+        @RequestParam(name = "appUserId") Long appUserId, @RequestParam(name = "status") Status status) {
         ResponseDTO response = null;
         try {
-            logger.info(String.format("Request for statusChange Access Service Id %d And Status %s ", accessServiceId, accessServiceStatus));
-            response = this.accessServiceService.statusChange(accessServiceId, appUserId, accessServiceStatus);
+            logger.info(String.format("Request for statusChange Access Service Id %d And Status %s ", accessServiceId, status));
+            response = this.accessServiceService.statusChange(accessServiceId, appUserId, status);
         } catch (Exception ex) {
             logger.info("Error during statusChange " + ExceptionUtil.getRootCause(ex));
             response = new ResponseDTO (ApiCode.HTTP_500, ApplicationConstants.UNEXPECTED_ERROR);
@@ -67,11 +56,8 @@ public class AccessServiceRestApi {
         return response;
     }
 
-    // get all access service q.a pass (11-21-2020)
-    @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
-    @RequestMapping(value = "/getAllAccessService", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Get All AccessService", notes = "Endpoint help retrieve all access service")
+    @RequestMapping(value = "/getAllAccessService", method = RequestMethod.GET)
     public ResponseDTO getAllAccessService() {
         ResponseDTO response = null;
         try {
@@ -84,4 +70,5 @@ public class AccessServiceRestApi {
         }
         return response;
     }
+
 }
