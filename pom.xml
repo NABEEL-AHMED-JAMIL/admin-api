@@ -25,12 +25,6 @@
 			<organization>Barco</organization>
 			<organizationUrl>https://github.com/NABEEL-AHMED-JAMIL</organizationUrl>
 		</developer>
-		<developer>
-			<name>Adeel Asghar</name>
-			<email>adeelasghar2011@gmail.com</email>
-			<organization>Barco</organization>
-			<organizationUrl>https://github.com/adeelasghar</organizationUrl>
-		</developer>
 	</developers>
 
 	<groupId>com.barco</groupId>
@@ -40,7 +34,7 @@
 	<description>Admin-Api For Barco</description>
 
 	<properties>
-		<java.version>1.8</java.version>
+		<java.version>11</java.version>
 		<postgresql.version>42.2.5</postgresql.version>
 		<disruptor.version>3.4.2</disruptor.version>
 		<jpa.version>2.1.8.RELEASE</jpa.version>
@@ -55,16 +49,21 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>com.barco</groupId>
 			<artifactId>model</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>31.05.1355.2023</version>
 			<classifier>barco-model</classifier>
 		</dependency>
 
 		<dependency>
 			<groupId>com.barco</groupId>
 			<artifactId>common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>31.05.1355.2023</version>
 			<classifier>barco-common-util</classifier>
 		</dependency>
 
@@ -79,14 +78,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<dependency>
-			<groupId>com.barco</groupId>
-			<artifactId>common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+        </dependency>
 
-	</dependencies>
+    </dependencies>
 
 	<build>
 		<plugins>
