@@ -2,7 +2,7 @@ package com.barco.admin.config;
 
 import com.barco.admin.filter.AuthTokenFilter;
 import com.barco.common.security.AuthEntryPointJwt;
-import com.barco.model.service.UserDetailsServiceImpl;
+import com.barco.model.security.UserDetailsServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,24 +52,35 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return super.authenticationManagerBean();
     }
 
+    /**
+     * method use to encode the password
+     * */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * method ue to configure the http
+     * @param http
+     * */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable().exceptionHandling().authenticationEntryPoint(this.unauthorizedHandler).and()
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-        .authorizeRequests().antMatchers("/auth.json/**", "/ws/**", "/user/**").permitAll()
+        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
+        .antMatchers("/auth.json/**", "/ws/**", "/user/**").permitAll()
         .antMatchers("/api/v2/**").permitAll().anyRequest().authenticated();
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
+    /**
+     * method use to configure teh white list url
+     * @param web
+     * */
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui",
-        "/swagger-resources/**", "/configuration/security", "/swagger-ui.html", "/webjars/**");
+        web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**",
+            "/configuration/security", "/swagger-ui.html", "/webjars/**");
     }
 
 }

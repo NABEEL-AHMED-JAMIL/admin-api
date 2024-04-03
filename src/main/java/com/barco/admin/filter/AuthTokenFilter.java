@@ -1,7 +1,7 @@
 package com.barco.admin.filter;
 
 import com.barco.common.security.JwtUtils;
-import com.barco.model.service.UserDetailsServiceImpl;
+import com.barco.model.security.UserDetailsServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

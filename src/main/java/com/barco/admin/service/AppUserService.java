@@ -1,33 +1,39 @@
 package com.barco.admin.service;
 
-import com.barco.model.dto.request.*;
+import com.barco.model.dto.request.AppUserRequest;
+import com.barco.model.dto.request.FileUploadRequest;
 import com.barco.model.dto.response.AppResponse;
+import java.io.ByteArrayOutputStream;
 
 /**
  * @author Nabeel Ahmed
  */
-public interface AppUserService {
+public interface AppUserService extends RootService {
 
-    public AppResponse getAppUserProfile(String username) throws Exception;
+    public AppResponse fetchAppUserProfile(String username) throws Exception;
 
-    public AppResponse updateAppUserProfile(UpdateUserProfileRequest requestPayload) throws Exception;
+    public AppResponse updateAppUserProfile(AppUserRequest payload) throws Exception;
 
-    public AppResponse updateAppUserPassword(UpdateUserProfileRequest requestPayload) throws Exception;
+    public AppResponse updateAppUserPassword(AppUserRequest payload) throws Exception;
 
-    public AppResponse closeAppUserAccount(UpdateUserProfileRequest requestPayload) throws Exception;
+    public AppResponse updateAppUserCompany(AppUserRequest payload) throws Exception;
 
-    public AppResponse getSubAppUserAccount(String username) throws Exception;
+    public AppResponse closeAppUserAccount(AppUserRequest payload) throws Exception;
 
-    public AppResponse signInAppUser(LoginRequest requestPayload) throws Exception;
+    public AppResponse fetchAllAppUserAccount(AppUserRequest payload) throws Exception;
 
-    public AppResponse signupAppUser(SignupRequest requestPayload) throws Exception;
+    public AppResponse addAppUserAccount(AppUserRequest payload) throws Exception;
 
-    public AppResponse forgotPassword(ForgotPasswordRequest requestPayload) throws Exception;
+    public AppResponse editAppUserAccount(AppUserRequest payload) throws Exception;
 
-    public AppResponse resetPassword(PasswordResetRequest requestPayload) throws Exception;
+    public AppResponse viewAppUserLinkGroupAccount(AppUserRequest payload) throws Exception;
 
-    public AppResponse authClamByRefreshToken(TokenRefreshRequest requestPayload)  throws Exception;
+    public AppResponse linkOrUnlinkAppUserWithGroup(AppUserRequest payload) throws Exception;
 
-    public AppResponse logoutAppUser(TokenRefreshRequest requestPayload)  throws Exception;
+    public ByteArrayOutputStream downloadAppUserTemplateFile() throws Exception;
+
+    public ByteArrayOutputStream downloadAppUsers(AppUserRequest payload) throws Exception;
+
+    public AppResponse uploadAppUsers(FileUploadRequest payload) throws Exception;
 
 }

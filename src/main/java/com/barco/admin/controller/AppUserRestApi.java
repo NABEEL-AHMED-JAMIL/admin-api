@@ -1,27 +1,40 @@
 package com.barco.admin.controller;
 
 import com.barco.admin.service.AppUserService;
+import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
+import com.barco.common.utility.excel.ExcelUtil;
+import com.barco.model.dto.request.AppUserRequest;
+import com.barco.model.dto.request.FileUploadRequest;
+import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.request.SignupRequest;
-import com.barco.model.dto.request.UpdateUserProfileRequest;
 import com.barco.model.dto.response.AppResponse;
-import com.barco.model.service.UserDetailsImpl;
-import com.barco.model.util.ProcessUtil;
+import com.barco.model.security.UserSessionDetail;
+import com.barco.model.util.MessageUtil;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 /**
  * Api use to perform crud operation
  * @author Nabeel Ahmed
  */
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins="*")
 @RequestMapping(value = "/appUser.json")
 public class AppUserRestApi {
 
@@ -31,134 +44,232 @@ public class AppUserRestApi {
     private AppUserService appUserService;
 
     /**
-     * api-status :- done
-     * @apiName :- tokenVerify
-     * @apiNote :- Api use to check token is valid or not
-     * its empty call to check the token expiry
-     * @return ResponseEntity<?>
-     * */
-    @RequestMapping(value = "/tokenVerify", method = RequestMethod.GET)
-    public ResponseEntity<?> tokenVerify() {
-        try {
-            return new ResponseEntity<>(new AppResponse(ProcessUtil.SUCCESS, "Token valid."), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while tokenVerify ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(ProcessUtil.ERROR,
-                "Token not valid."), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * api-status :- done
-     * @apiName :- signupAppUser
-     * @apiNote :- Api use to create the appUser as admin access
-     * @param requestPayload
-     * @return ResponseEntity<?>
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
-    @RequestMapping(value = "/signupAppUser", method = RequestMethod.POST)
-    public ResponseEntity<?> signupAppUser(@RequestBody SignupRequest requestPayload) {
-        try {
-            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            requestPayload.addAccessUserDetail(userDetails.getUsername());
-            return new ResponseEntity<>(this.appUserService.signupAppUser(requestPayload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while signupAppUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(ProcessUtil.ERROR,
-                    "Some internal error occurred contact with support."), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * api-status :- done
-     * @apiName :- getAppUserProfile
-     * @apiNote :- Api use to sign In the appUser
+     * @apiName :- findAppUserProfile
+     * @apiNote :- Api use to
      * @param username
      * @return ResponseEntity<?>
      * */
-    @RequestMapping(value = "/getAppUserProfile", method = RequestMethod.GET)
-    public ResponseEntity<?> getAppUserProfile(@RequestParam String username) {
+    @RequestMapping(value = "/fetchAppUserProfile", method = RequestMethod.GET)
+    public ResponseEntity<?> fetchAppUserProfile(@RequestParam String username) {
         try {
-            return new ResponseEntity<>(this.appUserService.getAppUserProfile(username), HttpStatus.OK);
+            return new ResponseEntity<>(this.appUserService.fetchAppUserProfile(username), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while getAppUserProfile ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(ProcessUtil.ERROR,
-                "Some internal error occurred contact with support."), HttpStatus.BAD_REQUEST);
+            logger.error("An error occurred while fetchAppUserProfile ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * api-status :- done
      * @apiName :- updateAppUserProfile
-     * @apiNote :- Api use to update profile
-     * @param requestPayload
+     * @apiNote :- Api use to
+     * @param payload
      * @return ResponseEntity<?>
      * */
     @RequestMapping(value = "/updateAppUserProfile", method = RequestMethod.POST)
-    public ResponseEntity<?> updateAppUserProfile(@RequestBody UpdateUserProfileRequest requestPayload) {
+    public ResponseEntity<?> updateAppUserProfile(@RequestBody AppUserRequest payload) {
         try {
-            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            requestPayload.addAccessUserDetail(userDetails.getUsername());
-            return new ResponseEntity<>(this.appUserService.updateAppUserProfile(requestPayload), HttpStatus.OK);
+            return new ResponseEntity<>(this.appUserService.updateAppUserProfile(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateAppUserProfile ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(ProcessUtil.ERROR,
-                "Some internal error occurred contact with support."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * api-status :- done
      * @apiName :- updateAppUserPassword
-     * @apiNote :- Api use to update profile password
-     * @param requestPayload
+     * @apiNote :- Api use to
+     * @param payload
      * @return ResponseEntity<?>
      * */
     @RequestMapping(value = "/updateAppUserPassword", method = RequestMethod.POST)
-    public ResponseEntity<?> updateAppUserPassword(@RequestBody UpdateUserProfileRequest requestPayload) {
+    public ResponseEntity<?> updateAppUserPassword(@RequestBody AppUserRequest payload) {
         try {
-            return new ResponseEntity<>(this.appUserService.updateAppUserPassword(requestPayload), HttpStatus.OK);
+            return new ResponseEntity<>(this.appUserService.updateAppUserPassword(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateAppUserPassword ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(ProcessUtil.ERROR,
-                "Some internal error occurred contact with support."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * api-status :- done
+     * @apiName :- findAppUserProfile
+     * @apiNote :- Api use to
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @RequestMapping(value = "/updateAppUserCompany", method = RequestMethod.POST)
+    public ResponseEntity<?> updateAppUserCompany(@RequestBody AppUserRequest payload) {
+        try {
+            return new ResponseEntity<>(this.appUserService.updateAppUserCompany(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while updateAppUserCompany ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- closeAppUserAccount
-     * @apiNote :- Api use to update profile password
-     * @param requestPayload
+     * @apiNote :- Api use to
+     * @param payload
      * @return ResponseEntity<?>
      * */
     @RequestMapping(value = "/closeAppUserAccount", method = RequestMethod.POST)
-    public ResponseEntity<?> closeAppUserAccount(@RequestBody UpdateUserProfileRequest requestPayload) {
+    public ResponseEntity<?> closeAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
-            return new ResponseEntity<>(this.appUserService.closeAppUserAccount(requestPayload), HttpStatus.OK);
+            return new ResponseEntity<>(this.appUserService.closeAppUserAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while closeAppUserAccount ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(ProcessUtil.ERROR,
-                "Some internal error occurred contact with support."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * api-status :- done
-     * @apiName :- getSubAppUserAccount
-     * @apiNote :- Api use to get sub appUser account
-     * @param username
+     * @apiName :- closeAppUserAccount
+     * @apiNote :- Api use to
+     * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
-    @RequestMapping(value = "/getSubAppUserAccount", method = RequestMethod.GET)
-    public ResponseEntity<?> getSubAppUserAccount(@RequestParam String username) {
+    @RequestMapping(value = "/fetchAllAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
-            return new ResponseEntity<>(this.appUserService.getSubAppUserAccount(username), HttpStatus.OK);
+            return new ResponseEntity<>(this.appUserService.fetchAllAppUserAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while getSubAppUserAccount ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(ProcessUtil.ERROR,
-                "Some internal error occurred contact with support."), HttpStatus.BAD_REQUEST);
+            logger.error("An error occurred while fetchAllAppUserAccount ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- addAppUserAccount
+     * @apiNote :- Api use to add app user account
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/addAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> addAppUserAccount(@RequestBody AppUserRequest payload) {
+        try {
+            // user session detail
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            return new ResponseEntity<>(this.appUserService.addAppUserAccount(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while addAppUserAccount ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- editAppUserAccount
+     * @apiNote :- Api use to edit the app user account
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/editAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> editAppUserAccount(@RequestBody AppUserRequest payload) {
+        try {
+            // user session detail
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            return new ResponseEntity<>(this.appUserService.editAppUserAccount(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while editAppUserAccount ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- viewAppUserLinkGroupAccount
+     * @apiNote :- Api use to view the link group
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/viewAppUserLinkGroupAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> viewAppUserLinkGroupAccount(@RequestBody AppUserRequest payload) {
+        try {
+            return new ResponseEntity<>(this.appUserService.viewAppUserLinkGroupAccount(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while viewAppUserLinkGroupAccount ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- linkOrUnlinkAppUserWithGroup
+     * @apiNote :- Api use to view the link group
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/linkOrUnlinkAppUserWithGroup", method = RequestMethod.POST)
+    public ResponseEntity<?> linkOrUnlinkAppUserWithGroup(@RequestBody AppUserRequest payload) {
+        try {
+            return new ResponseEntity<>(this.appUserService.linkOrUnlinkAppUserWithGroup(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while linkOrUnlinkAppUserWithGroup ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- downloadAppUserTemplateFile
+     * Api use to download group template
+     * @return ResponseEntity<?> downloadAppUserTemplateFile
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/downloadAppUserTemplateFile", method = RequestMethod.GET)
+    public ResponseEntity<?> downloadAppUserTemplateFile() {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
+            String fileName = "BatchAppUserDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
+            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
+            return ResponseEntity.ok().headers(headers).body(this.appUserService.downloadAppUserTemplateFile().toByteArray());
+        } catch (Exception ex) {
+            logger.error("An error occurred while downloadAppUserTemplateFile xlsx file", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- downloadAppUser
+     * Api use to download the app user
+     * @return ResponseEntity<?> downloadGroup
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/downloadAppUsers", method = RequestMethod.POST)
+    public ResponseEntity<?> downloadAppUsers(@RequestBody AppUserRequest payload) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
+            String fileName = "BatchAppUserDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
+            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
+            return ResponseEntity.ok().headers(headers).body(this.appUserService.downloadAppUsers(payload).toByteArray());
+        } catch (Exception ex) {
+            logger.error("An error occurred while downloadAppUsers ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- uploadAppUsers
+     * Api use to upload the appUser
+     * @return ResponseEntity<?> uploadAppUsers
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/uploadAppUsers", method = RequestMethod.POST)
+    public ResponseEntity<?> uploadAppUsers(FileUploadRequest payload) {
+        try {
+            if (!BarcoUtil.isNull(payload.getFile())) {
+                return new ResponseEntity<>(this.appUserService.uploadAppUsers(payload), HttpStatus.OK);
+            }
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.DATA_NOT_FOUND), HttpStatus.BAD_REQUEST);
+        } catch (Exception ex) {
+            logger.error("An error occurred while uploadAppUsers ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
 

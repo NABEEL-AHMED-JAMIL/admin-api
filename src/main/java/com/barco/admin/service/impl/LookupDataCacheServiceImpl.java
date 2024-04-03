@@ -1,10 +1,18 @@
 package com.barco.admin.service.impl;
 
-import com.amazonaws.util.IOUtils;
+import com.barco.common.utility.validation.LookupDataValidation;
+import com.barco.model.util.lookup.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import javax.annotation.PostConstruct;
 import com.barco.admin.service.LookupDataCacheService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.excel.BulkExcel;
-import com.barco.common.utility.validation.LookupValidation;
+import com.barco.common.utility.excel.SheetFiled;
 import com.barco.model.dto.request.FileUploadRequest;
 import com.barco.model.dto.request.LookupDataRequest;
 import com.barco.model.dto.response.AppResponse;
@@ -13,49 +21,40 @@ import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.LookupData;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.LookupDataRepository;
-import com.barco.model.util.ProcessUtil;
-import com.barco.model.util.lookuputil.APPLICATION_STATUS;
-import com.barco.model.util.lookuputil.GLookup;
+import com.barco.model.util.MessageUtil;
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
 import com.google.gson.Gson;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import javax.annotation.PostConstruct;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.util.*;
+import java.io.*;
+import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * @author Nabeel Ahmed
  */
 @Service
-@Transactional
 public class LookupDataCacheServiceImpl implements LookupDataCacheService {
 
     private Logger logger = LoggerFactory.getLogger(LookupDataCacheServiceImpl.class);
 
-    private final String PARENT_LOOKUP_DATA = "parentLookupData";
-    private final String SUB_LOOKUP_DATA = "subLookupData";
+    @Value("${storage.efsFileDire}")
+    private String tempStoreDirectory;
+
+    private final String PARENT_LOOKUP_DATA = "PARENT_LOOKUP_DATA";
+    private final String SUB_LOOKUP_DATA = "SUB_LOOKUP_DATA";
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock writeLock = readWriteLock.writeLock();
-
-    @Value("${storage.efsFileDire}")
-    private String tempStoreDirectory;
+    private Map<String, LookupDataResponse> lookupCacheMap = new HashMap<>();
+    private Map<String, SheetFiled> sheetFiledMap = new HashMap<>();
 
     @Autowired
     private BulkExcel bulkExcel;
@@ -64,7 +63,7 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
     @Autowired
     private LookupDataRepository lookupDataRepository;
 
-    private Map<String, LookupDataResponse> lookupCacheMap = new HashMap<>();
+    public LookupDataCacheServiceImpl() {}
 
     /**
      * Method use to cache the data
@@ -75,14 +74,12 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         try {
             logger.info("****************Cache-Lookup-Start***************************");
             this.lookupCacheMap = new HashMap<>();
-            this.lookupDataRepository.findByParentLookupIsNull()
-            .forEach(lookupData -> {
+            Iterable<LookupData> lookupDataList = this.lookupDataRepository.findByParentLookupIsNull();
+            lookupDataList.forEach(lookupData -> {
                 if (this.lookupCacheMap.containsKey(lookupData.getLookupType())) {
-                    this.lookupCacheMap.put(lookupData.getLookupType(),
-                        this.getLookupDataDetail(lookupData));
+                    this.lookupCacheMap.put(lookupData.getLookupType(), getLookupDataDetail(lookupData));
                 } else {
-                    this.lookupCacheMap.put(lookupData.getLookupType(),
-                        this.getLookupDataDetail(lookupData));
+                    this.lookupCacheMap.put(lookupData.getLookupType(), getLookupDataDetail(lookupData));
                 }
             });
             logger.info("***************Cache-Lookup-End********************************");
@@ -92,16 +89,18 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
     }
 
     /**
-     * Method use to add new filed into cache
+     * Method use to cache the data
      * */
-    private void addNewLookupData(LookupData lookupData) {
-        this.writeLock.lock();
-        try {
-            this.lookupCacheMap.put(lookupData.getLookupType(),
-                this.getLookupDataDetail(lookupData));
-        } finally {
-            this.writeLock.unlock();
-        }
+    @PostConstruct
+    private void initSheetData() throws IOException {
+        logger.info("****************Sheet-Start***************************");
+        ClassLoader cl = this.getClass().getClassLoader();
+        InputStream inputStream = cl.getResourceAsStream(this.bulkExcel.SHEET_COL);
+        String result = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
+        Type type = new TypeToken<Map<String, SheetFiled>>(){}.getType();
+        this.sheetFiledMap = new Gson().fromJson(result, type);
+        logger.info("Sheet Map " + this.sheetFiledMap.size());
+        logger.info("****************Sheet-End***************************");
     }
 
     /**
@@ -113,312 +112,259 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         logger.info("Request fetchCacheData ");
         Map<String, LookupDataResponse> lookupDataResponseMap = new HashMap<>();
         for (Map.Entry<String, LookupDataResponse> item: this.lookupCacheMap.entrySet()) {
-            if (item.getValue().getUiLookup()) {
+            if (item.getValue().getUiLookup().equals(UI_LOOKUP.TRUE.getLookupCode())) {
                 lookupDataResponseMap.put(item.getKey(), item.getValue());
             }
         }
-        return new AppResponse(ProcessUtil.SUCCESS, "LookupData.", lookupDataResponseMap);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, lookupDataResponseMap);
     }
 
     /**
-     * Method use to add new filed into db & cache
-     * @param requestPayload
-     * @return AppResponse
+     * @apiName :- addLookupData
+     * Api use to add the lookup data
+     * @param payload
+     * @return ResponseEntity<?> addLookupData
      * */
+
     @Override
-    public AppResponse addLookupData(LookupDataRequest requestPayload) throws Exception {
-        logger.info("Request addLookupData :- " + requestPayload);
-        if (BarcoUtil.isNull(requestPayload.getLookupCode())) {
-            return new AppResponse(ProcessUtil.ERROR, "LookupCode missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getLookupValue())) {
-            return new AppResponse(ProcessUtil.ERROR, "LookupValue missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getLookupType())) {
-            return new AppResponse(ProcessUtil.ERROR, "LookupType missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getDescription())) {
-            return new AppResponse(ProcessUtil.ERROR, "Description missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getAccessUserDetail().getUsername())) {
-            return new AppResponse(ProcessUtil.ERROR, "Username missing.");
-        } else if (this.lookupDataRepository.findByLookupType(requestPayload.getLookupType()).isPresent()) {
-            return new AppResponse(ProcessUtil.ERROR, "LookupType already exist.");
+    public AppResponse addLookupData(LookupDataRequest payload) throws Exception {
+        logger.info("Request addLookupData :- " + payload);
+        if (BarcoUtil.isNull(payload.getLookupCode())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.LOOKUP_DATA_LOOKUP_CODE_MISSING);
+        } else if (BarcoUtil.isNull(payload.getLookupValue())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.LOOKUP_DATA_LOOKUP_VALUE_MISSING);
+        } else if (BarcoUtil.isNull(payload.getLookupType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.LOOKUP_DATA_LOOKUP_TYPE_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.LOOKUP_DATA_DESCRIPTION_MISSING);
+        } else if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getUiLookup())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.LOOKUP_DATA_UI_LOOKUP_MISSING);
+        } else if (this.lookupDataRepository.findByLookupType(payload.getLookupType()).isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.LOOKUP_DATA_ALREADY_EXIST);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            requestPayload.getAccessUserDetail().getUsername(), APPLICATION_STATUS.ACTIVE.getLookupCode());
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
-            return new AppResponse(ProcessUtil.ERROR, "AppUser not found.");
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         LookupData lookupData = new LookupData();
-        lookupData.setLookupValue(requestPayload.getLookupValue());
-        lookupData.setLookupCode(requestPayload.getLookupCode());
-        lookupData.setLookupType(requestPayload.getLookupType());
-        lookupData.setUiLookup(requestPayload.isUiLookup());
-        if (!BarcoUtil.isNull(requestPayload.getDescription())) {
-            lookupData.setDescription(requestPayload.getDescription());
-        }
-        if (!BarcoUtil.isNull(requestPayload.getParentLookupId())) {
-            Optional<LookupData> parentLookupData = this.lookupDataRepository.findById(
-                requestPayload.getParentLookupId());
+        lookupData.setLookupType(payload.getLookupType());
+        lookupData.setLookupCode(payload.getLookupCode());
+        lookupData.setLookupValue(payload.getLookupValue());
+        lookupData.setUiLookup(UI_LOOKUP.getByLookupCode(payload.getUiLookup()));
+        lookupData.setDescription(payload.getDescription());
+        lookupData.setStatus(APPLICATION_STATUS.ACTIVE);
+        lookupData.setCreatedBy(appUser.get());
+        lookupData.setUpdatedBy(appUser.get());
+        if (!BarcoUtil.isNull(payload.getParentLookupId())) {
+            Optional<LookupData> parentLookupData = this.lookupDataRepository.findById(payload.getParentLookupId());
             if (parentLookupData.isPresent()) {
                 lookupData.setParentLookup(parentLookupData.get());
             }
         }
-        lookupData.setAppUser(appUser.get());
         this.addNewLookupData(this.lookupDataRepository.save(lookupData));
-        return new AppResponse(ProcessUtil.SUCCESS, String.format(
-            "LookupData save with %d.",lookupData.getLookupId()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, lookupData.getId()), payload);
     }
-
 
     /**
      * Method use to update new filed into db & cache
-     * @param requestPayload
+     * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse updateLookupData(LookupDataRequest requestPayload) throws Exception {
-        logger.info("Request updateLookupData :- " + requestPayload);
-        if (BarcoUtil.isNull(requestPayload.getLookupId())) {
-            return new AppResponse(ProcessUtil.ERROR, "LookupId missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getLookupCode())) {
-            return new AppResponse(ProcessUtil.ERROR, "LookupCode missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getLookupValue())) {
-            return new AppResponse(ProcessUtil.ERROR, "LookupValue missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getLookupType())) {
-            return new AppResponse(ProcessUtil.ERROR, "LookupType missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getDescription())) {
-            return new AppResponse(ProcessUtil.ERROR, "Description missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getAccessUserDetail().getUsername())) {
-            return new AppResponse(ProcessUtil.ERROR, "Username missing.");
+    public AppResponse updateLookupData(LookupDataRequest payload) throws Exception {
+        logger.info("Request updateLookupData :- " + payload);
+        if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
+        } else if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            requestPayload.getAccessUserDetail().getUsername(), APPLICATION_STATUS.ACTIVE.getLookupCode());
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
-            return new AppResponse(ProcessUtil.ERROR, "AppUser not found.");
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Optional<LookupData> lookupData = this.lookupDataRepository.findById(requestPayload.getLookupId());
-        if (lookupData.isPresent()) {
-            lookupData.get().setLookupValue(requestPayload.getLookupValue());
-            lookupData.get().setLookupCode(requestPayload.getLookupCode());
-            lookupData.get().setLookupType(requestPayload.getLookupType());
-            lookupData.get().setUiLookup(requestPayload.isUiLookup());
-            if (!BarcoUtil.isNull(requestPayload.getDescription())) {
-                lookupData.get().setDescription(requestPayload.getDescription());
-            }
-            this.lookupDataRepository.save(lookupData.get());
-            this.initialize(); // its update and add new also
-            return new AppResponse(ProcessUtil.SUCCESS, String.format(
-                "LookupData update with %d.", requestPayload.getLookupId()));
+        Optional<LookupData> lookupData = this.lookupDataRepository.findById(payload.getId());
+        if (!lookupData.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.DATA_NOT_FOUND, payload.getId()));
         }
-        return new AppResponse(ProcessUtil.ERROR, String.format(
-            "LookupData not found with %d.", requestPayload.getLookupId()));
+        if (!BarcoUtil.isNull(payload.getLookupCode())) {
+            lookupData.get().setLookupCode(payload.getLookupCode());
+        }
+        if (!BarcoUtil.isNull(payload.getLookupType())) {
+            lookupData.get().setLookupType(payload.getLookupType());
+        }
+        if (!BarcoUtil.isNull(payload.getLookupValue())) {
+            lookupData.get().setLookupValue(payload.getLookupValue());
+        }
+        if (!BarcoUtil.isNull(payload.getUiLookup())) {
+            lookupData.get().setUiLookup(UI_LOOKUP.getByLookupCode(payload.getUiLookup()));
+        }
+        if (!BarcoUtil.isNull(payload.getDescription())) {
+            lookupData.get().setDescription(payload.getDescription());
+        }
+        lookupData.get().setUpdatedBy(appUser.get());
+        this.lookupDataRepository.save(lookupData.get());
+        this.initialize();
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()), payload);
     }
 
     /**
-     * Method use to fetch sub lookup by ParentId
-     * @param requestPayload
+     * Method use to fetch all lookup
+     * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchSubLookupByParentId(LookupDataRequest requestPayload) throws Exception {
-        logger.info("Request fetchSubLookupByParentId :- " + requestPayload);
-        if (BarcoUtil.isNull(requestPayload.getParentLookupId())) {
-            return new AppResponse(ProcessUtil.ERROR, "ParentLookupId missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getAccessUserDetail().getUsername())) {
-            return new AppResponse(ProcessUtil.ERROR, "Username missing.");
+    public AppResponse findAllParentLookupByUsername(LookupDataRequest payload) throws Exception {
+        logger.info("Request findAllParentLookupByUsername ");
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            requestPayload.getAccessUserDetail().getUsername(), APPLICATION_STATUS.ACTIVE.getLookupCode());
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
-            return new AppResponse(ProcessUtil.ERROR, "AppUser not found.");
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Map<String, Object> appSettingDetail = new HashMap<>();
-        List<LookupDataResponse> lookupDataResponses = new ArrayList<>();
-        Optional<LookupData> parentLookup = this.lookupDataRepository.findByParentLookupAndAppUserUsername(
-            requestPayload.getParentLookupId(), requestPayload.getAccessUserDetail().getUsername());
-        if (!parentLookup.isPresent()) {
-            return new AppResponse(ProcessUtil.ERROR, String.format(
-                "LookupData not found with %s.", requestPayload));
+        Iterator<LookupData> lookupDataIterator = this.lookupDataRepository.findAllParentLookupByUsername(appUser.get().getUsername()).iterator();
+        List<LookupDataResponse> lookupDataResponse = new ArrayList<>();
+        while (lookupDataIterator.hasNext()) {
+            lookupDataResponse.add(this.fillLookupDataResponse(lookupDataIterator.next(), new LookupDataResponse(), true));
         }
-        LookupDataResponse parentLookupDataResponse = new LookupDataResponse();
-        this.fillLookupDateDto(parentLookup.get(), parentLookupDataResponse);
-        appSettingDetail.put(PARENT_LOOKUP_DATA, parentLookupDataResponse);
-        if (!BarcoUtil.isNull(parentLookup.get().getLookupChildren())) {
-            for (LookupData lookup: parentLookup.get().getLookupChildren()) {
-                LookupDataResponse childLookupDataResponse = new LookupDataResponse();
-                this.fillLookupDateDto(lookup, childLookupDataResponse);
-                lookupDataResponses.add(childLookupDataResponse);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, lookupDataResponse);
+    }
+
+    /**
+     * Method use to fetch sub lookup by Parent lookup uuid
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchSubLookupDataByParentLookupDataId(LookupDataRequest payload) throws Exception {
+        logger.info("Request fetchSubLookupDataByParentLookupDataId :- " + payload);
+        if (BarcoUtil.isNull(payload.getParentLookupId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
+        } else if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        Optional<LookupData> parentLookupData= this.lookupDataRepository.findOneByParentLookupIdAndUsername(
+            payload.getParentLookupId(), appUser.get().getUsername());
+        if (parentLookupData.isPresent()) {
+            Map<String, Object> appSettingDetail = new HashMap<>();
+            appSettingDetail.put(PARENT_LOOKUP_DATA, this.fillLookupDataResponse(parentLookupData.get(), new LookupDataResponse(), true));
+            if (!BarcoUtil.isNull(parentLookupData.get().getLookupChildren())) {
+                List<LookupDataResponse> lookupDataResponses = new ArrayList<>();
+                for (LookupData childLookupData: parentLookupData.get().getLookupChildren()) {
+                    lookupDataResponses.add(this.fillLookupDataResponse(childLookupData, new LookupDataResponse(), true));
+                }
+                appSettingDetail.put(SUB_LOOKUP_DATA, lookupDataResponses);
             }
+            return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, appSettingDetail);
         }
-        appSettingDetail.put(SUB_LOOKUP_DATA, lookupDataResponses);
-        return new AppResponse(ProcessUtil.SUCCESS,
-            "Data fetch successfully.", appSettingDetail);
+        return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.DATA_NOT_FOUND, payload.getParentLookupId()));
     }
 
     /**
      * Method use to fetch lookup by lookup type
-     * @param requestPayload
+     * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchLookupByLookupType(LookupDataRequest requestPayload) throws Exception {
-        logger.info("Request fetchLookupByLookupType :- " + requestPayload);
-        if (BarcoUtil.isNull(requestPayload.getLookupType())) {
-            return new AppResponse(ProcessUtil.ERROR, "LookupType missing.");
-        }
-        if (requestPayload.isValidate()) {
-            if (BarcoUtil.isNull(requestPayload.getAccessUserDetail().getUsername())) {
-                return new AppResponse(ProcessUtil.ERROR, "Username missing.");
-            } else if (!this.appUserRepository.findByUsernameAndStatus(requestPayload.getAccessUserDetail()
-                .getUsername(), APPLICATION_STATUS.ACTIVE.getLookupCode()).isPresent()) {
-                return new AppResponse(ProcessUtil.ERROR, "AppUser not found.");
-            }
+    public AppResponse fetchLookupDataByLookupType(LookupDataRequest payload) throws Exception {
+        logger.info("Request fetchLookupDataByLookupType :- " + payload);
+        if (BarcoUtil.isNull(payload.getLookupType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.LOOKUP_DATA_LOOKUP_TYPE_MISSING);
         }
         Map<String, Object> appSettingDetail = new HashMap<>();
-        List<LookupDataResponse> lookupDataResponses = new ArrayList<>();
-        Optional<LookupData> parentLookup = this.lookupDataRepository.findByLookupType(requestPayload.getLookupType());
-        if (!parentLookup.isPresent()) {
-            return new AppResponse(ProcessUtil.ERROR, String.format(
-                "LookupData not found with %s.", requestPayload));
+        Optional<LookupData> parentLookupData = this.lookupDataRepository.findByLookupType(payload.getLookupType());
+        if (!parentLookupData.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.DATA_NOT_FOUND, payload.getLookupType()));
         }
-        LookupDataResponse parentLookupDataResponse = new LookupDataResponse();
-        this.fillLookupDateDto(parentLookup.get(), parentLookupDataResponse);
-        appSettingDetail.put(PARENT_LOOKUP_DATA, parentLookupDataResponse);
-        if (!BarcoUtil.isNull(parentLookup.get().getLookupChildren())) {
-            for (LookupData lookup: parentLookup.get().getLookupChildren()) {
-                LookupDataResponse childLookupDataResponse = new LookupDataResponse();
-                this.fillLookupDateDto(lookup, childLookupDataResponse);
-                lookupDataResponses.add(childLookupDataResponse);
+        appSettingDetail.put(PARENT_LOOKUP_DATA, this.fillLookupDataResponse(parentLookupData.get(), new LookupDataResponse(), false));
+        if (!BarcoUtil.isNull(parentLookupData.get().getLookupChildren())) {
+            List<LookupDataResponse> lookupDataResponses = new ArrayList<>();
+            for (LookupData childLookupData: parentLookupData.get().getLookupChildren()) {
+                lookupDataResponses.add(this.fillLookupDataResponse(childLookupData, new LookupDataResponse(), false));
             }
+            appSettingDetail.put(SUB_LOOKUP_DATA, lookupDataResponses);
         }
-        appSettingDetail.put(SUB_LOOKUP_DATA, lookupDataResponses);
-        return new AppResponse(ProcessUtil.SUCCESS, "Data fetch successfully.", appSettingDetail);
-    }
-
-    /**
-     * Method use to fetch all lookup by user id
-     * @param requestPayload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse fetchAllLookup(LookupDataRequest requestPayload) throws Exception {
-        logger.info("Request fetchAllLookup :- " + requestPayload);
-        if (BarcoUtil.isNull(requestPayload.getAccessUserDetail().getUsername())) {
-            return new AppResponse(ProcessUtil.ERROR, "AppUser username missing.");
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            requestPayload.getAccessUserDetail().getUsername(), APPLICATION_STATUS.ACTIVE.getLookupCode());
-        if (!appUser.isPresent()) {
-            return new AppResponse(ProcessUtil.ERROR, "AppUser not found.");
-        }
-        List<LookupData> lookupDataList = this.lookupDataRepository.fetchAllLookup(appUser.get().getUsername());
-        List<LookupDataResponse> lookupDataResponses = new ArrayList<>();
-        if (!lookupDataList.isEmpty()) {
-            for (LookupData lookup: lookupDataList) {
-                LookupDataResponse lookupDataResponse = new LookupDataResponse();
-                this.fillLookupDateDto(lookup, lookupDataResponse);
-                lookupDataResponses.add(lookupDataResponse);
-            }
-        }
-        return new AppResponse(ProcessUtil.SUCCESS, "Data fetch successfully.", lookupDataResponses);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, appSettingDetail);
     }
 
     /**
      * Method use to delete the lookUp by lookup id and username
-     * @param requestPayload
+     * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse deleteLookupData(LookupDataRequest requestPayload) throws Exception {
-        logger.info("Request deleteLookupData :- " + requestPayload);
-        if (BarcoUtil.isNull(requestPayload.getLookupId())) {
-            return new AppResponse(ProcessUtil.ERROR, "LookupData id missing.");
-        } else if (BarcoUtil.isNull(requestPayload.getAccessUserDetail().getUsername())) {
-            return new AppResponse(ProcessUtil.ERROR, "AppUser username missing.");
+    public AppResponse deleteLookupData(LookupDataRequest payload) throws Exception {
+        logger.info("Request deleteLookupData :- " + payload);
+        if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            requestPayload.getAccessUserDetail().getUsername(), APPLICATION_STATUS.ACTIVE.getLookupCode());
-        if (!appUser.isPresent()) {
-            return new AppResponse(ProcessUtil.ERROR, "AppUser not found.");
-        }
-        this.lookupDataRepository.deleteById(requestPayload.getLookupId());
-        this.initialize(); // its update and add new also
-        return new AppResponse(ProcessUtil.SUCCESS, String.format(
-            "LookupData delete with %d.", requestPayload.getLookupId()));
+        this.lookupDataRepository.deleteById(payload.getId());
+        this.initialize();
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()));
     }
 
     /**
-     * Method use to download lookup template
+     * Method use to download the template
      * @return ByteArrayOutputStream
      * */
     @Override
-    public ByteArrayOutputStream downloadLookupTemplateFile() throws Exception {
-        String basePath = this.tempStoreDirectory + File.separator;
-        ClassLoader cl = this.getClass().getClassLoader();
-        InputStream inputStream = cl.getResourceAsStream(this.bulkExcel.BATCH);
-        String fileUploadPath = basePath + System.currentTimeMillis() + this.bulkExcel.XLSX_EXTENSION;
-        FileOutputStream fileOut = new FileOutputStream(fileUploadPath);
-        IOUtils.copy(inputStream, fileOut);
-        // after copy the stream into file close
-        if (inputStream != null) {
-            inputStream.close();
-        }
-        // 2nd insert data to newly copied file. So that template couldn't be changed.
-        XSSFWorkbook workbook = new XSSFWorkbook(new File(fileUploadPath));
-        this.bulkExcel.setWb(workbook);
-        XSSFSheet sheet = workbook.getSheet(this.bulkExcel.LOOKUP);
-        this.bulkExcel.setSheet(sheet);
-        this.bulkExcel.fillBulkHeader(0, this.bulkExcel.LOOKUP_HEADER_FILED_BATCH_FILE);
-        // Priority
-        workbook.write(fileOut);
-        fileOut.close();
-        workbook.close();
-        // read the file
-        File file = new File(fileUploadPath);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        byteArrayOutputStream.write(Files.readAllBytes(file.toPath()));
-        file.delete();
-        return byteArrayOutputStream;
+    public ByteArrayOutputStream downloadLookupDataTemplateFile() throws Exception {
+        logger.info("Request downloadLookupDataTemplateFile");
+        return downloadTemplateFile(this.tempStoreDirectory,
+            this.bulkExcel, this.sheetFiledMap.get(this.bulkExcel.LOOKUP));
     }
 
     /**
-     * Method use to download lookup file with content
-     * @param requestPayload
+     * Method use to download the data
+     * @param payload
      * @return ByteArrayOutputStream
      * */
     @Override
-    public ByteArrayOutputStream downloadLookup(LookupDataRequest requestPayload) throws Exception {
-        logger.info("Request deleteLookupData :- " + requestPayload);
-        if (BarcoUtil.isNull(requestPayload.getAccessUserDetail().getUsername())) {
-            throw new Exception("AppUser username missing");
+    public ByteArrayOutputStream downloadLookupData(LookupDataRequest payload) throws Exception {
+        logger.info("Request downloadLookupData :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            throw new Exception(MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            requestPayload.getAccessUserDetail().getUsername(), APPLICATION_STATUS.ACTIVE.getLookupCode());
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
-            throw new Exception("AppUser not found");
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         }
         List<LookupData> lookupDataList;
-        if (BarcoUtil.isNull(requestPayload.getParentLookupId())) {
-            lookupDataList = this.lookupDataRepository.fetchAllLookup(appUser.get().getUsername());
+        if (BarcoUtil.isNull(payload.getParentLookupId())) {
+            lookupDataList = this.lookupDataRepository.findAllParentLookupByUsername(appUser.get().getUsername());
         } else {
-            Optional<LookupData> parentLookup = this.lookupDataRepository.findByParentLookupAndAppUserUsername(
-                requestPayload.getParentLookupId(), appUser.get().getUsername());
-            if (!parentLookup.isPresent()) {
-                throw new Exception("ParentLookup not found");
+            Optional<LookupData> parentLookupData = this.lookupDataRepository.findOneByParentLookupIdAndUsername(
+                payload.getParentLookupId(), appUser.get().getUsername());
+            if (!parentLookupData.isPresent()) {
+                throw new Exception(MessageUtil.PARENT_LOOKUP_NOT_FOUND);
             }
-            lookupDataList = parentLookup.get().getLookupChildren().stream().collect(Collectors.toList());
+            lookupDataList = parentLookupData.get().getLookupChildren().stream().collect(Collectors.toList());
         }
+        SheetFiled sheetFiled = this.sheetFiledMap.get(this.bulkExcel.LOOKUP);
         XSSFWorkbook workbook = new XSSFWorkbook();
         this.bulkExcel.setWb(workbook);
-        XSSFSheet xssfSheet = workbook.createSheet(this.bulkExcel.LOOKUP);
+        XSSFSheet xssfSheet = workbook.createSheet(sheetFiled.getSheetName());
         this.bulkExcel.setSheet(xssfSheet);
         AtomicInteger rowCount = new AtomicInteger();
-        this.bulkExcel.fillBulkHeader(rowCount.get(), this.bulkExcel.LOOKUP_HEADER_FILED_BATCH_FILE);
+        this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
         lookupDataList.forEach(sourceJob -> {
             rowCount.getAndIncrement();
             List<String> dataCellValue = new ArrayList<>();
-            dataCellValue.add(!BarcoUtil.isNull(sourceJob.getLookupCode()) ?
-                String.valueOf(sourceJob.getLookupCode()) : "");
             dataCellValue.add(sourceJob.getLookupType());
+            dataCellValue.add(!BarcoUtil.isNull(sourceJob.getLookupCode()) ? String.valueOf(sourceJob.getLookupCode()) : "");
             dataCellValue.add(sourceJob.getLookupValue());
+            dataCellValue.add(sourceJob.getUiLookup().getLookupType());
             dataCellValue.add(sourceJob.getDescription());
             this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
         });
@@ -428,96 +374,102 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
     }
 
     /**
-     * Method use to upload lookup file with content
-     * @param fileObject
+     * Method use to download the data
+     * @param payload
      * @return ByteArrayOutputStream
      * */
     @Override
-    public AppResponse uploadLookup(FileUploadRequest fileObject) throws Exception {
+    public AppResponse uploadLookupData(FileUploadRequest payload) throws Exception {
         logger.info("Request for bulk uploading file!");
-        LookupDataRequest lookupDataRequest = new Gson().fromJson((String)
-            fileObject.getData(), LookupDataRequest.class);
-        if (BarcoUtil.isNull(fileObject.getAccessUserDetail().getUsername())) {
-            return new AppResponse(ProcessUtil.ERROR, "AppUser username missing.");
+        LookupDataRequest lookupDataRequest = new Gson().fromJson((String) payload.getData(), LookupDataRequest.class);
+        if (BarcoUtil.isNull(lookupDataRequest.getSessionUser().getUsername())) {
+            throw new Exception(MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            fileObject.getAccessUserDetail().getUsername(), APPLICATION_STATUS.ACTIVE.getLookupCode());
+            lookupDataRequest.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
-            return new AppResponse(ProcessUtil.ERROR, "AppUser not found.");
-        } else if (!fileObject.getFile().getContentType().equalsIgnoreCase(this.bulkExcel.SHEET_NAME)) {
-            logger.info("File Type " + fileObject.getFile().getContentType());
-            return new AppResponse(ProcessUtil.ERROR, "You can upload only .xlsx extension file.");
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
+        } else if (!payload.getFile().getContentType().equalsIgnoreCase(this.bulkExcel.SHEET_TYPE)) {
+            logger.info("File Type " + payload.getFile().getContentType());
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.XLSX_FILE_ONLY);
         }
         // fill the stream with file into work-book
-        LookupDataResponse lookupDataResponse = this.getParentLookupById(ProcessUtil.UPLOAD_LIMIT);
-        XSSFWorkbook workbook = new XSSFWorkbook(fileObject.getFile().getInputStream());
+        LookupDataResponse uploadLimit = this.getParentLookupDataByParentLookupType(LookupUtil.UPLOAD_LIMIT);
+        XSSFWorkbook workbook = new XSSFWorkbook(payload.getFile().getInputStream());
         if (BarcoUtil.isNull(workbook) || workbook.getNumberOfSheets() == 0) {
-            return new AppResponse(ProcessUtil.ERROR,  "You uploaded empty file.");
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.YOU_UPLOAD_EMPTY_FILE);
         }
-        XSSFSheet sheet = workbook.getSheet(this.bulkExcel.LOOKUP);
+        SheetFiled sheetFiled = this.sheetFiledMap.get(this.bulkExcel.LOOKUP);
+        XSSFSheet sheet = workbook.getSheet(sheetFiled.getSheetName());
         if (BarcoUtil.isNull(sheet)) {
-            return new AppResponse(ProcessUtil.ERROR, "Sheet not found with (LookupTemplate)");
+            return new AppResponse(BarcoUtil.ERROR, String.format(
+                 MessageUtil.SHEET_NOT_FOUND, sheetFiled.getSheetName()));
         } else if (sheet.getLastRowNum() < 1) {
-            return new AppResponse(ProcessUtil.ERROR,  "You can't upload empty file.");
-        } else if (sheet.getLastRowNum() > Long.valueOf(lookupDataResponse.getLookupValue())) {
-            return new AppResponse(ProcessUtil.ERROR, String.format("File support %s rows at a time.",
-                lookupDataResponse.getLookupValue()));
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.YOU_CANT_UPLOAD_EMPTY_FILE);
+        } else if (sheet.getLastRowNum() > Long.valueOf(uploadLimit.getLookupValue())) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(
+                 MessageUtil.FILE_SUPPORT_ROW_AT_TIME, uploadLimit.getLookupValue()));
         }
-        List<LookupValidation> lookupValidations = new ArrayList<>();
+        List<LookupDataValidation> lookupDataValidations = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         Iterator<Row> rows = sheet.iterator();
         while (rows.hasNext()) {
             Row currentRow = rows.next();
             if (currentRow.getRowNum() == 0) {
-                for (int i=0; i < this.bulkExcel.LOOKUP_HEADER_FILED_BATCH_FILE.length; i++) {
-                    if (!currentRow.getCell(i).getStringCellValue().equals(this.bulkExcel.LOOKUP_HEADER_FILED_BATCH_FILE[i])) {
-                        return new AppResponse(ProcessUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1) + " " +
-                            this.bulkExcel.LOOKUP_HEADER_FILED_BATCH_FILE[i] + " heading missing.");
+                for (int i=0; i < sheetFiled.getColTitle().size(); i++) {
+                    if (!currentRow.getCell(i).getStringCellValue().equals(sheetFiled.getColTitle().get(i))) {
+                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1)
+                            + " " + sheetFiled.getColTitle().get(i) + " heading missing.");
                     }
                 }
             } else if (currentRow.getRowNum() > 0) {
-                LookupValidation lookupValidation = new LookupValidation();
-                lookupValidation.setRowCounter(currentRow.getRowNum()+1);
-                for (int i=0; i < this.bulkExcel.LOOKUP_HEADER_FILED_BATCH_FILE.length; i++) {
+                LookupDataValidation lookupDataValidation = new LookupDataValidation();
+                lookupDataValidation.setRowCounter(currentRow.getRowNum()+1);
+                for (int i=0; i < sheetFiled.getColTitle().size(); i++) {
                     int index = 0;
                     if (i == index) {
-                        lookupValidation.setLookupCode(this.bulkExcel.getCellDetail(currentRow, i));
+                        lookupDataValidation.setLookupType(this.bulkExcel.getCellDetail(currentRow, i));
                     } else if (i == ++index) {
-                        lookupValidation.setLookupType(this.bulkExcel.getCellDetail(currentRow, i));
+                        lookupDataValidation.setLookupCode(this.bulkExcel.getCellDetail(currentRow, i));
                     } else if (i == ++index) {
-                        lookupValidation.setLookupValue(this.bulkExcel.getCellDetail(currentRow, i));
+                        lookupDataValidation.setLookupValue(this.bulkExcel.getCellDetail(currentRow, i));
+                    }  else if (i == ++index) {
+                        lookupDataValidation.setUiLookup(this.bulkExcel.getCellDetail(currentRow, i));
                     } else if (i == ++index) {
-                        lookupValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
+                        lookupDataValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
                     }
                 }
-                lookupValidation.setParentLookupId(lookupDataRequest.getParentLookupId());
-                lookupValidation.isValidLookup();
-                Optional<LookupData> isAlreadyExistLookup = this.lookupDataRepository.findByLookupType(
-                    lookupValidation.getLookupType());
+                lookupDataValidation.setParentLookupId(lookupDataRequest.getParentLookupId());
+                lookupDataValidation.isValidLookup();
+                Optional<LookupData> isAlreadyExistLookup = this.lookupDataRepository
+                    .findByLookupType(lookupDataValidation.getLookupType());
                 if (isAlreadyExistLookup.isPresent()) {
-                    lookupValidation.setErrorMsg(String.format("LookupType %s already in use at row %s.<br>",
-                        lookupValidation.getLookupType(), lookupValidation.getRowCounter()));
+                    lookupDataValidation.setErrorMsg(String.format(MessageUtil.LOOKUP_TYPE_ALREADY_USE_AT_ROW,
+                        lookupDataValidation.getLookupType(), lookupDataValidation.getRowCounter()));
                 }
-                if (!BarcoUtil.isNull(lookupValidation.getErrorMsg())) {
-                    errors.add(lookupValidation.getErrorMsg());
+                if (!BarcoUtil.isNull(lookupDataValidation.getErrorMsg())) {
+                    errors.add(lookupDataValidation.getErrorMsg());
                     continue;
                 }
-                lookupValidations.add(lookupValidation);
+                lookupDataValidations.add(lookupDataValidation);
             }
         }
         if (errors.size() > 0) {
-            return new AppResponse(ProcessUtil.ERROR, String.format(
-                "Total %d source jobs invalid.", errors.size()), errors);
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.TOTAL_INVALID, errors.size()), errors);
         }
-        lookupValidations.forEach(lookupValidation -> {
+        lookupDataValidations.forEach(lookupDataValidation -> {
             LookupData lookupData = new LookupData();
-            if (!BarcoUtil.isNull(lookupValidation.getLookupCode())) {
-                lookupData.setLookupCode(Long.valueOf(lookupValidation.getLookupCode()));
+            if (!BarcoUtil.isNull(lookupDataValidation.getLookupCode())) {
+                lookupData.setLookupCode(Long.valueOf(lookupDataValidation.getLookupCode()));
             }
-            lookupData.setLookupValue(lookupValidation.getLookupValue());
-            lookupData.setLookupType(lookupValidation.getLookupType());
-            if (!BarcoUtil.isNull(lookupValidation.getDescription())) {
-                lookupData.setDescription(lookupValidation.getDescription());
+            if (!BarcoUtil.isNull(lookupDataValidation.getUiLookup())) {
+                GLookup gUI_LOOKUP = UI_LOOKUP.getStatusByLookupType(lookupDataValidation.getUiLookup());
+                lookupData.setUiLookup(UI_LOOKUP.getByLookupCode(Long.parseLong(gUI_LOOKUP.getLookupCode().toString())));
+            }
+            lookupData.setLookupValue(lookupDataValidation.getLookupValue());
+            lookupData.setLookupType(lookupDataValidation.getLookupType());
+            if (!BarcoUtil.isNull(lookupDataValidation.getDescription())) {
+                lookupData.setDescription(lookupDataValidation.getDescription());
             }
             if (!BarcoUtil.isNull(lookupDataRequest.getParentLookupId())) {
                 Optional<LookupData> parentLookupData = this.lookupDataRepository
@@ -526,65 +478,36 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
                     lookupData.setParentLookup(parentLookupData.get());
                 }
             }
-            lookupData.setAppUser(appUser.get());
+            lookupData.setCreatedBy(appUser.get());
+            lookupData.setUpdatedBy(appUser.get());
+            lookupData.setStatus(APPLICATION_STATUS.ACTIVE);
             this.addNewLookupData(this.lookupDataRepository.save(lookupData));
         });
-        return new AppResponse(ProcessUtil.SUCCESS, "Data save successfully.");
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, ""));
     }
 
-    private void fillLookupDateDto(LookupData lookupData, LookupDataResponse lookupDataResponse) {
-        lookupDataResponse.setLookupId(lookupData.getLookupId());
-        lookupDataResponse.setLookupCode(lookupData.getLookupCode());
-        lookupDataResponse.setLookupValue(lookupData.getLookupValue());
-        lookupDataResponse.setLookupType(lookupData.getLookupType());
-        lookupDataResponse.setDescription(lookupData.getDescription());
-        lookupDataResponse.setDateCreated(lookupData.getDateCreated());
-        lookupDataResponse.setUiLookup(lookupData.getUiLookup());
+    /**
+     * Method use to get the parent lookup by parent lookup type
+     * @param parentLookupType
+     * @return LookupDataResponse
+     * */
+    @Override
+    public LookupDataResponse getParentLookupDataByParentLookupType(String parentLookupType) {
+        return this.lookupCacheMap.get(parentLookupType);
     }
 
-    private LookupDataResponse getLookupDataDetail(LookupData lookupData) {
-        LookupDataResponse parentLookupData = new LookupDataResponse();
-        parentLookupData.setLookupId(lookupData.getLookupId());
-        parentLookupData.setLookupCode(lookupData.getLookupCode());
-        parentLookupData.setLookupType(lookupData.getLookupType());
-        parentLookupData.setLookupValue(lookupData.getLookupValue());
-        parentLookupData.setDescription(lookupData.getDescription());
-        parentLookupData.setDateCreated(lookupData.getDateCreated());
-        parentLookupData.setUiLookup(lookupData.getUiLookup());
-        if (!BarcoUtil.isNull(lookupData.getLookupChildren()) &&
-            lookupData.getLookupChildren().size() > 0) {
-            parentLookupData.setLookupChildren(lookupData.getLookupChildren()
-            .stream().map(childLookup -> {
-                LookupDataResponse childLookupData =new LookupDataResponse();
-                childLookupData.setLookupId(childLookup.getLookupId());
-                childLookupData.setLookupCode(childLookup.getLookupCode());
-                childLookupData.setLookupType(childLookup.getLookupType());
-                childLookupData.setLookupValue(childLookup.getLookupValue());
-                childLookupData.setDescription(childLookup.getDescription());
-                childLookupData.setDateCreated(childLookup.getDateCreated());
-                childLookupData.setDateCreated(childLookup.getDateCreated());
-                childLookupData.setUiLookup(childLookup.getUiLookup());
-                return childLookupData;
-            }).collect(Collectors.toSet()));
-        }
-        return parentLookupData;
+    /**
+     * Method use to get the child lookup by parent lookup type and child lookup code
+     * @param parentLookupType
+     * @param childLookupCode
+     * @return LookupDataResponse
+     * */
+    @Override
+    public LookupDataResponse getChildLookupDataByParentLookupTypeAndChildLookupCode(String parentLookupType, Long childLookupCode) {
+        return this.getParentLookupDataByParentLookupType(parentLookupType).getLookupChildren().stream()
+            .filter(childLookup -> childLookupCode.equals(childLookup.getLookupCode())).findAny().orElse(null);
     }
 
-    public LookupDataResponse getParentLookupById(String lookupType) {
-        return this.lookupCacheMap.get(lookupType);
-    }
-
-    public LookupDataResponse getChildLookupById(String parentLookupType, Long childLookupCode) {
-        return this.getParentLookupById(parentLookupType).getLookupChildren().stream()
-            .filter(childLookup -> childLookupCode.equals(childLookup.getLookupCode()))
-            .findAny().orElse(null);
-    }
-
-    public GLookup<Long, String> getGLookup(String parentLookup, Long childLookupCode) {
-        LookupDataResponse lookupDataResponse = this.getChildLookupById(parentLookup, childLookupCode);
-        return lookupDataResponse != null ? new GLookup<>(lookupDataResponse.getLookupType(),
-                lookupDataResponse.getLookupCode(), lookupDataResponse.getLookupValue()) : null;
-    }
 
     public Map<String, LookupDataResponse> getLookupCacheMap() {
         return lookupCacheMap;
@@ -592,6 +515,65 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
 
     public void setLookupCacheMap(Map<String, LookupDataResponse> lookupCacheMap) {
         this.lookupCacheMap = lookupCacheMap;
+    }
+
+    public Map<String, SheetFiled> getSheetFiledMap() {
+        return sheetFiledMap;
+    }
+
+    public void setSheetFiledMap(Map<String, SheetFiled> sheetFiledMap) {
+        this.sheetFiledMap = sheetFiledMap;
+    }
+
+    /**
+     * Method use to add new field into cache
+     * @param payload
+     * */
+    private void addNewLookupData(LookupData payload) {
+        this.writeLock.lock();
+        try {
+            this.lookupCacheMap.put(payload.getLookupType(), getLookupDataDetail(payload));
+        } finally {
+            this.writeLock.unlock();
+        }
+    }
+
+    /**
+     * Method us to get the lookupData
+     * @param lookupData
+     * */
+    private LookupDataResponse getLookupDataDetail(LookupData lookupData) {
+        LookupDataResponse parentLookupData = new LookupDataResponse();
+        parentLookupData = this.fillLookupDataResponse(lookupData, parentLookupData, false);
+        if (!BarcoUtil.isNull(lookupData.getLookupChildren()) && lookupData.getLookupChildren().size() > 0) {
+            parentLookupData.setLookupChildren(lookupData.getLookupChildren().stream()
+                .map(childLookup -> this.fillLookupDataResponse(childLookup, new LookupDataResponse(), false))
+                .collect(Collectors.toSet()));
+        }
+        return parentLookupData;
+    }
+
+    /**
+     * Method use to fill the lookup data
+     * @param lookupData
+     * @param lookupDataResponse
+     * */
+    private LookupDataResponse fillLookupDataResponse(LookupData lookupData,
+        LookupDataResponse lookupDataResponse, Boolean isFull) {
+        lookupDataResponse.setId(lookupData.getId());
+        lookupDataResponse.setLookupCode(lookupData.getLookupCode());
+        lookupDataResponse.setLookupValue(lookupData.getLookupValue());
+        lookupDataResponse.setLookupType(lookupData.getLookupType());
+        if (isFull) {
+            lookupDataResponse.setUiLookup(UI_LOOKUP.getStatusByLookupType(lookupData.getUiLookup().getLookupType()));
+            lookupDataResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(lookupData.getStatus().getLookupType()));
+            lookupDataResponse.setDescription(lookupData.getDescription());
+            lookupDataResponse.setCreatedBy(getActionUser(lookupData.getCreatedBy()));
+            lookupDataResponse.setUpdatedBy(getActionUser(lookupData.getUpdatedBy()));
+            lookupDataResponse.setDateUpdated(lookupData.getDateUpdated());
+            lookupDataResponse.setDateCreated(lookupData.getDateCreated());
+        }
+        return lookupDataResponse;
     }
 
 }
