@@ -17,6 +17,7 @@ import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.Groups;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.GroupsRepository;
+import com.barco.model.repository.UserGroupRepository;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.LookupUtil;
@@ -51,6 +52,8 @@ public class MgGroupServiceImpl implements MgGroupService {
     private BulkExcel bulkExcel;
     @Autowired
     private GroupsRepository groupsRepository;
+    @Autowired
+    private UserGroupRepository userGroupRepository;
     @Autowired
     private AppUserRepository appUserRepository;
     @Autowired
@@ -112,10 +115,18 @@ public class MgGroupServiceImpl implements MgGroupService {
         groups.get().setName(payload.getName());
         groups.get().setDescription(payload.getDescription());
         groups.get().setUpdatedBy(adminUser.get());
-        groups.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+        if (!BarcoUtil.isNull(payload.getStatus())) {
+            // if status is in-active & delete then we have filter the role and show only those role in user detail
+            groups.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+            groups.get().getUserGroups().stream()
+                .map(appUserRoleAccess -> {
+                    appUserRoleAccess.setStatus(groups.get().getStatus());
+                    return appUserRoleAccess;
+                }).collect(Collectors.toList());
+        }
+
         this.groupsRepository.save(groups.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(
-            MessageUtil.DATA_UPDATE, payload.getId().toString()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()), payload);
     }
 
     /***
@@ -134,9 +145,14 @@ public class MgGroupServiceImpl implements MgGroupService {
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.groupsRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE)
-                .stream().map(groups -> getGroupResponse(groups)).collect(Collectors.toList()));
+        List<GroupResponse> groupResponses = this.groupsRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE)
+            .stream()
+            .map(groups -> {
+                GroupResponse groupResponse = getGroupResponse(groups);
+                return groupResponse;
+            })
+            .collect(Collectors.toList());
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, groupResponses);
     }
 
     /**
@@ -339,6 +355,7 @@ public class MgGroupServiceImpl implements MgGroupService {
         GroupResponse groupResponse = new GroupResponse();
         groupResponse.setId(groups.getId());
         groupResponse.setName(groups.getName());
+        groupResponse.setAvatar(groupResponse.getName().charAt(0)+"");
         groupResponse.setDescription(groups.getDescription());
         groupResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(groups.getStatus().getLookupType()));
         groupResponse.setCreatedBy(getActionUser(groups.getCreatedBy()));

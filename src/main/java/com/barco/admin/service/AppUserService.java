@@ -26,14 +26,4 @@ public interface AppUserService extends RootService {
 
     public AppResponse editAppUserAccount(AppUserRequest payload) throws Exception;
 
-    public AppResponse viewAppUserLinkGroupAccount(AppUserRequest payload) throws Exception;
-
-    public AppResponse linkOrUnlinkAppUserWithGroup(AppUserRequest payload) throws Exception;
-
-    public ByteArrayOutputStream downloadAppUserTemplateFile() throws Exception;
-
-    public ByteArrayOutputStream downloadAppUsers(AppUserRequest payload) throws Exception;
-
-    public AppResponse uploadAppUsers(FileUploadRequest payload) throws Exception;
-
 }

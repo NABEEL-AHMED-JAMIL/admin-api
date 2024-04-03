@@ -179,17 +179,17 @@ public class EVariableRestApi {
     }
 
     /**
-     * @apiName :- fetchLinkEVariableWithUser
+     * @apiName :- fetchLinkEVariableWitUser
      * Api use to fetch e-variable with root user
-     * @return ResponseEntity<?> fetchLinkEVariableWithUser
+     * @return ResponseEntity<?> fetchLinkEVariableWitUser
      * */
     @PreAuthorize("hasRole('DEV')")
-    @RequestMapping(value = "/fetchLinkEVariableWithUser", method = RequestMethod.POST)
-    public ResponseEntity<?> fetchLinkEVariableWithUser(@RequestBody LinkEURequest payload) {
+    @RequestMapping(value = "/fetchLinkEVariableWitUser", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchLinkEVariableWitUser(@RequestBody LinkEURequest payload) {
         try {
-            return new ResponseEntity<>(this.eVariableService.fetchLinkEVariableWithUser(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.eVariableService.fetchLinkEVariableWitUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while fetchLinkEVariableWithUser ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while fetchLinkEVariableWitUser ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }

@@ -1136,6 +1136,57 @@ public class RPPServiceImpl implements RPPService {
     }
 
     /**
+     * Method use to fetch profile with user
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchProfileWithUser(LinkPURequest payload) throws Exception {
+        logger.info("Request fetchProfileWithUser :- " + payload);
+        Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!superAdmin.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(
+            QueryService.FETCH_PROFILE_WITH_USER, superAdmin.get().getId(),
+            APPLICATION_STATUS.ACTIVE.getLookupCode(), APPLICATION_STATUS.ACTIVE.getLookupCode()));
+        List<ProfileResponse> profileResponses = new ArrayList<>();
+        if (!BarcoUtil.isNull(queryResponse.getData())) {
+            for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
+                profileResponses.add(new ProfileResponse(Long.valueOf(
+                    data.get(QueryService.ID).toString()), data.get(QueryService.PROFILE_NAME).toString()));
+            }
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, profileResponses);
+    }
+
+    /**
+     * Method use to fetch role with user
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchRoleWithUser(LinkRURequest payload) throws Exception {
+        logger.info("Request fetchRoleWithUser :- " + payload);
+        Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!superAdmin.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(
+            QueryService.FETCH_ROLE_WITH_USER, superAdmin.get().getId(),
+            APPLICATION_STATUS.ACTIVE.getLookupCode(), APPLICATION_STATUS.ACTIVE.getLookupCode()));
+        List<RoleResponse> roleResponses = new ArrayList<>();
+        if (!BarcoUtil.isNull(queryResponse.getData())) {
+            for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
+                roleResponses.add(new RoleResponse(data.get(QueryService.ROLE_NAME).toString()));
+            }
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, roleResponses);
+    }
+
+    /**
      * Method use to add the link detail
      * @param superAdmin
      * @param role

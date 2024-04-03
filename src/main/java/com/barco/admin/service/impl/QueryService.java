@@ -30,6 +30,7 @@ public class QueryService {
     public static String ID = "id";
     public static String STATUS = "status";
     public static String PROFILE_NAME = "profile_name";
+    public static String ROLE_NAME = "role_name";
     public static String PERMISSION_NAME = "permission_name";
     public static String DESCRIPTION = "description";
     public static String LINK_PP = "link_pp";
@@ -80,6 +81,17 @@ public class QueryService {
         "LEFT JOIN APP_USER_ENV AUE ON AUE.APP_USER_ID = AU.ID AND AUE.ENV_KEY_ID = %d " +
         "WHERE AU.STATUS != %d " +
         "ORDER by AU.ID ASC";
+
+
+    // fetchProfileWithUser => FETCH_ROLE_WITH_USER
+    public static String FETCH_ROLE_WITH_USER = "SELECT DISTINCT ROLE.NAME AS ROLE_NAME " +
+        "FROM ROLE " +
+        "INNER JOIN APP_USER_ROLE_ACCESS AURA ON AURA.ROLE_ID = ROLE.ID AND AURA.APP_USER_ID = %d AND AURA.STATUS = %d AND ROLE.STATUS = %d ";
+
+    // fetchRoleWithUser => FETCH_PROFILE_WITH_USER
+    public static String FETCH_PROFILE_WITH_USER = "SELECT DISTINCT PRO.ID, PRO.PROFILE_NAME " +
+        "FROM PROFILE PRO " +
+        "INNER JOIN APP_USER_PROFILE_ACCESS AUPA ON AUPA.PROFILE_ID = PRO.ID AND AUPA.APP_USER_ID = %d AND PRO.STATUS = %d AND AUPA.STATUS = %d ";
 
     public QueryService() {}
 
