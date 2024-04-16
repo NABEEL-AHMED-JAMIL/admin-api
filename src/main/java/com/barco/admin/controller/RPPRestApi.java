@@ -37,7 +37,8 @@ public class RPPRestApi {
     private RPPService rppService;
 
     /**
-     * Api use to create the role
+     * @apiName :- addRole
+     * @apiNote :- Api use to create the role
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -53,7 +54,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to update the role
+     * @apiName :- updateRole
+     * @apiNote :- Api use to update the role
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -69,7 +71,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to find all role
+     * @apiName :- fetchAllRole
+     * @apiNote :- Api use to find all role
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -85,7 +88,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to find the role py id
+     * @apiName :- findRoleById
+     * @apiNote :- Api use to find the role py id
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -101,7 +105,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to find the role py id
+     * @apiName :- deleteRoleById
+     * @apiNote :- Api use to find the role py id
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -117,8 +122,25 @@ public class RPPRestApi {
     }
 
     /**
+     * @apiName :- deleteAllRole
+     * @apiNote :- Api use to find the role py id
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @RequestMapping(path="/deleteAllRole", method=RequestMethod.POST)
+    public ResponseEntity<?> deleteAllRole(@RequestBody RoleRequest payload) {
+        try {
+            return new ResponseEntity<>(this.rppService.deleteAllRole(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while deleteAllRole ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- downloadRoleTemplateFile
-     * Api use to download role template
+     * @apiNote :- Api use to download role template
      * @return ResponseEntity<?> downloadRoleTemplateFile
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -138,7 +160,7 @@ public class RPPRestApi {
 
     /**
      * @apiName :- downloadRole
-     * Api use to download the role data
+     * @apiNote :- Api use to download the role data
      * @return ResponseEntity<?> downloadRole
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -158,7 +180,7 @@ public class RPPRestApi {
 
     /**
      * @apiName :- uploadRole
-     * Api use to upload the role
+     * @apiNote :- Api use to upload the role
      * @return ResponseEntity<?> uploadRole
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -176,7 +198,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to add the profile
+     * @apiName :- addProfile
+     * @apiNote :- Api use to add the profile
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -192,7 +215,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to update the profile
+     * @apiName :- updateProfile
+     * @apiNote :- Api use to update the profile
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -208,7 +232,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to fetch all profile
+     * @apiName :- fetchAllProfile
+     * @apiNote :- Api use to fetch all profile
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -224,7 +249,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to fetch profile by id
+     * @apiName :- fetchProfileById
+     * @apiNote :- Api use to fetch profile by id
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -240,7 +266,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to delete profile by id
+     * @apiName :- deleteProfileById
+     * @apiNote :- Api use to delete profile by id
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -256,8 +283,25 @@ public class RPPRestApi {
     }
 
     /**
+     * @apiName :- deleteAllProfile
+     * @apiNote :- Api use to delete profile by ids
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @RequestMapping(path="/deleteAllProfile",  method=RequestMethod.POST)
+    public ResponseEntity<?> deleteAllProfile(@RequestBody ProfileRequest payload) {
+        try {
+            return new ResponseEntity<>(this.rppService.deleteAllProfile(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while deleteAllProfile ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- downloadProfileTemplateFile
-     * Api use to download profile template
+     * @apiNote :- Api use to download profile template
      * @return ResponseEntity<?> downloadProfileTemplateFile
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -277,7 +321,7 @@ public class RPPRestApi {
 
     /**
      * @apiName :- downloadProfile
-     * Api use to download the profile
+     * @apiNote :- Api use to download the profile
      * @return ResponseEntity<?> downloadProfile
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -297,7 +341,7 @@ public class RPPRestApi {
 
     /**
      * @apiName :- uploadProfile
-     * Api use to upload the profile
+     * @apiNote :- Api use to upload the profile
      * @return ResponseEntity<?> uploadProfile
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -315,7 +359,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to fetch add the permission
+     * @apiName :- addPermission
+     * @apiNote :- Api use to fetch add the permission
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -331,7 +376,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to fetch update the permission
+     * @apiName :- updatePermission
+     * @apiNote :- Api use to fetch update the permission
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -347,7 +393,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to fetch all the permission
+     * @apiName :- fetchAllPermission
+     * @apiNote :- Api use to fetch all the permission
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -363,7 +410,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to fetch permission by id
+     * @apiName :- fetchPermissionById
+     * @apiNote :- Api use to fetch permission by id
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -379,7 +427,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to delete permission by id
+     * @apiName :- deletePermissionById
+     * @apiNote :- Api use to delete permission by id
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -395,8 +444,25 @@ public class RPPRestApi {
     }
 
     /**
+     * @apiName :- deleteAllPermission
+     * @apiNote :- Api use to delete permission by ids
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @RequestMapping(path="/deleteAllPermission", method=RequestMethod.POST)
+    public ResponseEntity<?> deleteAllPermission(@RequestBody PermissionRequest payload) {
+        try {
+            return new ResponseEntity<>(this.rppService.deleteAllPermission(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while deleteAllPermission ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- downloadPermissionTemplateFile
-     * Api use to download permission template
+     * @apiNote :- Api use to download permission template
      * @return ResponseEntity<?> downloadPermissionTemplateFile
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -416,7 +482,7 @@ public class RPPRestApi {
 
     /**
      * @apiName :- downloadPermission
-     * Api use to download the permission
+     * @apiNote :- Api use to download the permission
      * @return ResponseEntity<?> downloadPermission
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -436,7 +502,7 @@ public class RPPRestApi {
 
     /**
      * @apiName :- uploadPermission
-     * Api use to upload the permission
+     * @apiNote :- Api use to upload the permission
      * @return ResponseEntity<?> uploadPermission
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -455,7 +521,7 @@ public class RPPRestApi {
 
     /**
      * @apiName :- fetchLinkProfilePermission
-     * Api use to fetch link-> profile & permission
+     * @apiNote :- Api use to fetch link-> profile & permission
      * @return ResponseEntity<?> fetchLinkProfilePermission
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -471,7 +537,7 @@ public class RPPRestApi {
 
     /**
      * @apiName :- updateLinkProfilePermission
-     * Api use to add/edit link-> profile & permission
+     * @apiNote :- Api use to add/edit link-> profile & permission
      * @return ResponseEntity<?> updateLinkProfilePermission
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -486,7 +552,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to fetch the role with root user
+     * @apiName :- fetchLinkRoleWithRootUser
+     * @apiNote :- Api use to fetch the role with root user
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -504,7 +571,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to link the role with root user
+     * @apiName :- fetchLinkRoleWithRootUser
+     * @apiNote :- Api use to link the role with root user
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -522,7 +590,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to fetch the profile with root user
+     * @apiName :- fetchLinkProfileWithRootUser
+     * @apiNote :- Api use to fetch the profile with root user
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -540,7 +609,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to link the profile with root user
+     * @apiName :- linkProfileWithRootUser
+     * @apiNote :- Api use to link the profile with root user
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -557,10 +627,9 @@ public class RPPRestApi {
         }
     }
 
-
-    //
     /**
-     * Api use to link the profile with root user
+     * @apiName :- fetchProfileWithUser
+     * @apiNote :- Api use to link the profile with root user
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -578,7 +647,8 @@ public class RPPRestApi {
     }
 
     /**
-     * Api use to link the role with root user
+     * @apiName :- fetchRoleWithUser
+     * @apiNote :- Api use to link the role with root user
      * @param payload
      * @return ResponseEntity<?>
      * */

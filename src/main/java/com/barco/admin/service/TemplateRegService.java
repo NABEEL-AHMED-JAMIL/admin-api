@@ -17,5 +17,7 @@ public interface TemplateRegService extends RootService {
 	public AppResponse fetchTemplateReg(TemplateRegRequest payload) throws Exception;
 
 	public AppResponse deleteTemplateReg(TemplateRegRequest payload) throws Exception;
+
+	public AppResponse deleteAllTemplateReg(TemplateRegRequest payload) throws Exception;
 	
 }

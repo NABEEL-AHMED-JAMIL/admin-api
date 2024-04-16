@@ -48,9 +48,6 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
     @Value("${storage.efsFileDire}")
     private String tempStoreDirectory;
 
-    private final String PARENT_LOOKUP_DATA = "PARENT_LOOKUP_DATA";
-    private final String SUB_LOOKUP_DATA = "SUB_LOOKUP_DATA";
-
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock writeLock = readWriteLock.writeLock();
     private Map<String, LookupDataResponse> lookupCacheMap = new HashMap<>();
@@ -536,44 +533,6 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         } finally {
             this.writeLock.unlock();
         }
-    }
-
-    /**
-     * Method us to get the lookupData
-     * @param lookupData
-     * */
-    private LookupDataResponse getLookupDataDetail(LookupData lookupData) {
-        LookupDataResponse parentLookupData = new LookupDataResponse();
-        parentLookupData = this.fillLookupDataResponse(lookupData, parentLookupData, false);
-        if (!BarcoUtil.isNull(lookupData.getLookupChildren()) && lookupData.getLookupChildren().size() > 0) {
-            parentLookupData.setLookupChildren(lookupData.getLookupChildren().stream()
-                .map(childLookup -> this.fillLookupDataResponse(childLookup, new LookupDataResponse(), false))
-                .collect(Collectors.toSet()));
-        }
-        return parentLookupData;
-    }
-
-    /**
-     * Method use to fill the lookup data
-     * @param lookupData
-     * @param lookupDataResponse
-     * */
-    private LookupDataResponse fillLookupDataResponse(LookupData lookupData,
-        LookupDataResponse lookupDataResponse, Boolean isFull) {
-        lookupDataResponse.setId(lookupData.getId());
-        lookupDataResponse.setLookupCode(lookupData.getLookupCode());
-        lookupDataResponse.setLookupValue(lookupData.getLookupValue());
-        lookupDataResponse.setLookupType(lookupData.getLookupType());
-        if (isFull) {
-            lookupDataResponse.setUiLookup(UI_LOOKUP.getStatusByLookupType(lookupData.getUiLookup().getLookupType()));
-            lookupDataResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(lookupData.getStatus().getLookupType()));
-            lookupDataResponse.setDescription(lookupData.getDescription());
-            lookupDataResponse.setCreatedBy(getActionUser(lookupData.getCreatedBy()));
-            lookupDataResponse.setUpdatedBy(getActionUser(lookupData.getUpdatedBy()));
-            lookupDataResponse.setDateUpdated(lookupData.getDateUpdated());
-            lookupDataResponse.setDateCreated(lookupData.getDateCreated());
-        }
-        return lookupDataResponse;
     }
 
 }

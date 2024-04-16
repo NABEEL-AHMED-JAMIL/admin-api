@@ -19,7 +19,11 @@ public interface EVariableService extends RootService {
 
     public AppResponse fetchEnVariableById(EnVariablesRequest payload) throws Exception;
 
+    public AppResponse fetchUserEnvByEnvKey(EnVariablesRequest payload) throws Exception;
+
     public AppResponse deleteEnVariableById(EnVariablesRequest payload) throws Exception;
+
+    public AppResponse deleteAllEnVariable(EnVariablesRequest payload) throws Exception;
 
     public ByteArrayOutputStream downloadEnVariableTemplateFile() throws Exception;
 

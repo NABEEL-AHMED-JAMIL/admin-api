@@ -14,9 +14,11 @@ import com.barco.model.dto.response.*;
 import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.AppUserEnv;
 import com.barco.model.pojo.EnvVariables;
+import com.barco.model.pojo.LookupData;
 import com.barco.model.repository.AppUserEnvRepository;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.EnvVariablesRepository;
+import com.barco.model.repository.LookupDataRepository;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.LookupUtil;
@@ -30,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -51,11 +54,13 @@ public class EVariableServiceImpl implements EVariableService {
     @Autowired
     private AppUserRepository appUserRepository;
     @Autowired
-    private LookupDataCacheService lookupDataCacheService;
+    private LookupDataRepository lookupDataRepository;
     @Autowired
     private EnvVariablesRepository envVariablesRepository;
     @Autowired
     private AppUserEnvRepository appUserEnvRepository;
+    @Autowired
+    private LookupDataCacheService lookupDataCacheService;
 
     /***
      * Method use to add env variable
@@ -85,7 +90,8 @@ public class EVariableServiceImpl implements EVariableService {
         envVariables.setUpdatedBy(adminUser.get());
         envVariables.setStatus(APPLICATION_STATUS.ACTIVE);
         envVariables = this.envVariablesRepository.save(envVariables);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, envVariables.getId().toString()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(
+            MessageUtil.DATA_SAVED, envVariables.getId().toString()), payload);
     }
 
     /**
@@ -110,7 +116,8 @@ public class EVariableServiceImpl implements EVariableService {
         }
         Optional<EnvVariables> envVariables = this.envVariablesRepository.findById(payload.getId());
         if (!envVariables.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getId().toString()));
+            return new AppResponse(BarcoUtil.ERROR, String.format(
+                MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getId().toString()));
         } else if (!envVariables.get().getEnvKey().equals(payload.getEnvKey()) && this.envVariablesRepository
             .findByEnvKeyAndStatusNot(payload.getEnvKey(), APPLICATION_STATUS.DELETE).isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.PROFILE_ALREADY_EXIST, payload);
@@ -139,10 +146,11 @@ public class EVariableServiceImpl implements EVariableService {
     @Override
     public AppResponse fetchAllEnVariable(EnVariablesRequest payload) throws Exception {
         logger.info("Request fetchAllEnVariable :- " + payload);
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.envVariablesRepository.findAllByStatusNot(APPLICATION_STATUS.DELETE)
-                .stream().map(envVariables -> getEnVariablesResponse(envVariables))
-                .collect(Collectors.toList()));
+            this.envVariablesRepository.findAllByDateCreatedBetweenAndStatusNot(startDate, endDate, APPLICATION_STATUS.DELETE)
+                .stream().map(envVariables -> getEnVariablesResponse(envVariables)).collect(Collectors.toList()));
     }
 
     /**
@@ -161,6 +169,46 @@ public class EVariableServiceImpl implements EVariableService {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getId().toString()));
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getEnVariablesResponse(envVariables.get()));
+    }
+
+    /**
+     * Method use to get the env variable detail by envKey
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchUserEnvByEnvKey(EnVariablesRequest payload) throws Exception {
+        logger.info("Request fetchUserEnvByEnvKey :- " + payload);
+        if (BarcoUtil.isNull(payload.getEnvKey())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ENV_KEYID_REQUIRED);
+        }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        Optional<EnvVariables> envVariables = this.envVariablesRepository.findByEnvKeyAndStatusNot(payload.getEnvKey(), APPLICATION_STATUS.DELETE);
+        if (!envVariables.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getId().toString()));
+        }
+        Optional<AppUserEnv> appUserEnv = this.appUserEnvRepository.findAppUserEnvByEnvVariablesAndAppUser(envVariables.get(), adminUser.get());
+        if (!appUserEnv.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.APP_USER_ENV_NOT_FOUND, payload.getId().toString()));
+        }
+        Map<String, Object> appSettingDetail = new HashMap<>();
+        Optional<LookupData> parentLookupData = this.lookupDataRepository.findByLookupType(appUserEnv.get().getEnvValue());
+        if (!parentLookupData.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.DATA_NOT_FOUND, payload.getEnvKey()));
+        }
+        appSettingDetail.put(PARENT_LOOKUP_DATA, this.fillLookupDataResponse(parentLookupData.get(), new LookupDataResponse(), false));
+        if (!BarcoUtil.isNull(parentLookupData.get().getLookupChildren())) {
+            List<LookupDataResponse> lookupDataResponses = new ArrayList<>();
+            for (LookupData childLookupData: parentLookupData.get().getLookupChildren()) {
+                lookupDataResponses.add(this.fillLookupDataResponse(childLookupData, new LookupDataResponse(), false));
+            }
+            appSettingDetail.put(SUB_LOOKUP_DATA, lookupDataResponses);
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, appSettingDetail);
     }
 
     /**
@@ -185,9 +233,30 @@ public class EVariableServiceImpl implements EVariableService {
         if (!envVariables.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getId().toString()));
         }
-        this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_ENV_BY_ENV_KEY_ID, envVariables.get().getId()));
         this.envVariablesRepository.delete(envVariables.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId().toString()), payload);
+    }
+
+    /**
+     * Method use delete the all env
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse deleteAllEnVariable(EnVariablesRequest payload) throws Exception {
+        logger.info("Request deleteAllEnVariable :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getIds())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
+        }
+        this.envVariablesRepository.deleteAll(this.envVariablesRepository.findAllByIdIn(payload.getIds()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
     }
 
     /**
@@ -196,7 +265,7 @@ public class EVariableServiceImpl implements EVariableService {
      * */
     @Override
     public ByteArrayOutputStream downloadEnVariableTemplateFile() throws Exception {
-        logger.info("Request downloadLookupDataTemplateFile");
+        logger.info("Request downloadEnVariableTemplateFile");
         return downloadTemplateFile(this.tempStoreDirectory, this.bulkExcel,
             this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.EVARIABLE));
     }
@@ -208,7 +277,7 @@ public class EVariableServiceImpl implements EVariableService {
      * */
     @Override
     public ByteArrayOutputStream downloadEnVariable(EnVariablesRequest payload) throws Exception {
-        logger.info("Request downloadRole :- " + payload);
+        logger.info("Request downloadEnVariable :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             throw new Exception(MessageUtil.USERNAME_MISSING);
         }
@@ -224,7 +293,17 @@ public class EVariableServiceImpl implements EVariableService {
         this.bulkExcel.setSheet(xssfSheet);
         AtomicInteger rowCount = new AtomicInteger();
         this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
-        Iterator<EnvVariables> envVariables = this.envVariablesRepository.findAll().iterator();
+        // change to start date and end date filter and if ids include then only download that ids
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+        Iterator<EnvVariables> envVariables;
+        if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+            envVariables = this.envVariablesRepository.findAllByDateCreatedBetweenAndIdInAndStatusNot(
+                startDate, endDate, payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
+        } else {
+            envVariables = this.envVariablesRepository.findAllByDateCreatedBetweenAndStatusNot(
+                startDate, endDate, APPLICATION_STATUS.DELETE).iterator();
+        }
         while (envVariables.hasNext()) {
             EnvVariables envVariable = envVariables.next();
             rowCount.getAndIncrement();
@@ -233,9 +312,9 @@ public class EVariableServiceImpl implements EVariableService {
             dataCellValue.add(envVariable.getDescription());
             this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
         }
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        workbook.write(outputStream);
-        return outputStream;
+        ByteArrayOutputStream outSteam = new ByteArrayOutputStream();
+        workbook.write(outSteam);
+        return outSteam;
     }
 
     /**
@@ -399,24 +478,6 @@ public class EVariableServiceImpl implements EVariableService {
             appUserEnv.setStatus(APPLICATION_STATUS.INACTIVE);
         }
         return appUserEnv;
-    }
-
-    /***
-     * Method use to get the env variable
-     * @param envVariables
-     * @return EnVariablesResponse
-     * */
-    private EnVariablesResponse getEnVariablesResponse(EnvVariables envVariables) {
-        EnVariablesResponse enVariablesResponse = new EnVariablesResponse();
-        enVariablesResponse.setId(envVariables.getId());
-        enVariablesResponse.setEnvKey(envVariables.getEnvKey());
-        enVariablesResponse.setDescription(envVariables.getDescription());
-        enVariablesResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(envVariables.getStatus().getLookupType()));
-        enVariablesResponse.setCreatedBy(getActionUser(envVariables.getCreatedBy()));
-        enVariablesResponse.setUpdatedBy(getActionUser(envVariables.getUpdatedBy()));
-        enVariablesResponse.setDateUpdated(envVariables.getDateUpdated());
-        enVariablesResponse.setDateCreated(envVariables.getDateCreated());
-        return enVariablesResponse;
     }
 
 }

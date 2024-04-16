@@ -1,15 +1,16 @@
 package com.barco.admin.controller;
 
+import com.barco.admin.service.NotificationService;
+import com.barco.common.utility.BarcoUtil;
+import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.request.NotificationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
+import com.barco.model.dto.response.AppResponse;
 
 /**
  * @author Nabeel Ahmed
@@ -21,34 +22,10 @@ public class NotificationRestApi {
 
     private Logger logger = LoggerFactory.getLogger(NotificationRestApi.class);
 
-//    @Autowired
-//    private GlobalProperties globalProperties;
-//    @Autowired
-//    private NotificationService notificationService;
+    @Autowired
+    private NotificationService notificationService;
 
     /**
-     * Process message for register the session
-     * @param notificationRequest
-     * @param headerAccessor
-     * */
-    @MessageMapping("/register")
-    public void register(@Payload NotificationRequest notificationRequest, SimpMessageHeaderAccessor headerAccessor) throws Exception {
-        logger.info("register" + notificationRequest);
-
-    }
-
-    /**
-     * Process message for unregister the session
-     * @param notificationRequest
-     * @param headerAccessor
-     * */
-    @MessageMapping("/unregister")
-    public void unregister(@Payload NotificationRequest notificationRequest, SimpMessageHeaderAccessor headerAccessor) throws Exception {
-        logger.info("unregister" + notificationRequest);
-    }
-
-    /**
-     * api-status :- done
      * @apiName :- updateNotification
      * @apiNote :- Api use update notification for specific user
      * @param requestPayload
@@ -56,7 +33,12 @@ public class NotificationRestApi {
      * */
     @RequestMapping(value = "/updateNotification", method = RequestMethod.POST)
     public ResponseEntity<?> updateNotification(@RequestBody NotificationRequest requestPayload) {
-        return null;
+        try {
+            return new ResponseEntity<>(this.notificationService.updateNotification(requestPayload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while updateNotification ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**
@@ -67,6 +49,12 @@ public class NotificationRestApi {
      * */
     @RequestMapping(value = "/fetchAllNotification", method = RequestMethod.GET)
     public ResponseEntity<?> fetchAllNotification(@RequestParam String username) {
-        return null;
+        try {
+            return new ResponseEntity<>(this.notificationService.fetchAllNotification(username), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllNotification ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
     }
+
 }

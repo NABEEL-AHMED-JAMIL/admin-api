@@ -37,11 +37,12 @@ public class MgGroupRestApi {
     private MgGroupService mgGroupService;
 
     /**
-     * Method use to fetch the data
+     * @apiName :- addGroup
+     * @apiNote :- Method use to fetch the data
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')  or hasRole('USER')")
     @RequestMapping(value="/addGroup", method= RequestMethod.POST)
     public ResponseEntity<?> addGroup(@RequestBody GroupRequest payload) {
         try {
@@ -53,11 +54,12 @@ public class MgGroupRestApi {
     }
 
     /**
-     * Method use to fetch the data
+     * @apiName :- updateGroup
+     * @apiNote :- Method use to fetch the data
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')  or hasRole('USER')")
     @RequestMapping(value="/updateGroup", method=RequestMethod.POST)
     public ResponseEntity<?> updateGroup(@RequestBody GroupRequest payload) {
         try {
@@ -69,11 +71,12 @@ public class MgGroupRestApi {
     }
 
     /**
-     * Method use to fetch the data
+     * @apiName :- fetchAllGroup
+     * @apiNote :- Method use to fetch the data
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')  or hasRole('USER')")
     @RequestMapping(value="/fetchAllGroup", method=RequestMethod.POST)
     public ResponseEntity<?> fetchAllGroup(@RequestBody GroupRequest payload) {
         try {
@@ -85,11 +88,12 @@ public class MgGroupRestApi {
     }
 
     /**
-     * Method use to fetch the data
+     * @apiName :- fetchGroupById
+     * @apiNote :- Method use to fetch the data
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')  or hasRole('USER')")
     @RequestMapping(value="/fetchGroupById", method=RequestMethod.POST)
     public ResponseEntity<?> fetchGroupById(@RequestBody GroupRequest payload) {
         try {
@@ -101,11 +105,12 @@ public class MgGroupRestApi {
     }
 
     /**
-     * Method use to fetch the data
+     * @apiName :- deleteGroupById
+     * @apiNote :- Method use to fetch the data
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')  or hasRole('USER')")
     @RequestMapping(value="/deleteGroupById", method=RequestMethod.POST)
     public ResponseEntity<?> deleteGroupById(@RequestBody GroupRequest payload) {
         try {
@@ -118,10 +123,10 @@ public class MgGroupRestApi {
 
     /**
      * @apiName :- downloadGroupTemplateFile
-     * Api use to download group template
+     * @apiNote :- Api use to download group template
      * @return ResponseEntity<?> downloadGroupTemplateFile
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')  or hasRole('USER')")
     @RequestMapping(value = "/downloadGroupTemplateFile", method = RequestMethod.GET)
     public ResponseEntity<?> downloadGroupTemplateFile() {
         try {
@@ -138,10 +143,10 @@ public class MgGroupRestApi {
 
     /**
      * @apiName :- downloadGroup
-     * Api use to download the group
+     * @apiNote :- Api use to download the group
      * @return ResponseEntity<?> downloadGroup
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')  or hasRole('USER')")
     @RequestMapping(value = "/downloadGroup", method = RequestMethod.POST)
     public ResponseEntity<?> downloadGroup(@RequestBody EnVariablesRequest payload) {
         try {
@@ -158,10 +163,10 @@ public class MgGroupRestApi {
 
     /**
      * @apiName :- uploadGroup
-     * Api use to upload the group
+     * @apiNote :- Api use to upload the group
      * @return ResponseEntity<?> uploadGroup
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')  or hasRole('USER')")
     @RequestMapping(value = "/uploadGroup", method = RequestMethod.POST)
     public ResponseEntity<?> uploadGroup(FileUploadRequest payload) {
         try {

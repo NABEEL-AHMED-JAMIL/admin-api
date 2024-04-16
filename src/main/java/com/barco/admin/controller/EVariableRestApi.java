@@ -4,10 +4,7 @@ import com.barco.admin.service.EVariableService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.common.utility.excel.ExcelUtil;
-import com.barco.model.dto.request.EnVariablesRequest;
-import com.barco.model.dto.request.FileUploadRequest;
-import com.barco.model.dto.request.LinkEURequest;
-import com.barco.model.dto.request.SessionUser;
+import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.MessageUtil;
@@ -40,7 +37,8 @@ public class EVariableRestApi {
     private EVariableService eVariableService;
 
     /**
-     * Method use to fetch the data
+     * @apiName :- addEnVariable
+     * @apiNote :- Method use to fetch the data
      * @param payload
      * @return ResponseEntity
      * */
@@ -56,7 +54,8 @@ public class EVariableRestApi {
     }
 
     /**
-     * Method use to fetch the data
+     * @apiName :- updateEnVariable
+     * @apiNote :- Method use to fetch the data
      * @param payload
      * @return ResponseEntity
      * */
@@ -72,7 +71,8 @@ public class EVariableRestApi {
     }
 
     /**
-     * Method use to fetch the data
+     * @apiName :- fetchAllEnVariable
+     * @apiNote :- Method use to fetch the data
      * @param payload
      * @return ResponseEntity
      * */
@@ -88,7 +88,8 @@ public class EVariableRestApi {
     }
 
     /**
-     * Method use to fetch the data
+     * @apiName :- fetchEnVariableById
+     * @apiNote :- Method use to fetch the data
      * @param payload
      * @return ResponseEntity
      * */
@@ -104,7 +105,24 @@ public class EVariableRestApi {
     }
 
     /**
-     * Method use to fetch the data
+     * @apiName :- fetchUserEnvByEnvKey
+     * @apiNote :- Method use to fetch the data
+     * @param payload
+     * @return ResponseEntity
+     * */
+    @RequestMapping(value="/fetchUserEnvByEnvKey", method= RequestMethod.POST)
+    public ResponseEntity<?> fetchUserEnvByEnvKey(@RequestBody EnVariablesRequest payload) {
+        try {
+            return new ResponseEntity<>(this.eVariableService.fetchUserEnvByEnvKey(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchUserEnvByEnvKey ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- deleteEnVariableById
+     * @apiNote :- Method use to fetch the data
      * @param payload
      * @return ResponseEntity
      * */
@@ -120,8 +138,25 @@ public class EVariableRestApi {
     }
 
     /**
+     * @apiName :- deleteAllEnVariable
+     * @apiNote :- Api use to delete en-variable by ids
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(path="/deleteAllEnVariable", method=RequestMethod.POST)
+    public ResponseEntity<?> deleteAllEnVariable(@RequestBody EnVariablesRequest payload) {
+        try {
+            return new ResponseEntity<>(this.eVariableService.deleteAllEnVariable(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while deleteAllEnVariable ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- downloadEnVariableTemplateFile
-     * Api use to download en-variable template
+     * @apiNote :- Api use to download en-variable template
      * @return ResponseEntity<?> downloadEnVariableTemplateFile
      * */
     @PreAuthorize("hasRole('DEV')")
@@ -141,7 +176,7 @@ public class EVariableRestApi {
 
     /**
      * @apiName :- downloadEnVariable
-     * Api use to download the en-variable
+     * @apiNote :- Api use to download the en-variable
      * @return ResponseEntity<?> downloadEnVariable
      * */
     @PreAuthorize("hasRole('DEV')")
@@ -161,7 +196,7 @@ public class EVariableRestApi {
 
     /**
      * @apiName :- uploadEnVariable
-     * Api use to upload the en-variable
+     * @apiNote :- Api use to upload the en-variable
      * @return ResponseEntity<?> uploadEnVariable
      * */
     @PreAuthorize("hasRole('DEV')")
@@ -180,7 +215,7 @@ public class EVariableRestApi {
 
     /**
      * @apiName :- fetchLinkEVariableWitUser
-     * Api use to fetch e-variable with root user
+     * @apiNote :- Api use to fetch e-variable with root user
      * @return ResponseEntity<?> fetchLinkEVariableWitUser
      * */
     @PreAuthorize("hasRole('DEV')")
@@ -196,7 +231,7 @@ public class EVariableRestApi {
 
     /**
      * @apiName :- linkEVariableWithUser
-     * Api use to link e-variable with root user
+     * @apiNote :- Api use to link e-variable with root user
      * @return ResponseEntity<?> linkEVariableWithUser
      * */
     @PreAuthorize("hasRole('DEV')")

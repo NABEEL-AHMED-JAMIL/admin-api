@@ -28,7 +28,8 @@ public class TemplateRegRestApi {
     private TemplateRegService templateRegService;
 
     /**
-     * Api use to add templateReg
+     * @apiName :- addTemplateReg
+     * @apiName :- Api use to add templateReg
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -44,7 +45,8 @@ public class TemplateRegRestApi {
     }
 
     /**
-     * Api use to edit templateReg
+     * @apiName :- editTemplateReg
+     * @apiName :- Api use to edit templateReg
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -60,7 +62,8 @@ public class TemplateRegRestApi {
     }
 
     /**
-     * Api use to find templateReg by templateType
+     * @apiName :- findTemplateRegByTemplateId
+     * @apiName :- Api use to find templateReg by templateType
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -76,7 +79,8 @@ public class TemplateRegRestApi {
     }
 
     /**
-     * Api use to fetch templateReg
+     * @apiName :- fetchTemplateReg
+     * @apiName :- Api use to fetch templateReg
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -92,7 +96,8 @@ public class TemplateRegRestApi {
     }
 
     /**
-     * Api use to delete templateReg
+     * @apiName :- deleteTemplateReg
+     * @apiName :- Api use to delete templateReg
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -103,6 +108,23 @@ public class TemplateRegRestApi {
             return new ResponseEntity<>(this.templateRegService.deleteTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteTemplateReg ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- deleteAllCredential
+     * @apiName :- Api use to delete templateReg
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(path="/deleteAllCredential", method=RequestMethod.POST)
+    public ResponseEntity<?> deleteAllCredential(@RequestBody TemplateRegRequest payload) {
+        try {
+            return new ResponseEntity<>(this.templateRegService.deleteAllTemplateReg(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while deleteAllCredential ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }

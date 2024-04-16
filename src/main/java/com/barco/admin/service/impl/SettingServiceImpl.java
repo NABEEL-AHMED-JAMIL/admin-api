@@ -80,13 +80,11 @@ public class SettingServiceImpl implements SettingService {
         for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
             rowCount.getAndIncrement();
             List<String> dataCellValue = new ArrayList<>();
-            column.forEach(col -> {
-                dataCellValue.add(String.valueOf(!BarcoUtil.isNull(data.get(col)) ? data.get(col): ""));
-            });
+            column.forEach(col -> dataCellValue.add(String.valueOf(!BarcoUtil.isNull(data.get(col)) ? data.get(col): "")));
             this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
         }
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        workbook.write(outputStream);
-        return outputStream;
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        workbook.write(outStream);
+        return outStream;
     }
 }

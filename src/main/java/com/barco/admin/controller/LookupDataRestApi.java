@@ -43,7 +43,7 @@ public class LookupDataRestApi {
 
     /**
      * @apiName :- addLookupData
-     * Api use to add the lookup data
+     * @apiNote :- Api use to add the lookup data
      * @param payload
      * @return ResponseEntity<?> addLookupData
      * */
@@ -60,7 +60,7 @@ public class LookupDataRestApi {
 
     /**
      * @apiName :- updateLookupData
-     * Api use to update the lookup data
+     * @apiNote :- Api use to update the lookup data
      * @param payload
      * @return ResponseEntity<?> updateLookupData
      * */
@@ -77,7 +77,7 @@ public class LookupDataRestApi {
 
     /**
      * @apiName :- findAllParentLookupByUsername
-     * Api use to fetch the lookup detail
+     * @apiNote :- Api use to fetch the lookup detail
      * @return ResponseEntity<?> findAllParentLookupByUsername
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
@@ -93,7 +93,7 @@ public class LookupDataRestApi {
 
     /**
      * @apiName :- fetchSubLookupDataByParentLookupDataId
-     * Api use to fetch the sub-Lookup by parent lookup id
+     * @apiNote :- Api use to fetch the sub-Lookup by parent lookup id
      * @param payload
      * @return ResponseEntity<?> fetchSubLookupDataByParentLookupDataId
      * */
@@ -110,7 +110,7 @@ public class LookupDataRestApi {
 
     /**
      * @apiName :- fetchLookupDataByLookupType
-     * Api use to fetch the sub-Lookup by parent lookup type
+     * @apiNote :- Api use to fetch the sub-Lookup by parent lookup type
      * @param payload
      * @return ResponseEntity<?> fetchLookupDataByLookupType
      * */
@@ -126,7 +126,7 @@ public class LookupDataRestApi {
 
     /**
      * @apiName :- deleteLookupData
-     * Api use to delete the lookup data
+     * @apiNote :- Api use to delete the lookup data
      * @param payload
      * @return ResponseEntity<?> deleteLookupData
      * */
@@ -143,7 +143,7 @@ public class LookupDataRestApi {
 
     /**
      * @apiName :- downloadLookupDataTemplateFile
-     * Api use to download lookup template the lookup data
+     * @apiNote :- Api use to download lookup template the lookup data
      * @return ResponseEntity<?> downloadLookupDataTemplateFile
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
@@ -163,7 +163,7 @@ public class LookupDataRestApi {
 
     /**
      * @apiName :- downloadLookupData
-     * Api use to download the lookup data
+     * @apiNote :- Api use to download the lookup data
      * @return ResponseEntity<?> downloadLookupData
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
@@ -183,7 +183,7 @@ public class LookupDataRestApi {
 
     /**
      * @apiName :- uploadLookupData
-     * Api use to upload the lookup data
+     * @apiNote :- Api use to upload the lookup data
      * @return ResponseEntity<?> uploadLookupData
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")

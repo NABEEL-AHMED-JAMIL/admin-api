@@ -5,7 +5,6 @@ import com.barco.admin.service.TemplateRegService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.model.dto.request.TemplateRegRequest;
 import com.barco.model.dto.response.AppResponse;
-import com.barco.model.dto.response.TemplateRegResponse;
 import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.TemplateReg;
 import com.barco.model.repository.AppUserRepository;
@@ -16,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import javax.transaction.Transactional;
+import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -134,8 +135,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         if (!templateReg.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            getTemplateRegResponse(templateReg.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getTemplateRegResponse(templateReg.get()));
     }
 
     /**
@@ -154,8 +154,11 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.templateRegRepository.findAllByUsername(appUser.get().getUsername())
+            this.templateRegRepository.findAllByDateCreatedBetweenAndUsername(
+                startDate, endDate, appUser.get().getUsername())
                 .stream().map(templateReg -> getTemplateRegResponse(templateReg))
                 .collect(Collectors.toList()));
     }
@@ -187,22 +190,27 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
     }
 
-
     /**
-     * Method use to get the templateReg response
-     * @param templateReg
-     * @return TemplateRegResponse
+     * Method use to delete all email template from db by username
+     * @param payload
+     * @return AppResponse
      * */
-    private TemplateRegResponse getTemplateRegResponse(TemplateReg templateReg) {
-        TemplateRegResponse templateRegResponse = new TemplateRegResponse();
-        templateRegResponse.setId(templateReg.getId());
-        templateRegResponse.setTemplateName(templateReg.getTemplateName());
-        templateRegResponse.setTemplateContent(templateReg.getTemplateContent());
-        templateRegResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(templateReg.getStatus().getLookupType()));
-        templateRegResponse.setCreatedBy(getActionUser(templateReg.getCreatedBy()));
-        templateRegResponse.setUpdatedBy(getActionUser(templateReg.getUpdatedBy()));
-        templateRegResponse.setDateUpdated(templateReg.getDateUpdated());
-        templateRegResponse.setDateCreated(templateReg.getDateCreated());
-        return templateRegResponse;
+    @Override
+    @Transactional
+    public AppResponse deleteAllTemplateReg(TemplateRegRequest payload) throws Exception {
+        logger.info("Request deleteAllTemplateReg :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getIds())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
+        }
+        this.templateRegRepository.deleteAll(this.templateRegRepository.findAllByIdIn(payload.getIds()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
     }
+
 }

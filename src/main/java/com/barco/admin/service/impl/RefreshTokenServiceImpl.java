@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import com.barco.admin.service.LookupDataCacheService;
 import com.barco.admin.service.RefreshTokenService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.model.dto.request.TokenRefreshRequest;
@@ -40,8 +39,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private AppUserRepository appUserRepository;
     @Autowired
     private AppTokenRepository appTokenRepository;
-    @Autowired
-    private LookupDataCacheService lookupDataCacheService;
 
     public RefreshTokenServiceImpl() {}
 
@@ -53,10 +50,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     public AppResponse fetchByAllRefreshToken(TokenRefreshRequest payload) throws Exception {
         logger.info("Request fetchByAllRefreshToken");
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + " 00:00:00");
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + " 23:59:59");
-        List<RefreshTokenResponse> tokenResponseList = this.appTokenRepository.findByDateCreatedBetweenAndStatus(
-            startDate, endDate, APPLICATION_STATUS.ACTIVE).stream()
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+        List<RefreshTokenResponse> tokenResponseList = this.appTokenRepository.findByDateCreatedBetweenAndStatusNot(
+            startDate, endDate, APPLICATION_STATUS.DELETE).stream()
             .map(refreshToken -> {
                 RefreshTokenResponse refreshTokenResponse = new RefreshTokenResponse();
                 refreshTokenResponse.setId(refreshToken.getId());

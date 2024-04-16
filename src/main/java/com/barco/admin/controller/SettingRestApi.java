@@ -39,7 +39,8 @@ public class SettingRestApi {
     private XmlOutTagInfoUtil xmlOutTagInfoUtil;
 
     /**
-     * Api use to execute dynamicQuery for select
+     * @apiName :- dynamicQueryResponse
+     * @apiName :- Api use to execute dynamicQuery for select
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -50,11 +51,12 @@ public class SettingRestApi {
             return new ResponseEntity<>(this.settingService.dynamicQueryResponse(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while dynamicQueryResponse ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCause(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
+     * @apiName :- downloadDynamicQueryFile
      * @apiName :- downloadLookupTemplateFile
      * Api use to download dynamic query
      * @return ResponseEntity<?> downloadDynamicQueryFile
@@ -76,7 +78,8 @@ public class SettingRestApi {
     }
 
     /**
-     * Api use to create the xml setting for source task
+     * @apiName :- xmlCreateChecker
+     * @apiName :- Api use to create the xml setting for source task
      * @param payload
      * @return ResponseEntity<?> xmlCreateChecker
      * */
@@ -84,7 +87,7 @@ public class SettingRestApi {
     @RequestMapping(path="/xmlCreateChecker", method=RequestMethod.POST)
     public ResponseEntity<?> xmlCreateChecker(@RequestBody ConfigurationMakerRequest payload) {
         try {
-            if (payload.getXmlTagsInfo() != null) {
+            if (!BarcoUtil.isNull(payload.getXmlTagsInfo())) {
                 return new ResponseEntity<>(new AppResponse(BarcoUtil.SUCCESS, this.xmlOutTagInfoUtil.makeXml(payload)), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.WRONG_INPUT), HttpStatus.OK);

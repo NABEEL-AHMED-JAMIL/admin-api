@@ -28,8 +28,10 @@ public class RefreshTokenRestApi {
     private RefreshTokenService refreshTokenService;
 
     /**
-     * Method use to fetch the data
-     * @param
+     * @apiName :- fetchByAllRefreshToken
+     * @apiNote :- Method use to fetch the data
+     * @param payload
+     * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN')")
     @RequestMapping(value="/fetchByAllRefreshToken", method=RequestMethod.POST)
@@ -43,8 +45,8 @@ public class RefreshTokenRestApi {
     }
 
     /**
-     * Integration Status :- done
-     * Api use to delete refresh token
+     * @apiName :- deleteRefreshToken
+     * @apiNote :- Api use to delete refresh token
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -60,8 +62,8 @@ public class RefreshTokenRestApi {
     }
 
     /**
-     * Integration Status :- done
-     * Api use to delete all refresh token
+     * @apiName :- deleteAllRefreshToken
+     * @apiNote :- Api use to delete all refresh token
      * @param payload
      * @return ResponseEntity<?>
      * */

@@ -31,7 +31,6 @@ public class AuthRestApi {
     private AuthService authService;
 
     /**
-     * api-status :- done
      * @apiName :- signInAppUser
      * @apiNote :- Api use to sign In the appUser
      * @param httpServletRequest
@@ -72,7 +71,6 @@ public class AuthRestApi {
     }
 
     /**
-     * api-status :- done
      * @apiName :- forgotPassword
      * @apiNote :- Api use support to forgot password
      * @param payload

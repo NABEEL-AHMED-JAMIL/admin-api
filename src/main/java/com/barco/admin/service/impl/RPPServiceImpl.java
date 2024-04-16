@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -176,7 +175,6 @@ public class RPPServiceImpl implements RPPService {
      * @return AppResponse
      * */
     @Override
-    @Transactional
     public AppResponse deleteRoleById(RoleRequest payload) throws Exception {
         logger.info("Request deleteRoleById :- " + payload);
         if (BarcoUtil.isNull(payload.getId())) {
@@ -187,10 +185,25 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ROLE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
         // delete with role user
-        this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_ROLES, role.get().getId()));
-        this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_ROLE_ACCESS_BY_ROLE_ID, role.get().getId()));
+        //this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_ROLES, role.get().getId()));
+        //this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_ROLE_ACCESS_BY_ROLE_ID, role.get().getId()));
         this.roleRepository.delete(role.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED,payload.getId().toString()));
+    }
+
+    /**
+     * Method use to delete all role
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse deleteAllRole(RoleRequest payload) throws Exception {
+        logger.info("Request deleteAllRole :- " + payload);
+        if (BarcoUtil.isNull(payload.getIds())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
+        }
+        this.roleRepository.deleteAll(this.roleRepository.findAllByIdIn(payload.getIds()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""));
     }
 
     /**
@@ -226,7 +239,12 @@ public class RPPServiceImpl implements RPPService {
         this.bulkExcel.setSheet(xssfSheet);
         AtomicInteger rowCount = new AtomicInteger();
         this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
-        Iterator<Role> roleList = this.roleRepository.findAll().iterator();
+        Iterator<Role> roleList;
+        if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+            roleList = this.roleRepository.findAllByIdIn(payload.getIds()).iterator();
+        } else {
+            roleList = this.roleRepository.findAll().iterator();
+        }
         while (roleList.hasNext()) {
             Role role = roleList.next();
             rowCount.getAndIncrement();
@@ -235,9 +253,9 @@ public class RPPServiceImpl implements RPPService {
             dataCellValue.add(role.getDescription());
             this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
         }
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        workbook.write(outputStream);
-        return outputStream;
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        workbook.write(outStream);
+        return outStream;
     }
 
     /**
@@ -458,10 +476,23 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.PROFILE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
         // delete with permission user
-        this.queryService.deleteQuery(String.format(QueryService.DELETE_PROFILE_PERMISSION_BY_PROFILE_ID, profile.get().getId()));
-        this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_PROFILE_ACCESS_BY_PROFILE_ID, profile.get().getId()));
         this.profileRepository.delete(profile.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED,payload.getId().toString()));
+    }
+
+    /**
+     * Method use to delete all profile
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse deleteAllProfile(ProfileRequest payload) throws Exception {
+        logger.info("Request deletePermissionById :- " + payload);
+        if (BarcoUtil.isNull(payload.getIds())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
+        }
+        this.profileRepository.deleteAll(this.profileRepository.findAllByIdIn(payload.getIds()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""));
     }
 
     /**
@@ -498,7 +529,12 @@ public class RPPServiceImpl implements RPPService {
         this.bulkExcel.setSheet(xssfSheet);
         AtomicInteger rowCount = new AtomicInteger();
         this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
-        Iterator<Profile> profileList = this.profileRepository.findAll().iterator();
+        Iterator<Profile> profileList;
+        if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+            profileList = this.profileRepository.findAllByIdIn(payload.getIds()).iterator();
+        } else {
+            profileList = this.profileRepository.findAll().iterator();
+        }
         while (profileList.hasNext()) {
             Profile profile = profileList.next();
             rowCount.getAndIncrement();
@@ -720,9 +756,23 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.PERMISSION_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
         // delete with permission user
-        this.queryService.deleteQuery(String.format(QueryService.DELETE_PROFILE_PERMISSION_BY_PERMISSION_ID, permission.get().getId()));
         this.permissionRepository.delete(permission.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED,payload.getId().toString()));
+    }
+
+    /**
+     * Method use to delete all permission
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse deleteAllPermission(PermissionRequest payload) throws Exception {
+        logger.info("Request deleteAllPermission :- " + payload);
+        if (BarcoUtil.isNull(payload.getIds())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
+        }
+        this.permissionRepository.deleteAll(this.permissionRepository.findAllByIdIn(payload.getIds()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""));
     }
 
     /**
@@ -758,9 +808,14 @@ public class RPPServiceImpl implements RPPService {
         this.bulkExcel.setSheet(xssfSheet);
         AtomicInteger rowCount = new AtomicInteger();
         this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
-        Iterator<Permission> permissionList = this.permissionRepository.findAll().iterator();
-        while (permissionList.hasNext()) {
-            Permission permission = permissionList.next();
+        Iterator<Permission> permissions;
+        if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+            permissions = this.permissionRepository.findAllByIdIn(payload.getIds()).iterator();
+        } else {
+            permissions = this.permissionRepository.findAll().iterator();
+        }
+        while (permissions.hasNext()) {
+            Permission permission = permissions.next();
             rowCount.getAndIncrement();
             List<String> dataCellValue = new ArrayList<>();
             dataCellValue.add(permission.getPermissionName());
@@ -1017,8 +1072,8 @@ public class RPPServiceImpl implements RPPService {
         if (!role.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ROLE_NOT_FOUND_WITH_ID, payload.getRoleId()), payload);
         }
-        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(
-            QueryService.FETCH_LINK_ROLE_WITH_ROOT_USER, role.get().getId(), appUser.get().getId(), appUser.get().getId()));
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_ROLE_WITH_ROOT_USER,
+            role.get().getId(), appUser.get().getId(), appUser.get().getId()));
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -1186,99 +1241,5 @@ public class RPPServiceImpl implements RPPService {
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, roleResponses);
     }
 
-    /**
-     * Method use to add the link detail
-     * @param superAdmin
-     * @param role
-     * @param appUser
-     * @return AppUserRoleAccess
-     * */
-    private AppUserRoleAccess getAppUserRoleAccess(AppUser superAdmin, Role role, AppUser appUser) {
-        AppUserRoleAccess appUserRoleAccess = new AppUserRoleAccess();
-        appUserRoleAccess.setCreatedBy(superAdmin);
-        appUserRoleAccess.setUpdatedBy(superAdmin);
-        appUserRoleAccess.setRole(role);
-        appUserRoleAccess.setAppUser(appUser);
-        appUserRoleAccess.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (role.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
-            appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
-            appUserRoleAccess.setStatus(APPLICATION_STATUS.INACTIVE);
-        }
-        return appUserRoleAccess;
-    }
 
-    /**
-     * Method use to add the link detail
-     * @param superAdmin
-     * @param profile
-     * @param appUser
-     * @return AppUserRoleAccess
-     * */
-    private AppUserProfileAccess getAppUserProfileAccess(AppUser superAdmin, Profile profile, AppUser appUser) {
-        AppUserProfileAccess appUserRoleAccess = new AppUserProfileAccess();
-        appUserRoleAccess.setCreatedBy(superAdmin);
-        appUserRoleAccess.setUpdatedBy(superAdmin);
-        appUserRoleAccess.setProfile(profile);
-        appUserRoleAccess.setAppUser(appUser);
-        appUserRoleAccess.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (profile.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
-            appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
-            appUserRoleAccess.setStatus(APPLICATION_STATUS.INACTIVE);
-        }
-        return appUserRoleAccess;
-    }
-
-    /**
-     * Method use to convert the role to role response
-     * @param role
-     * @return RoleResponse
-     * */
-    private RoleResponse gateRoleResponse(Role role) {
-        RoleResponse roleResponse = new RoleResponse();
-        roleResponse.setId(role.getId());
-        roleResponse.setName(role.getName());
-        roleResponse.setDescription(role.getDescription());
-        roleResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(role.getStatus().getLookupType()));
-        roleResponse.setCreatedBy(getActionUser(role.getCreatedBy()));
-        roleResponse.setUpdatedBy(getActionUser(role.getUpdatedBy()));
-        roleResponse.setDateUpdated(role.getDateUpdated());
-        roleResponse.setDateCreated(role.getDateCreated());
-        return roleResponse;
-    }
-
-    /**
-     * Method use to convert pojo to dto as response
-     * @param profile
-     * @return ProfileResponse
-     * */
-    private ProfileResponse gateProfileResponse(Profile profile) {
-        ProfileResponse profileResponse = new ProfileResponse();
-        profileResponse.setId(profile.getId());
-        profileResponse.setProfileName(profile.getProfileName());
-        profileResponse.setDescription(profile.getDescription());
-        profileResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(profile.getStatus().getLookupType()));
-        profileResponse.setCreatedBy(getActionUser(profile.getCreatedBy()));
-        profileResponse.setUpdatedBy(getActionUser(profile.getUpdatedBy()));
-        profileResponse.setDateUpdated(profile.getDateUpdated());
-        profileResponse.setDateCreated(profile.getDateCreated());
-        return profileResponse;
-    }
-
-    /**
-     * Method use to convert pojo to deto as response
-     * @param permission
-     * @return ProfileResponse
-     * */
-    private PermissionResponse gatePermissionResponse(Permission permission) {
-        PermissionResponse permissionResponse = new PermissionResponse();
-        permissionResponse.setId(permission.getId());
-        permissionResponse.setPermissionName(permission.getPermissionName());
-        permissionResponse.setDescription(permission.getDescription());
-        permissionResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(permission.getStatus().getLookupType()));
-        permissionResponse.setCreatedBy(getActionUser(permission.getCreatedBy()));
-        permissionResponse.setUpdatedBy(getActionUser(permission.getUpdatedBy()));
-        permissionResponse.setDateUpdated(permission.getDateUpdated());
-        permissionResponse.setDateCreated(permission.getDateCreated());
-        return permissionResponse;
-    }
 }

@@ -20,6 +20,8 @@ public interface RPPService extends RootService {
 
     public AppResponse deleteRoleById(RoleRequest payload) throws Exception;
 
+    public AppResponse deleteAllRole(RoleRequest payload) throws Exception;
+
     public ByteArrayOutputStream downloadRoleTemplateFile() throws Exception;
 
     public ByteArrayOutputStream downloadRole(RoleRequest payload) throws Exception;
@@ -35,6 +37,8 @@ public interface RPPService extends RootService {
     public AppResponse fetchProfileById(ProfileRequest payload) throws Exception;
 
     public AppResponse deleteProfileById(ProfileRequest payload) throws Exception;
+
+    public AppResponse deleteAllProfile(ProfileRequest payload) throws Exception;
 
     public ByteArrayOutputStream downloadProfileTemplateFile() throws Exception;
 
@@ -52,6 +56,8 @@ public interface RPPService extends RootService {
     public AppResponse fetchPermissionById(PermissionRequest payload) throws Exception;
 
     public AppResponse deletePermissionById(PermissionRequest payload) throws Exception;
+
+    public AppResponse deleteAllPermission(PermissionRequest payload) throws Exception;
 
     public ByteArrayOutputStream downloadPermissionTemplateFile() throws Exception;
 

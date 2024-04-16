@@ -1,6 +1,7 @@
 package com.barco.admin.service.impl;
 
 import com.barco.admin.service.LookupDataCacheService;
+import com.barco.admin.service.NotificationService;
 import com.barco.admin.service.RefreshTokenService;
 import com.barco.common.emailer.EmailMessagesFactory;
 import com.barco.common.security.JwtUtils;
@@ -59,6 +60,8 @@ public class AuthServiceImpl implements AuthService {
     private AuthenticationManager authenticationManager;
     @Autowired
     private EmailMessagesFactory emailMessagesFactory;
+    @Autowired
+    private NotificationService notificationService;
 
 
     public AuthServiceImpl() {}
@@ -139,7 +142,6 @@ public class AuthServiceImpl implements AuthService {
             appUser.setProfile(adminProfile.get());
         }
         this.appUserRepository.save(appUser);
-        this.sendRegisterUser(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         SubAppUser subAppUser = new SubAppUser();
         subAppUser.setAppUserParent(superAdmin.get());
         subAppUser.setAppUserChild(appUser);
@@ -147,8 +149,10 @@ public class AuthServiceImpl implements AuthService {
         subAppUser.setUpdatedBy(superAdmin.get());
         subAppUser.setStatus(APPLICATION_STATUS.ACTIVE);
         this.subAppUserRepository.save(subAppUser);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(
-            MessageUtil.USER_SUCCESSFULLY_REGISTER, appUser.getUsername()), payload);
+        this.sendRegisterUser(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
+        this.sendNotification(superAdmin.get().getUsername(), MessageUtil.REQUESTED_FOR_NEW_ACCOUNT,
+            String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()), superAdmin.get(), this.lookupDataCacheService, this.notificationService);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.USER_SUCCESSFULLY_REGISTER, appUser.getUsername()), payload);
     }
 
     /**
@@ -165,8 +169,10 @@ public class AuthServiceImpl implements AuthService {
         Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(
             payload.getEmail(), APPLICATION_STATUS.ACTIVE);
         if (appUser.isPresent()) {
-            this.sendForgotPasswordEmail(appUser.get(), this.lookupDataCacheService,
-                this.templateRegRepository, this.emailMessagesFactory, this.jwtUtils);
+            this.sendForgotPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository,
+                this.emailMessagesFactory, this.jwtUtils);
+            this.sendNotification(appUser.get().getUsername(), MessageUtil.FORGOT_PASSWORD, MessageUtil.FORGOT_EMAIL_SEND_TO_YOUR_EMAIL,
+                appUser.get(), this.lookupDataCacheService, this.notificationService);
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.EMAIL_SEND_SUCCESSFULLY);
         }
         return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACCOUNT_NOT_EXIST);
@@ -191,8 +197,9 @@ public class AuthServiceImpl implements AuthService {
         if (appUser.isPresent()) {
             appUser.get().setPassword(this.passwordEncoder.encode(payload.getNewPassword()));
             this.appUserRepository.save(appUser.get());
-            this.sendResetPasswordEmail(appUser.get(), this.lookupDataCacheService,
-                this.templateRegRepository, this.emailMessagesFactory);
+            this.sendResetPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
+            this.sendNotification(appUser.get().getUsername(), MessageUtil.RESET_PASSWORD, MessageUtil.RESET_EMAIL_SEND_TO_YOUR_EMAIL,
+                appUser.get(), this.lookupDataCacheService, this.notificationService);
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.EMAIL_SEND_SUCCESSFULLY);
         }
         return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACCOUNT_NOT_EXIST);
