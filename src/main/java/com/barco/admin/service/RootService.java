@@ -18,7 +18,6 @@ import com.barco.model.repository.TemplateRegRepository;
 import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.ModelUtil;
 import com.barco.model.util.lookup.*;
-import com.google.gson.Gson;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -658,6 +657,5 @@ public interface RootService {
                 }).collect(Collectors.toList());
         }
     }
-
 
 }

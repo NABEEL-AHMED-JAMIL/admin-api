@@ -193,7 +193,7 @@ public class EVariableServiceImpl implements EVariableService {
         }
         Optional<AppUserEnv> appUserEnv = this.appUserEnvRepository.findAppUserEnvByEnvVariablesAndAppUser(envVariables.get(), adminUser.get());
         if (!appUserEnv.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.APP_USER_ENV_NOT_FOUND, payload.getId().toString()));
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.APP_USER_ENV_NOT_FOUND, payload.getEnvKey()));
         }
         Map<String, Object> appSettingDetail = new HashMap<>();
         Optional<LookupData> parentLookupData = this.lookupDataRepository.findByLookupType(appUserEnv.get().getEnvValue());

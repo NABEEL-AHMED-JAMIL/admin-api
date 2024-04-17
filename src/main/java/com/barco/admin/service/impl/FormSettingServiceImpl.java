@@ -3,28 +3,36 @@ package com.barco.admin.service.impl;
 import com.barco.admin.service.FormSettingService;
 import com.barco.admin.service.LookupDataCacheService;
 import com.barco.common.utility.BarcoUtil;
-import com.barco.model.dto.request.ControlRequest;
-import com.barco.model.dto.request.FormRequest;
-import com.barco.model.dto.request.SectionRequest;
+import com.barco.common.utility.excel.BulkExcel;
+import com.barco.common.utility.excel.SheetFiled;
+import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.dto.response.ControlResponse;
 import com.barco.model.dto.response.FormResponse;
 import com.barco.model.dto.response.SectionResponse;
-import com.barco.model.pojo.AppUser;
-import com.barco.model.pojo.GenControl;
-import com.barco.model.pojo.GenForm;
-import com.barco.model.pojo.GenSection;
+import com.barco.model.pojo.*;
 import com.barco.model.repository.*;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.*;
+import com.barco.model.util.validation.STTCValidation;
+import com.barco.model.util.validation.STTFValidation;
+import com.barco.model.util.validation.STTSValidation;
+import com.google.gson.Gson;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import java.io.ByteArrayOutputStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +44,10 @@ public class FormSettingServiceImpl implements FormSettingService {
 
     private Logger logger = LoggerFactory.getLogger(FormSettingServiceImpl.class);
 
+    @Value("${storage.efsFileDire}")
+    private String tempStoreDirectory;
+    @Autowired
+    private BulkExcel bulkExcel;
     @Autowired
     private AppUserRepository appUserRepository;
     @Autowired
@@ -44,6 +56,10 @@ public class FormSettingServiceImpl implements FormSettingService {
     private GenSectionRepository genSectionRepository;
     @Autowired
     private GenControlRepository genControlRepository;
+    @Autowired
+    private SourceTaskTypeRepository sourceTaskTypeRepository;
+    @Autowired
+    private CredentialRepository credentialRepository;
     @Autowired
     private LookupDataRepository lookupDataRepository;
     @Autowired
@@ -57,6 +73,277 @@ public class FormSettingServiceImpl implements FormSettingService {
     @Autowired
     private GenSectionLinkGenFormRepository genSectionLinkGenFormRepository;
 
+    /**
+     * Method use to add the stt
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse addSTT(STTRequest payload) throws Exception {
+        logger.info("Request addSTT :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getServiceName())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_SERVICE_NAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_DESCRIPTION_MISSING);
+        } else if (BarcoUtil.isNull(payload.getTaskType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_MISSING);
+        } else if ((payload.getTaskType().equals(TASK_TYPE.API.getLookupCode()) ||
+            payload.getTaskType().equals(TASK_TYPE.AWS_SQS.getLookupCode()) ||
+            payload.getTaskType().equals(TASK_TYPE.WEB_SOCKET.getLookupCode())) &&
+            BarcoUtil.isNull(payload.getApiTaskType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_WITH_API_TYPE_MISSING);
+        } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode()) && BarcoUtil.isNull(payload.getKafkaTaskType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_WITH_KAFKA_TYPE_MISSING);
+        }
+        SourceTaskType sourceTaskType = new SourceTaskType();
+        sourceTaskType.setServiceName(payload.getServiceName());
+        sourceTaskType.setDescription(payload.getDescription());
+        sourceTaskType.setTaskType(TASK_TYPE.getRequestMethodByValue(payload.getTaskType()));
+        if (!BarcoUtil.isNull(payload.getCredentialId())) {
+            Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(payload.getCredentialId(),
+                adminUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
+            if (credential.isPresent()) {
+                sourceTaskType.setCredential(credential.get());
+            }
+        }
+        sourceTaskType.setCreatedBy(adminUser.get());
+        sourceTaskType.setUpdatedBy(adminUser.get());
+        sourceTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
+        if (payload.getTaskType().equals(TASK_TYPE.AWS_SQS.getLookupCode()) ||
+            payload.getTaskType().equals(TASK_TYPE.API.getLookupCode()) ||
+            payload.getTaskType().equals(TASK_TYPE.WEB_SOCKET.getLookupCode())) {
+            ApiTaskTypeRequest apiTaskTypeRequest = payload.getApiTaskType();
+            if (BarcoUtil.isNull(apiTaskTypeRequest.getApiUrl())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.API_URL_MISSING);
+            } else if (BarcoUtil.isNull(apiTaskTypeRequest.getHttpMethod())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.HTTP_METHOD_MISSING);
+            }
+            sourceTaskType.setApiTaskType(getApiTaskType(apiTaskTypeRequest, adminUser));
+        } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode())) {
+            KafkaTaskTypeRequest kafkaTaskTypeRequest = payload.getKafkaTaskType();
+            if (BarcoUtil.isNull(kafkaTaskTypeRequest.getNumPartitions())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_NUM_PARTITIONS);
+            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getServiceUrl())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_SERVICE_URL_MISSING);
+            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getTopicName())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_TOPIC_NAME_MISSING);
+            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getTopicPattern())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_TOPIC_PATTERN_MISSING);
+            }
+            sourceTaskType.setKafkaTaskType(getKafkaTaskType(kafkaTaskTypeRequest, adminUser));
+        }
+        this.sourceTaskTypeRepository.save(sourceTaskType);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, sourceTaskType.getId().toString()), payload);
+    }
+
+    /**
+     * Method use to edit the stt
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse editSTT(STTRequest payload) throws Exception {
+        logger.info("Request editSTT :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_SERVICE_ID_MISSING);
+        } else if (BarcoUtil.isNull(payload.getServiceName())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_SERVICE_NAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_DESCRIPTION_MISSING);
+        } else if (BarcoUtil.isNull(payload.getTaskType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_MISSING);
+        } else if ((payload.getTaskType().equals(TASK_TYPE.API.getLookupCode()) ||
+            payload.getTaskType().equals(TASK_TYPE.AWS_SQS.getLookupCode()) ||
+            payload.getTaskType().equals(TASK_TYPE.WEB_SOCKET.getLookupCode())) &&
+            BarcoUtil.isNull(payload.getApiTaskType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_WITH_API_TYPE_MISSING);
+        } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode()) && BarcoUtil.isNull(payload.getKafkaTaskType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_WITH_KAFKA_TYPE_MISSING);
+        }
+        Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
+            payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
+        if (!sourceTaskType.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
+        } else if (!sourceTaskType.get().getTaskType().equals(payload.getTaskType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_CANNOT_CHANGE_TO_DIFFERENT_TASK_TYPE);
+        }
+        sourceTaskType.get().setServiceName(payload.getServiceName());
+        sourceTaskType.get().setDescription(payload.getDescription());
+        if (!BarcoUtil.isNull(payload.getStatus())) {
+            sourceTaskType.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+        }
+        if (!BarcoUtil.isNull(payload.getCredentialId())) {
+            Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(
+                payload.getCredentialId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+            if (credential.isPresent()) {
+                sourceTaskType.get().setCredential(credential.get());
+            }
+        }
+        if (payload.getTaskType().equals(TASK_TYPE.AWS_SQS.getLookupCode()) ||
+            payload.getTaskType().equals(TASK_TYPE.API.getLookupCode()) ||
+            payload.getTaskType().equals(TASK_TYPE.WEB_SOCKET.getLookupCode())) {
+            ApiTaskTypeRequest apiTaskTypeRequest = payload.getApiTaskType();
+            if (BarcoUtil.isNull(apiTaskTypeRequest.getApiUrl())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.API_URL_MISSING);
+            } else if (BarcoUtil.isNull(apiTaskTypeRequest.getHttpMethod())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.HTTP_METHOD_MISSING);
+            }
+            sourceTaskType.get().getApiTaskType().setApiUrl(apiTaskTypeRequest.getApiUrl());
+            sourceTaskType.get().getApiTaskType().setHttpMethod(apiTaskTypeRequest.getHttpMethod());
+            // give the same status of parent type
+            if (!BarcoUtil.isNull(payload.getStatus())) {
+                sourceTaskType.get().getApiTaskType().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+                sourceTaskType.get().getApiTaskType().setUpdatedBy(adminUser.get());
+            }
+        } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode())) {
+            KafkaTaskTypeRequest kafkaTaskTypeRequest = payload.getKafkaTaskType();
+            if (BarcoUtil.isNull(kafkaTaskTypeRequest.getNumPartitions())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_NUM_PARTITIONS);
+            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getServiceUrl())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_SERVICE_URL_MISSING);
+            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getTopicName())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_TOPIC_NAME_MISSING);
+            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getTopicPattern())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_TOPIC_PATTERN_MISSING);
+            }
+            sourceTaskType.get().getKafkaTaskType().setServiceUrl(kafkaTaskTypeRequest.getServiceUrl());
+            sourceTaskType.get().getKafkaTaskType().setNumPartitions(kafkaTaskTypeRequest.getNumPartitions());
+            sourceTaskType.get().getKafkaTaskType().setTopicName(kafkaTaskTypeRequest.getTopicName());
+            sourceTaskType.get().getKafkaTaskType().setTopicPattern(kafkaTaskTypeRequest.getTopicPattern());
+            // give the same status of parent type
+            if (!BarcoUtil.isNull(payload.getStatus())) {
+                sourceTaskType.get().getKafkaTaskType().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+                sourceTaskType.get().getKafkaTaskType().setUpdatedBy(adminUser.get());
+            }
+        }
+        // delete all source task
+        if (!BarcoUtil.isNull(sourceTaskType.get().getGroupsLinkSourceTaskTypes())) {
+            sourceTaskType.get().getGroupsLinkSourceTaskTypes().stream()
+                .filter(grpLinkStt -> !grpLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
+                .map(grpLinkStt -> {
+                    grpLinkStt.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+                    grpLinkStt.setUpdatedBy(adminUser.get());
+                    return grpLinkStt;
+                }).collect(Collectors.toList());
+        }
+        // delete all form
+        if (!BarcoUtil.isNull(sourceTaskType.get().getGenFormLinkSourceTaskTypes())) {
+            sourceTaskType.get().getGenFormLinkSourceTaskTypes().stream()
+                .filter(genFormLinkStt -> !genFormLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
+                .map(genFormLinkStt -> {
+                    genFormLinkStt.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+                    genFormLinkStt.setUpdatedBy(adminUser.get());
+                    return genFormLinkStt;
+                }).collect(Collectors.toList());
+        }
+        sourceTaskType.get().setUpdatedBy(adminUser.get());
+        this.sourceTaskTypeRepository.save(sourceTaskType.get());
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()), payload);
+    }
+
+    /**
+     * Method use to delete the stt
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse deleteSTT(STTRequest payload) throws Exception {
+        logger.info("Request deleteSTT :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_SERVICE_ID_MISSING);
+        }
+        Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
+            payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
+        if (!sourceTaskType.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
+        }
+        sourceTaskType.get().setStatus(APPLICATION_STATUS.DELETE);
+        sourceTaskType.get().setUpdatedBy(adminUser.get());
+        // delete api task type
+        if (!BarcoUtil.isNull(sourceTaskType.get().getApiTaskType())) {
+            sourceTaskType.get().getApiTaskType().setStatus(APPLICATION_STATUS.DELETE);
+            sourceTaskType.get().getApiTaskType().setUpdatedBy(adminUser.get());
+        }
+        // delete kafka task type
+        if (!BarcoUtil.isNull(sourceTaskType.get().getKafkaTaskType())) {
+            sourceTaskType.get().getKafkaTaskType().setStatus(APPLICATION_STATUS.DELETE);
+            sourceTaskType.get().getKafkaTaskType().setUpdatedBy(adminUser.get());
+        }
+        // delete all source task
+        if (!BarcoUtil.isNull(sourceTaskType.get().getGroupsLinkSourceTaskTypes())) {
+            sourceTaskType.get().getGroupsLinkSourceTaskTypes().stream()
+            .filter(grpLinkStt -> !grpLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(grpLinkStt -> {
+                grpLinkStt.setStatus(APPLICATION_STATUS.DELETE);
+                grpLinkStt.setUpdatedBy(adminUser.get());
+                return grpLinkStt;
+            }).collect(Collectors.toList());
+        }
+        // delete all form
+        if (!BarcoUtil.isNull(sourceTaskType.get().getGenFormLinkSourceTaskTypes())) {
+            sourceTaskType.get().getGenFormLinkSourceTaskTypes().stream()
+                .filter(genFormLinkStt -> !genFormLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
+                .map(genFormLinkStt -> {
+                    genFormLinkStt.setStatus(APPLICATION_STATUS.DELETE);
+                    genFormLinkStt.setUpdatedBy(adminUser.get());
+                    return genFormLinkStt;
+                }).collect(Collectors.toList());
+        }
+        sourceTaskType.get().setUpdatedBy(adminUser.get());
+        this.sourceTaskTypeRepository.save(sourceTaskType.get());
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId().toString()), payload);
+    }
+
+    /**
+     * Method use to fetch stt by stt id(source task type)
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchSTTBySttId(STTRequest payload) throws Exception {
+        return null;
+    }
+
+    /***
+     * Method use to fetch stt (source task type)
+     * @param payload
+     * @return AppResponse
+     */
+    @Override
+    public AppResponse fetchSTT(STTRequest payload) throws Exception {
+        return null;
+    }
+
+    /**
+     * Method use to delete all stt
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse deleteAllSTT(FormRequest payload) throws Exception {
+        return null;
+    }
 
     /**
      * Method use to add the form
@@ -64,7 +351,7 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse addForm(FormRequest payload) {
+    public AppResponse addForm(FormRequest payload) throws Exception {
         logger.info("Request addForm :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
@@ -101,7 +388,7 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse editForm(FormRequest payload) {
+    public AppResponse editForm(FormRequest payload) throws Exception {
         logger.info("Request editForm :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
@@ -134,12 +421,10 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!BarcoUtil.isNull(payload.getStatus())) {
             genForm.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
             if (!BarcoUtil.isNull(genForm.get().getGenFormLinkSourceTaskTypes())) {
-                genForm.get().getGenFormLinkSourceTaskTypes().stream()
-                    .filter(genFormLinkStt -> !genFormLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
-                    .map(genFormLinkStt -> {
-                        genFormLinkStt.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-                        return genFormLinkStt;
-                    }).collect(Collectors.toList());
+                this.actionOnGenFormLinkSourceTaskTypes(genForm.get(), adminUser.get());
+            }
+            if (!BarcoUtil.isNull(genForm.get().getGenSectionLinkGenForms())) {
+                this.actionOnGenSectionLinkGenForms(genForm.get(), adminUser.get());
             }
         }
         genForm.get().setUpdatedBy(adminUser.get());
@@ -153,7 +438,7 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse deleteFormById(FormRequest payload) {
+    public AppResponse deleteFormById(FormRequest payload) throws Exception {
         logger.info("Request deleteFormById :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
@@ -172,17 +457,12 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         genForm.get().setStatus(APPLICATION_STATUS.DELETE);
         genForm.get().setUpdatedBy(adminUser.get());
-        if (!BarcoUtil.isNull(payload.getStatus())) {
-            genForm.get().getGenFormLinkSourceTaskTypes().stream()
-                .filter(genFormLinkStt -> !genFormLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
-                .map(genFormLinkStt -> {
-                    genFormLinkStt.setStatus(APPLICATION_STATUS.DELETE);
-                    genFormLinkStt.setUpdatedBy(adminUser.get());
-                    return genFormLinkStt;
-                }).collect(Collectors.toList());
+        if (!BarcoUtil.isNull(genForm.get().getGenFormLinkSourceTaskTypes())) {
+            this.actionOnGenFormLinkSourceTaskTypes(genForm.get(), adminUser.get());
         }
-        this.genSectionLinkGenFormRepository.deleteAllByStatusAndFormIdAndAppUserId(
-            APPLICATION_STATUS.DELETE, genForm.get().getId(), adminUser.get().getId());
+        if (!BarcoUtil.isNull(genForm.get().getGenSectionLinkGenForms())) {
+            this.actionOnGenSectionLinkGenForms(genForm.get(), adminUser.get());
+        }
         this.genFormRepository.save(genForm.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
     }
@@ -193,7 +473,7 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchFormByFormId(FormRequest payload) {
+    public AppResponse fetchFormByFormId(FormRequest payload) throws Exception {
         logger.info("Request fetchFormByFormId :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
@@ -219,7 +499,7 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchForms(FormRequest payload) {
+    public AppResponse fetchForms(FormRequest payload) throws Exception {
         logger.info("Request fetchForms :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
@@ -236,7 +516,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (result.isEmpty()) {
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
         }
-        List<FormResponse> formResponses = result.stream().map(genForm -> {
+        List<FormResponse> formResponses = result.stream()
+        .map(genForm -> {
             FormResponse formResponse = getFormResponse(genForm);
             formResponse.setTotalStt(this.genFormLinkSourceTaskTypeRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
             formResponse.setTotalSection(this.genSectionLinkGenFormRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
@@ -252,7 +533,32 @@ public class FormSettingServiceImpl implements FormSettingService {
      * */
     @Override
     public AppResponse deleteAllForms(FormRequest payload) throws Exception {
-        return null;
+        logger.info("Request deleteAllForms :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getIds())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
+        }
+        this.genFormRepository.saveAll(
+            this.genFormRepository.findAllByIdIn(payload.getIds()).stream()
+                .map(genForm -> {
+                    genForm.setStatus(APPLICATION_STATUS.DELETE);
+                    genForm.setUpdatedBy(appUser.get());
+                    if (!BarcoUtil.isNull(genForm.getGenFormLinkSourceTaskTypes())) {
+                        this.actionOnGenFormLinkSourceTaskTypes(genForm, appUser.get());
+                    }
+                    if (!BarcoUtil.isNull(genForm.getGenSectionLinkGenForms())) {
+                        this.actionOnGenSectionLinkGenForms(genForm, appUser.get());
+                    }
+                    return genForm;
+                }).collect(Collectors.toList())
+        );
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
     }
 
     /**
@@ -313,18 +619,15 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!genSection.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_NOT_FOUND);
         }
-        genSection.get().setId(payload.getId());
         genSection.get().setSectionName(payload.getSectionName());
         genSection.get().setDescription(payload.getDescription());
         if (!BarcoUtil.isNull(payload.getStatus())) {
             genSection.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
             if (!BarcoUtil.isNull(genSection.get().getGenSectionLinkGenForms())) {
-                genSection.get().getGenSectionLinkGenForms().stream()
-                    .filter(genSectionLinkGenForm -> !genSectionLinkGenForm.getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
-                    .map(genSectionLinkGenForm -> {
-                        genSectionLinkGenForm.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-                        return genSectionLinkGenForm;
-                    }).collect(Collectors.toList());
+                this.actionOnGenSectionLinkGenForms(genSection.get(), adminUser.get());
+            }
+            if (!BarcoUtil.isNull(genSection.get().getGenControlLinkGenSections())) {
+                this.actionOnGenControlLinkGenSections(genSection.get(), adminUser.get());
             }
         }
         genSection.get().setUpdatedBy(adminUser.get());
@@ -357,15 +660,11 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         genSection.get().setStatus(APPLICATION_STATUS.DELETE);
         if (!BarcoUtil.isNull(genSection.get().getGenSectionLinkGenForms())) {
-            genSection.get().getGenSectionLinkGenForms().stream()
-                .filter(genSectionLinkGenForm -> !genSectionLinkGenForm.getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
-                .map(genSectionLinkGenForm -> {
-                    genSectionLinkGenForm.setStatus(APPLICATION_STATUS.DELETE);
-                    return genSectionLinkGenForm;
-                }).collect(Collectors.toList());
+            this.actionOnGenSectionLinkGenForms(genSection.get(), adminUser.get());
         }
-        this.genControlLinkGenSectionRepository.deleteAllByStatusAndSectionIdAndAppUserId(
-            APPLICATION_STATUS.ACTIVE, genSection.get().getId(), adminUser.get().getId());
+        if (!BarcoUtil.isNull(genSection.get().getGenControlLinkGenSections())) {
+            this.actionOnGenControlLinkGenSections(genSection.get(), adminUser.get());
+        }
         this.genSectionRepository.save(genSection.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
     }
@@ -438,7 +737,30 @@ public class FormSettingServiceImpl implements FormSettingService {
     @Override
     public AppResponse deleteAllSections(SectionRequest payload) throws Exception {
         logger.info("Request deleteAllSections :- " + payload);
-        return null;
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getIds())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
+        }
+        this.genSectionRepository.saveAll(
+            this.genSectionRepository.findAllByIdIn(payload.getIds()).stream()
+                .map((genSection -> {
+                    genSection.setStatus(APPLICATION_STATUS.DELETE);
+                    if (!BarcoUtil.isNull(genSection.getGenSectionLinkGenForms())) {
+                        this.actionOnGenSectionLinkGenForms(genSection, appUser.get());
+                    }
+                    if (!BarcoUtil.isNull(genSection.getGenControlLinkGenSections())) {
+                        this.actionOnGenControlLinkGenSections(genSection, appUser.get());
+                    }
+                    return genSection;
+                })).collect(Collectors.toList())
+        );
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
     }
 
     /**
@@ -497,7 +819,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         genControl.setUpdatedBy(adminUser.get());
         this.genControlRepository.save(genControl);
         payload.setId(genControl.getId());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format("STTControl added with %d.", payload.getId()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()));
     }
 
     /**
@@ -565,12 +887,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!BarcoUtil.isNull(payload.getStatus())) {
             genControl.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
             if (!BarcoUtil.isNull(genControl.get().getGenControlLinkGenSections())) {
-                genControl.get().getGenControlLinkGenSections().stream()
-                    .filter(genControlLinkGenSection -> !genControlLinkGenSection.getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
-                    .map(genControlLinkGenSection -> {
-                        genControlLinkGenSection.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-                        return genControlLinkGenSection;
-                    }).collect(Collectors.toList());
+                this.actionOnGenControlLinkGenSections(genControl.get(), adminUser.get());
             }
         }
         this.genControlRepository.save(genControl.get());
@@ -600,16 +917,9 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!genControl.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_NOT_FOUND);
         }
-        if (!BarcoUtil.isNull(payload.getStatus())) {
-            genControl.get().setStatus(APPLICATION_STATUS.DELETE);
-            if (!BarcoUtil.isNull(genControl.get().getGenControlLinkGenSections())) {
-                genControl.get().getGenControlLinkGenSections().stream()
-                    .filter(genControlLinkGenSection -> !genControlLinkGenSection.getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
-                    .map(genControlLinkGenSection -> {
-                        genControlLinkGenSection.setStatus(APPLICATION_STATUS.DELETE);
-                        return genControlLinkGenSection;
-                    }).collect(Collectors.toList());
-            }
+        genControl.get().setStatus(APPLICATION_STATUS.DELETE);
+        if (!BarcoUtil.isNull(genControl.get().getGenControlLinkGenSections())) {
+            this.actionOnGenControlLinkGenSections(genControl.get(), adminUser.get());
         }
         this.genControlRepository.save(genControl.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
@@ -660,8 +970,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         List<ControlResponse> controlResponses = this.genControlRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNot(
-            startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE)
-            .stream()
+            startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE).stream()
             .map(genControl -> {
                 ControlResponse controlResponse = getControlResponse(genControl);
                 controlResponse.setTotalSection(this.genControlLinkGenSectionRepository.countByGenControlAndStatusNot(genControl, APPLICATION_STATUS.DELETE));
@@ -670,10 +979,415 @@ public class FormSettingServiceImpl implements FormSettingService {
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, controlResponses);
     }
 
+    /**
+     * Method use to delete all controls (form control)
+     * @param payload
+     * @return AppResponse
+     * */
     @Override
     public AppResponse deleteAllControls(ControlRequest payload) throws Exception {
         logger.info("Request deleteAllControls :- " + payload);
-        return null;
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getIds())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
+        }
+        this.genControlRepository.saveAll(
+            this.genControlRepository.findAllByIdIn(payload.getIds()).stream().map(genControl -> {
+                genControl.setStatus(APPLICATION_STATUS.DELETE);
+                if (!BarcoUtil.isNull(genControl.getGenControlLinkGenSections())) {
+                    this.actionOnGenControlLinkGenSections(genControl, appUser.get());
+                }
+                return genControl;
+        }).collect(Collectors.toList()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
+    }
+
+    /**
+     * Method use to download stt* all file template
+     * @param payload
+     * @return ByteArrayOutputStream
+     * */
+    @Override
+    public ByteArrayOutputStream downloadSTTCommonTemplateFile(STTFileUploadRequest payload) throws Exception {
+        logger.info("Request downloadSTTCommonTemplateFile :- " + payload);
+        return downloadTemplateFile(this.tempStoreDirectory, this.bulkExcel,
+            this.lookupDataCacheService.getSheetFiledMap().get(payload.getDownloadType()));
+    }
+
+    /**
+     * Method use to download stt* all file
+     * @param payload
+     * @return ByteArrayOutputStream
+     * */
+    @Override
+    public ByteArrayOutputStream downloadSTTCommon(STTFileUploadRequest payload) throws Exception {
+        logger.info("Request downloadSTTCommon :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            throw new Exception(MessageUtil.USERNAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDownloadType())) {
+            throw new Exception(MessageUtil.DOWNLOAD_TYPE_MISSING);
+        }
+        SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(payload.getDownloadType());
+        List<String> header = sheetFiled.getColTitle();
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        this.bulkExcel.setWb(workbook);
+        XSSFSheet xssfSheet = workbook.createSheet(payload.getDownloadType());
+        this.bulkExcel.setSheet(xssfSheet);
+        AtomicInteger rowCount = new AtomicInteger();
+        this.bulkExcel.fillBulkHeader(rowCount.get(), header);
+        // fill data
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
+        }
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+        if (payload.getDownloadType().equals(this.bulkExcel.STT_FORM)) {
+            List<GenForm> getForms;
+            if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+                getForms = this.genFormRepository.findAllByDateCreatedBetweenAndCreatedByAndIdInAndStatusNot(
+                    startDate, endDate, adminUser.get(), payload.getIds(), APPLICATION_STATUS.DELETE);
+            } else {
+                getForms = this.genFormRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNot(
+                    startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE);
+            }
+            getForms.forEach(genForm -> {
+                rowCount.getAndIncrement();
+                List<String> dataCellValue = new ArrayList<>();
+                dataCellValue.add(genForm.getFormName());
+                dataCellValue.add(genForm.getFormType().name());
+                dataCellValue.add(genForm.getHomePage());
+                dataCellValue.add(genForm.getServiceId());
+                dataCellValue.add(genForm.getDescription());
+                this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
+            });
+        } else if (payload.getDownloadType().equals(this.bulkExcel.STT_SECTION)) {
+            List<GenSection> genSections;
+            if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+                genSections = this.genSectionRepository.findAllByDateCreatedBetweenAndCreatedByAndIdInAndStatusNot(
+                    startDate, endDate, adminUser.get(), payload.getIds(), APPLICATION_STATUS.DELETE);
+            } else {
+                genSections = this.genSectionRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNot(
+                    startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE);
+            }
+            genSections.forEach(genSection -> {
+                rowCount.getAndIncrement();
+                List<String> dataCellValue = new ArrayList<>();
+                dataCellValue.add(genSection.getSectionName());
+                dataCellValue.add(genSection.getDescription());
+                this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
+            });
+        } else if (payload.getDownloadType().equals(this.bulkExcel.STT_CONTROL)) {
+            List<GenControl> genControls;
+            if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+                genControls = this.genControlRepository.findAllByDateCreatedBetweenAndCreatedByAndIdInAndStatusNot(
+                    startDate, endDate, adminUser.get(), payload.getIds(), APPLICATION_STATUS.DELETE);
+            } else {
+                genControls = this.genControlRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNot(
+                    startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE);
+            }
+            genControls.forEach(genControl -> {
+                rowCount.getAndIncrement();
+                List<String> dataCellValue = new ArrayList<>();
+                dataCellValue.add(genControl.getControlName());
+                dataCellValue.add(genControl.getDescription());
+                dataCellValue.add(genControl.getFieldName());
+                dataCellValue.add(genControl.getFieldTitle());
+                dataCellValue.add(!BarcoUtil.isNull(genControl.getFieldWidth()) ?
+                    genControl.getFieldWidth().toString(): this.bulkExcel.BLANK_VAL);
+                dataCellValue.add(genControl.getPlaceHolder());
+                dataCellValue.add(genControl.getPattern());
+                dataCellValue.add(genControl.getFieldType().name());
+                dataCellValue.add(!BarcoUtil.isNull(genControl.getMinLength()) ?
+                    genControl.getMinLength().toString(): this.bulkExcel.BLANK_VAL);
+                dataCellValue.add(!BarcoUtil.isNull(genControl.getMaxLength()) ?
+                    genControl.getMaxLength().toString(): this.bulkExcel.BLANK_VAL);
+                dataCellValue.add(genControl.getMandatory().name());
+                this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
+            });
+        }
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        workbook.write(outStream);
+        return outStream;
+    }
+
+    /**
+     * Method use to upload stt* file with data
+     * @param fileObject
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse uploadSTTCommon(FileUploadRequest fileObject) throws Exception {
+        logger.info("Request uploadSTTCommon :- " + fileObject);
+        if (!fileObject.getFile().getContentType().equalsIgnoreCase(this.bulkExcel.SHEET_TYPE)) {
+            logger.info("File Type " + fileObject.getFile().getContentType());
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.XLSX_FILE_ONLY);
+        } else if (BarcoUtil.isNull(fileObject.getData())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.DATA_NOT_FOUND_XLSX);
+        }
+        Gson gson = new Gson();
+        STTFileUploadRequest sttFileUReq = gson.fromJson((String) fileObject.getData(), STTFileUploadRequest.class);
+        if (BarcoUtil.isNull(sttFileUReq.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        } else if (BarcoUtil.isNull(sttFileUReq.getUploadType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.UPLOAD_TYPE_MISSING);
+        }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            sttFileUReq.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        Optional<LookupData> uploadLimit = this.lookupDataRepository.findByLookupType(LookupUtil.UPLOAD_LIMIT);
+        XSSFWorkbook workbook = new XSSFWorkbook(fileObject.getFile().getInputStream());
+        if (BarcoUtil.isNull(workbook) || workbook.getNumberOfSheets() == 0) {
+            return new AppResponse(BarcoUtil.ERROR,  MessageUtil.YOU_UPLOAD_EMPTY_FILE);
+        }
+        XSSFSheet sheet = null;
+        if (sttFileUReq.getUploadType().equals(this.bulkExcel.STT) || sttFileUReq.getUploadType().equals(this.bulkExcel.STT_FORM) ||
+            sttFileUReq.getUploadType().equals(this.bulkExcel.STT_SECTION) || sttFileUReq.getUploadType().equals(this.bulkExcel.STT_CONTROL)) {
+            sheet = workbook.getSheet(sttFileUReq.getUploadType());
+        }
+        // target sheet upload limit validation
+        if (BarcoUtil.isNull(sheet)) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.SHEET_NOT_FOUND, sttFileUReq.getUploadType()));
+        } else if (sheet.getLastRowNum() < 1) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.YOU_CANT_UPLOAD_EMPTY_FILE);
+        } else if (sheet.getLastRowNum() > Long.valueOf(uploadLimit.get().getLookupValue())) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.FILE_SUPPORT_ROW_AT_TIME, uploadLimit.get().getLookupValue()));
+        }
+        logger.info(String.format(MessageUtil.UPLOAD_FILE_TYPE, sttFileUReq.getUploadType()));
+        if (sttFileUReq.getUploadType().equals(this.bulkExcel.STT_FORM)) {
+            return this.uploadSTTForm(sheet, adminUser.get());
+        } else if (sttFileUReq.getUploadType().equals(this.bulkExcel.STT_SECTION)) {
+            return this.uploadSTTSection(sheet, adminUser.get());
+        } else if (sttFileUReq.getUploadType().equals(this.bulkExcel.STT_CONTROL)) {
+            return this.uploadSTTControl(sheet, adminUser.get());
+        }
+        return new AppResponse(BarcoUtil.ERROR, MessageUtil.WRONG_UPLOAD_TYPE_DEFINE);
+    }
+
+    /**
+     * Method use to upload the stt form
+     * @pa ram sheet
+     * @param appUser
+     * @return AppResponse
+     * */
+    private AppResponse uploadSTTForm(XSSFSheet sheet, AppUser appUser) throws Exception {
+        List<STTFValidation> sttfValidations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        Iterator<Row> rows = sheet.iterator();
+        SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.STT_FORM);
+        while (rows.hasNext()) {
+            Row currentRow = rows.next();
+            if (currentRow.getRowNum() == 0) {
+                for (int i=0; i<sheetFiled.getColTitle().size(); i++) {
+                    if (!currentRow.getCell(i).getStringCellValue().equals(sheetFiled.getColTitle().get(i))) {
+                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1) + " " +
+                            sheetFiled.getColTitle().get(i) + " heading missing.");
+                    }
+                }
+            } else if (currentRow.getRowNum() > 0) {
+                STTFValidation sttfValidation = new STTFValidation();
+                sttfValidation.setRowCounter(currentRow.getRowNum()+1);
+                for (int i=0; i<sheetFiled.getColTitle().size(); i++) {
+                    int index = 0;
+                    if (i == index) {
+                        sttfValidation.setFormName(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttfValidation.setFormType(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttfValidation.setHomePage(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttfValidation.setServiceId(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttfValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
+                    }
+                }
+                sttfValidation.isValidSTTF();
+                if (!BarcoUtil.isNull(sttfValidation.getHomePage()) &&
+                    !this.lookupDataRepository.findByLookupType(sttfValidation.getHomePage()).isPresent()) {
+                    // have to check home page contain in the db or not
+                    sttfValidation.setErrorMsg(String.format("Homepage should not be empty at row %s.<br>", sttfValidation.getRowCounter()));
+                }
+                if (!BarcoUtil.isNull(sttfValidation.getErrorMsg())) {
+                    errors.add(sttfValidation.getErrorMsg());
+                    continue;
+                }
+                sttfValidations.add(sttfValidation);
+            }
+        }
+        if (errors.size() > 0) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.TOTAL_STTF_INVALID, errors.size()), errors);
+        }
+        sttfValidations.forEach(sttfValidation -> {
+            GenForm genForm = new GenForm();
+            genForm.setFormName(sttfValidation.getFormName());
+            genForm.setDescription(sttfValidation.getDescription());
+            genForm.setFormType(FORM_TYPE.findEnumByName(sttfValidation.getFormType()));
+            genForm.setServiceId(sttfValidation.getServiceId());
+            genForm.setHomePage(sttfValidation.getHomePage());
+            genForm.setStatus(APPLICATION_STATUS.ACTIVE);
+            genForm.setCreatedBy(appUser);
+            genForm.setUpdatedBy(appUser);
+            this.genFormRepository.save(genForm);
+        });
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, ""));
+    }
+
+    /**
+     * Method use to upload the stt section
+     * @param sheet
+     * @param appUser
+     * @return AppResponse
+     * */
+    private AppResponse uploadSTTSection(XSSFSheet sheet, AppUser appUser) throws Exception {
+        List<STTSValidation> sttsValidations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        Iterator<Row> rows = sheet.iterator();
+        SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.STT_SECTION);
+        while (rows.hasNext()) {
+            Row currentRow = rows.next();
+            if (currentRow.getRowNum() == 0) {
+                for (int i=0; i<sheetFiled.getColTitle().size(); i++) {
+                    if (!currentRow.getCell(i).getStringCellValue().equals(sheetFiled.getColTitle().get(i))) {
+                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1) + " " +
+                            sheetFiled.getColTitle().get(i) + " heading missing.");
+                    }
+                }
+            } else if (currentRow.getRowNum() > 0) {
+                STTSValidation sttsValidation = new STTSValidation();
+                sttsValidation.setRowCounter(currentRow.getRowNum()+1);
+                for (int i=0; i<sheetFiled.getColTitle().size(); i++) {
+                    int index = 0;
+                    if (i == index) {
+                        sttsValidation.setSectionName(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttsValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
+                    }
+                }
+                sttsValidation.isValidSTTS();
+                if (!BarcoUtil.isNull(sttsValidation.getErrorMsg())) {
+                    errors.add(sttsValidation.getErrorMsg());
+                    continue;
+                }
+                sttsValidations.add(sttsValidation);
+            }
+        }
+        if (errors.size() > 0) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.TOTAL_STTS_INVALID, errors.size()), errors);
+        }
+        sttsValidations.forEach(sttsValidation -> {
+            GenSection genSection = new GenSection();
+            genSection.setSectionName(sttsValidation.getSectionName());
+            genSection.setDescription(sttsValidation.getDescription());
+            genSection.setStatus(APPLICATION_STATUS.ACTIVE);
+            genSection.setCreatedBy(appUser);
+            genSection.setUpdatedBy(appUser);
+            this.genSectionRepository.save(genSection);
+        });
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, ""));
+    }
+
+    /**
+     * Method use to upload the stt control
+     * @param sheet
+     * @param appUser
+     * @return AppResponse
+     * */
+    private AppResponse uploadSTTControl(XSSFSheet sheet, AppUser appUser) throws Exception {
+        List<STTCValidation> sttcValidations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        Iterator<Row> rows = sheet.iterator();
+        SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.STT_CONTROL);
+        while (rows.hasNext()) {
+            Row currentRow = rows.next();
+            if (currentRow.getRowNum() == 0) {
+                for (int i=0; i<sheetFiled.getColTitle().size(); i++) {
+                    if (!currentRow.getCell(i).getStringCellValue().equals(sheetFiled.getColTitle().get(i))) {
+                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1) + " " +
+                                sheetFiled.getColTitle().get(i) + " heading missing.");
+                    }
+                }
+            } else if (currentRow.getRowNum() > 0) {
+                STTCValidation sttcValidation = new STTCValidation();
+                sttcValidation.setRowCounter(currentRow.getRowNum()+1);
+                for (int i=0; i<sheetFiled.getColTitle().size(); i++) {
+                    int index = 0;
+                    if (i == index) {
+                        sttcValidation.setControlName(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttcValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttcValidation.setFieldName(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttcValidation.setFieldTitle(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttcValidation.setFieldWidth(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttcValidation.setPlaceHolder(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttcValidation.setPattern(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttcValidation.setFieldType(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttcValidation.setMinLength(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttcValidation.setMaxLength(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        sttcValidation.setRequired(this.bulkExcel.getCellDetail(currentRow, i));
+                    }
+                }
+                sttcValidation.isValidSTTC();
+                if (!BarcoUtil.isNull(sttcValidation.getErrorMsg())) {
+                    errors.add(sttcValidation.getErrorMsg());
+                    continue;
+                }
+                sttcValidations.add(sttcValidation);
+            }
+        }
+        if (errors.size() > 0) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.TOTAL_STTC_INVALID, errors.size()), errors);
+        }
+        sttcValidations.forEach(sttcValidation -> {
+            GenControl genControl = new GenControl();
+            genControl.setControlName(sttcValidation.getControlName());
+            genControl.setDescription(sttcValidation.getDescription());
+            genControl.setFieldType(FILED_TYPE.findEnumByName(sttcValidation.getFieldType()));
+            genControl.setFieldTitle(sttcValidation.getFieldTitle());
+            genControl.setFieldName(sttcValidation.getFieldName());
+            genControl.setPlaceHolder(sttcValidation.getPlaceHolder());
+            if (!BarcoUtil.isNull(sttcValidation.getFieldWidth())) {
+                genControl.setFieldWidth(Long.valueOf(sttcValidation.getFieldWidth()));
+            }
+            if (!BarcoUtil.isNull(sttcValidation.getMinLength())) {
+                genControl.setMinLength(Long.valueOf(sttcValidation.getMinLength()));
+            }
+            if (!BarcoUtil.isNull(sttcValidation.getMaxLength())) {
+                genControl.setMaxLength(Long.valueOf(sttcValidation.getMaxLength()));
+            }
+            if (FILED_TYPE.RADIO.name().equals(sttcValidation.getFieldType()) ||
+                FILED_TYPE.CHECKBOX.name().equals(sttcValidation.getFieldType()) ||
+                FILED_TYPE.SELECT.name().equals(sttcValidation.getFieldType()) ||
+                FILED_TYPE.MULTI_SELECT.name().equals(sttcValidation.getFieldType())) {
+                genControl.setFieldLkValue(sttcValidation.getFieldLkValue());
+            }
+            genControl.setMandatory(IS_DEFAULT.findEnumByName(sttcValidation.getRequired()));
+            genControl.setIsDefault(IS_DEFAULT.NO_DEFAULT);
+            genControl.setDisabled(IS_DEFAULT.NO_DEFAULT);
+            genControl.setPattern(sttcValidation.getPattern());
+            genControl.setStatus(APPLICATION_STATUS.ACTIVE);
+            genControl.setCreatedBy(appUser);
+            genControl.setUpdatedBy(appUser);
+            this.genControlRepository.save(genControl);
+        });
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, ""));
     }
 
     /**
@@ -758,4 +1472,117 @@ public class FormSettingServiceImpl implements FormSettingService {
         return controlResponse;
     }
 
+    /**
+     * Method use to action on gen form link source task types
+     * @param genForm
+     * @param appUser
+     * */
+    private void actionOnGenFormLinkSourceTaskTypes(GenForm genForm, AppUser appUser) {
+        genForm.getGenFormLinkSourceTaskTypes().stream()
+            .filter(genFormLinkStt -> !genFormLinkStt
+                .getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
+            .map(genFormLinkStt -> {
+                genFormLinkStt.setStatus(genForm.getStatus());
+                genFormLinkStt.setUpdatedBy(appUser);
+                return genFormLinkStt;
+            }).collect(Collectors.toList());
+    }
+
+    /***
+     * Method use to action on gen section link gen from
+     * @param genForm
+     * @param appUser
+     * */
+    private void actionOnGenSectionLinkGenForms(GenForm genForm, AppUser appUser) {
+        genForm.getGenSectionLinkGenForms().stream()
+            .filter(genFormLinkSection -> !genFormLinkSection
+                .getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
+            .map(genFormLinkSection -> {
+                genFormLinkSection.setStatus(genForm.getStatus());
+                genFormLinkSection.setUpdatedBy(appUser);
+                return genFormLinkSection;
+            }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method use to action on gen section link gen from
+     * @param genSection
+     * @param appUser
+     * */
+    private void actionOnGenSectionLinkGenForms(GenSection genSection, AppUser appUser) {
+        genSection.getGenSectionLinkGenForms().stream()
+            .filter(genFormLinkSection -> !genFormLinkSection
+                .getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
+            .map(genFormLinkSection -> {
+                genFormLinkSection.setStatus(genSection.getStatus());
+                genFormLinkSection.setUpdatedBy(appUser);
+                return genFormLinkSection;
+            }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method use to action on gen control link gen sections
+     * @param genSection
+     * @param appUser
+     * */
+    private void actionOnGenControlLinkGenSections(GenSection genSection, AppUser appUser) {
+        genSection.getGenControlLinkGenSections().stream()
+            .filter(genGenControlLinkGenSections -> !genGenControlLinkGenSections
+                .getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
+            .map(genGenControlLinkGenSections -> {
+                genGenControlLinkGenSections.setStatus(genSection.getStatus());
+                genGenControlLinkGenSections.setUpdatedBy(appUser);
+                return genGenControlLinkGenSections;
+            }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method use to action on gen control link gen sections
+     * @param genControl
+     * @param appUser
+     * */
+    private void actionOnGenControlLinkGenSections(GenControl genControl, AppUser appUser) {
+        genControl.getGenControlLinkGenSections().stream()
+            .filter(genGenControlLinkGenSections -> !genGenControlLinkGenSections
+               .getStatus().equals(APPLICATION_STATUS.DELETE.getLookupValue()))
+            .map(genGenControlLinkGenSections -> {
+                genGenControlLinkGenSections.setStatus(genControl.getStatus());
+                genGenControlLinkGenSections.setUpdatedBy(appUser);
+                return genGenControlLinkGenSections;
+            }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method use to get kafka task type
+     * @param kafkaTaskTypeRequest
+     * @param adminUser
+     * @return ApiTaskType
+     * */
+    private static KafkaTaskType getKafkaTaskType(KafkaTaskTypeRequest kafkaTaskTypeRequest, Optional<AppUser> adminUser) {
+        KafkaTaskType kafkaTaskType = new KafkaTaskType();
+        kafkaTaskType.setServiceUrl(kafkaTaskTypeRequest.getServiceUrl());
+        kafkaTaskType.setNumPartitions(kafkaTaskTypeRequest.getNumPartitions());
+        kafkaTaskType.setTopicName(kafkaTaskTypeRequest.getTopicName());
+        kafkaTaskType.setTopicPattern(kafkaTaskTypeRequest.getTopicPattern());
+        kafkaTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
+        kafkaTaskType.setCreatedBy(adminUser.get());
+        kafkaTaskType.setUpdatedBy(adminUser.get());
+        return kafkaTaskType;
+    }
+
+    /**
+     * Method use to get api task type
+     * @param apiTaskTypeRequest
+     * @param adminUser
+     * @return ApiTaskType
+     * */
+    private static ApiTaskType getApiTaskType(ApiTaskTypeRequest apiTaskTypeRequest, Optional<AppUser> adminUser) {
+        ApiTaskType apiTaskType = new ApiTaskType();
+        apiTaskType.setApiUrl(apiTaskTypeRequest.getApiUrl());
+        apiTaskType.setHttpMethod(apiTaskTypeRequest.getHttpMethod());
+        apiTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
+        apiTaskType.setCreatedBy(adminUser.get());
+        apiTaskType.setUpdatedBy(adminUser.get());
+        return apiTaskType;
+    }
 }

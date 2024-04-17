@@ -1,14 +1,25 @@
 package com.barco.admin.service;
 
-import com.barco.model.dto.request.ControlRequest;
-import com.barco.model.dto.request.FormRequest;
-import com.barco.model.dto.request.SectionRequest;
+import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
+import java.io.ByteArrayOutputStream;
 
 /**
  * @author Nabeel Ahmed
  */
 public interface FormSettingService extends RootService {
+
+    public AppResponse addSTT(STTRequest payload) throws Exception;
+
+    public AppResponse editSTT(STTRequest payload) throws Exception;
+
+    public AppResponse deleteSTT(STTRequest payload) throws Exception;
+
+    public AppResponse fetchSTTBySttId(STTRequest payload) throws Exception;
+
+    public AppResponse fetchSTT(STTRequest payload) throws Exception;
+
+    public AppResponse deleteAllSTT(FormRequest payload) throws Exception;
 
     public AppResponse addForm(FormRequest payload) throws Exception;
 
@@ -45,5 +56,11 @@ public interface FormSettingService extends RootService {
     public AppResponse fetchControls(ControlRequest payload) throws Exception;
 
     public AppResponse deleteAllControls(ControlRequest payload) throws Exception;
+
+    public ByteArrayOutputStream downloadSTTCommonTemplateFile(STTFileUploadRequest payload) throws Exception;
+
+    public ByteArrayOutputStream downloadSTTCommon(STTFileUploadRequest payload) throws Exception;
+
+    public AppResponse uploadSTTCommon(FileUploadRequest payload) throws Exception;
 
 }

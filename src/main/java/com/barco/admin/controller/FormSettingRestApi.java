@@ -3,13 +3,13 @@ package com.barco.admin.controller;
 import com.barco.admin.service.FormSettingService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
-import com.barco.model.dto.request.ControlRequest;
-import com.barco.model.dto.request.FormRequest;
-import com.barco.model.dto.request.SectionRequest;
+import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
+import com.barco.model.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
 
 /**
  * Api use form setting rest api
@@ -31,6 +35,108 @@ public class FormSettingRestApi {
 
     @Autowired
     private FormSettingService formSettingService;
+
+    /**
+     * @apiName :- addSTT
+     * @apiNote :- Api use to create stt (source task type)
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/addSTT", method = RequestMethod.POST)
+    public ResponseEntity<?> addSTT(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.addSTT(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while addSTT ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- editSTT
+     * @apiNote :- Api use to update stt (source task type)
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/editSTT", method = RequestMethod.POST)
+    public ResponseEntity<?> editSTT(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.editSTT(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while editSTT ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- deleteSTT
+     * @apiNote :- Api use to delete stt (source task type)
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/deleteSTT", method = RequestMethod.POST)
+    public ResponseEntity<?> deleteSTT(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.deleteSTT(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while deleteSTT ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- fetchSTTBySttId
+     * @apiNote :- Api use to fetch stt by stt id(source task type)
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/fetchSTTBySttId", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchSTTBySttId(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.fetchSTTBySttId(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchSTTBySttId ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- fetchSTT
+     * @apiNote :- Api use to fetch stt(source task type)
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/fetchSTT", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchSTT(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.fetchSTT(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchSTT ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- deleteAllSTT
+     * @apiNote :- Api use to delete all stt
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/deleteAllSTT", method = RequestMethod.POST)
+    public ResponseEntity<?> deleteAllSTT(@RequestBody FormRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.deleteAllSTT(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while deleteAllSTT ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
 
     /**
      * @apiName :- addForm
@@ -334,6 +440,68 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.deleteAllControls(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllControls ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- downloadSTTCommonTemplateFile
+     * @apiNote :- Api use to download sttc template file
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/downloadSTTCommonTemplateFile", method = RequestMethod.POST)
+    public ResponseEntity<?> downloadSTTCommonTemplateFile(@RequestBody STTFileUploadRequest payload) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
+            String fileName = "BatchSTTDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ".xlsx";
+            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
+            return ResponseEntity.ok().headers(headers).body(this.formSettingService.downloadSTTCommonTemplateFile(payload).toByteArray());
+        } catch (Exception ex) {
+            logger.error("An error occurred while downloadSTTCommonTemplateFile xlsx file", ExceptionUtil.getRootCauseMessage(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- downloadSTTCommon
+     * @apiNote :- Api use to download stt* all file
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/downloadSTTCommon", method = RequestMethod.POST)
+    public ResponseEntity<?> downloadSTTCommon(@RequestBody STTFileUploadRequest payload) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
+            String fileName = "BatchLookupDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ".xlsx";
+            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
+            return ResponseEntity.ok().headers(headers).body(this.formSettingService.downloadSTTCommon(payload).toByteArray());
+        } catch (Exception ex) {
+            logger.error("An error occurred while downloadSTTCommon ", ExceptionUtil.getRootCauseMessage(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- uploadSTTCommon
+     * @apiNote :- Api use to upload
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/uploadSTTCommon", method = RequestMethod.POST)
+    public ResponseEntity<?> uploadSTTCommon(FileUploadRequest payload) {
+        try {
+            if (!BarcoUtil.isNull(payload.getFile())) {
+                return new ResponseEntity<>(this.formSettingService.uploadSTTCommon(payload), HttpStatus.OK);
+            }
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.DATA_NOT_FOUND), HttpStatus.BAD_REQUEST);
+        } catch (Exception ex) {
+            logger.error("An error occurred while uploadSTTCommon ", ExceptionUtil.getRootCauseMessage(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
