@@ -147,7 +147,7 @@ public class MgGroupServiceImpl implements MgGroupService {
         }
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
-        List<GroupResponse> groupResponses = this.groupsRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNot(
+        List<GroupResponse> groupResponses = this.groupsRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
             startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE)
             .stream().map(groups -> {
                 GroupResponse groupResponse = getGroupResponse(groups);
@@ -359,10 +359,10 @@ public class MgGroupServiceImpl implements MgGroupService {
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         Iterator<Groups> groups;
         if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
-            groups = this.groupsRepository.findAllByDateCreatedBetweenAndCreatedByAndIdInAndStatusNot(
+            groups = this.groupsRepository.findAllByDateCreatedBetweenAndCreatedByAndIdInAndStatusNotOrderByDateCreatedDesc(
                 startDate, endDate, appUser.get(), payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
         } else {
-            groups = this.groupsRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNot(
+            groups = this.groupsRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
                 startDate, endDate, appUser.get(), APPLICATION_STATUS.DELETE).iterator();
         }
         while (groups.hasNext()) {
@@ -445,8 +445,7 @@ public class MgGroupServiceImpl implements MgGroupService {
             }
         }
         if (errors.size() > 0) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(
-                MessageUtil.TOTAL_INVALID, errors.size()), errors);
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.TOTAL_INVALID, errors.size()), errors);
         }
         rppValidationsList.forEach(rppValidation -> {
             Groups groups = new Groups();

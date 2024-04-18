@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -80,13 +82,15 @@ public class AppUserServiceImpl implements AppUserService {
             appUserResponse.setCompany(companyResponse);
         }
         if (!BarcoUtil.isNull(appUser.get().getGroupUsers())) {
-            appUserResponse.setGroups(appUser.get().getGroupUsers().stream()
+            appUserResponse.setGroups(appUser.get().getGroupUsers()
+                .stream()
                 .filter(groupUser -> groupUser.getStatus().equals(APPLICATION_STATUS.ACTIVE))
                 .map(GroupUser::getGroups).map(groups -> getGroupResponse(groups))
                 .collect(Collectors.toList()));
         }
         if (!BarcoUtil.isNull(appUser.get().getAppUserEnvs())) {
-            appUserResponse.setEnVariables(appUser.get().getAppUserEnvs().stream()
+            appUserResponse.setEnVariables(appUser.get().getAppUserEnvs()
+                .stream()
                 .filter(appUserEnv -> appUserEnv.getStatus().equals(APPLICATION_STATUS.ACTIVE))
                 .map(appUserEnv -> {
                     EnVariablesResponse enVariables = new EnVariablesResponse();
@@ -143,7 +147,7 @@ public class AppUserServiceImpl implements AppUserService {
         } else if (BarcoUtil.isNull(payload.getEmail())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.COMPANY_EMAIL_MISSING);
         }
-        Company company = null;
+        Company company;
         if (!BarcoUtil.isNull(appUser.get().getCompany())) {
             appUser.get().getCompany().setName(payload.getName());
             appUser.get().getCompany().setEmail(payload.getEmail());
@@ -221,6 +225,8 @@ public class AppUserServiceImpl implements AppUserService {
         appUser.get().setPassword(this.passwordEncoder.encode(payload.getNewPassword()));
         this.appUserRepository.save(appUser.get());
         this.sendResetPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
+        this.sendNotification(appUser.get().getUsername(), MessageUtil.PASSWORD_UPDATED, MessageUtil.PASSWORD_UPDATE_MESSAGE,
+            appUser.get(), this.lookupDataCacheService, this.notificationService);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, appUser.get().getUsername()), payload);
     }
 
@@ -278,10 +284,12 @@ public class AppUserServiceImpl implements AppUserService {
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        List<AppUserResponse> subAppUserResponses = appUser.get().getSubAppUsers().stream()
-            .filter(subAppUser -> !subAppUser.getStatus().equals(APPLICATION_STATUS.DELETE))
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+        List<AppUserResponse> subAppUserResponses = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndStatusNotOrderByDateCreatedDesc(
+            startDate, endDate, appUser.get(), APPLICATION_STATUS.DELETE).stream()
             .map(subAppUser -> {
-                AppUser appUserChild = subAppUser.getAppUserChild();
+                AppUser appUserChild = subAppUser;
                 AppUserResponse appUserResponse = getAppUserDetail(appUserChild);
                 appUserResponse.setTotalSubUser(appUserChild.getSubAppUsers().size());
                 appUserResponse.setCreatedBy(getActionUser(appUserChild.getCreatedBy()));
