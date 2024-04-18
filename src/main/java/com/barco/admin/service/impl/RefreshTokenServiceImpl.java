@@ -52,7 +52,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         logger.info("Request fetchByAllRefreshToken");
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
-        List<RefreshTokenResponse> tokenResponseList = this.appTokenRepository.findByDateCreatedBetweenAndStatusNot(
+        List<RefreshTokenResponse> tokenResponseList = this.appTokenRepository.findByDateCreatedBetweenAndStatusNotOrderByDateCreatedDesc(
             startDate, endDate, APPLICATION_STATUS.DELETE).stream()
             .map(refreshToken -> {
                 RefreshTokenResponse refreshTokenResponse = new RefreshTokenResponse();

@@ -322,6 +322,7 @@ public class FormSettingServiceImpl implements FormSettingService {
      * */
     @Override
     public AppResponse fetchSTTBySttId(STTRequest payload) throws Exception {
+        logger.info("Request fetchSTTBySttId :- " + payload);
         return null;
     }
 
@@ -332,6 +333,7 @@ public class FormSettingServiceImpl implements FormSettingService {
      */
     @Override
     public AppResponse fetchSTT(STTRequest payload) throws Exception {
+        logger.info("Request fetchSTT :- " + payload);
         return null;
     }
 

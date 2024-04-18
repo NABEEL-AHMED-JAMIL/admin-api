@@ -149,7 +149,7 @@ public class EVariableServiceImpl implements EVariableService {
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.envVariablesRepository.findAllByDateCreatedBetweenAndStatusNot(startDate, endDate, APPLICATION_STATUS.DELETE)
+            this.envVariablesRepository.findAllByDateCreatedBetweenAndStatusNotOrderByDateCreatedDesc(startDate, endDate, APPLICATION_STATUS.DELETE)
                 .stream().map(envVariables -> getEnVariablesResponse(envVariables)).collect(Collectors.toList()));
     }
 
@@ -298,10 +298,10 @@ public class EVariableServiceImpl implements EVariableService {
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         Iterator<EnvVariables> envVariables;
         if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
-            envVariables = this.envVariablesRepository.findAllByDateCreatedBetweenAndIdInAndStatusNot(
+            envVariables = this.envVariablesRepository.findAllByDateCreatedBetweenAndIdInAndStatusNotOrderByDateCreatedDesc(
                 startDate, endDate, payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
         } else {
-            envVariables = this.envVariablesRepository.findAllByDateCreatedBetweenAndStatusNot(
+            envVariables = this.envVariablesRepository.findAllByDateCreatedBetweenAndStatusNotOrderByDateCreatedDesc(
                 startDate, endDate, APPLICATION_STATUS.DELETE).iterator();
         }
         while (envVariables.hasNext()) {

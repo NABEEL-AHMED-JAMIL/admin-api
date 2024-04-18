@@ -224,7 +224,8 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Iterator<LookupData> lookupDataIterator = this.lookupDataRepository.findAllParentLookupByUsername(appUser.get().getUsername()).iterator();
+        Iterator<LookupData> lookupDataIterator = this.lookupDataRepository.findAllParentLookupByUsernameOrderByDateCreatedDesc(
+            appUser.get().getUsername()).iterator();
         List<LookupDataResponse> lookupDataResponse = new ArrayList<>();
         while (lookupDataIterator.hasNext()) {
             lookupDataResponse.add(this.fillLookupDataResponse(lookupDataIterator.next(), new LookupDataResponse(), true));
@@ -339,7 +340,7 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         }
         List<LookupData> lookupDataList;
         if (BarcoUtil.isNull(payload.getParentLookupId())) {
-            lookupDataList = this.lookupDataRepository.findAllParentLookupByUsername(appUser.get().getUsername());
+            lookupDataList = this.lookupDataRepository.findAllParentLookupByUsernameOrderByDateCreatedDesc(appUser.get().getUsername());
         } else {
             Optional<LookupData> parentLookupData = this.lookupDataRepository.findOneByParentLookupIdAndUsername(
                 payload.getParentLookupId(), appUser.get().getUsername());

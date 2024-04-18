@@ -157,7 +157,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.templateRegRepository.findAllByDateCreatedBetweenAndUsername(
+            this.templateRegRepository.findAllByDateCreatedBetweenAndUsernameOrderByDateCreatedDesc(
                 startDate, endDate, appUser.get().getUsername())
                 .stream().map(templateReg -> getTemplateRegResponse(templateReg))
                 .collect(Collectors.toList()));
