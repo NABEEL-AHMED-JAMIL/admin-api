@@ -356,45 +356,6 @@ public interface RootService {
         }
     }
 
-    /**
-     * Method use to create the group response
-     * @param groups
-     * @return GroupUser
-     * */
-    public default GroupResponse getGroupResponse(Groups groups) {
-        GroupResponse groupResponse = new GroupResponse();
-        groupResponse.setId(groups.getId());
-        groupResponse.setName(groups.getName());
-        groupResponse.setAvatar(groupResponse.getName().charAt(0)+"");
-        groupResponse.setDescription(groups.getDescription());
-        groupResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(groups.getStatus().getLookupType()));
-        groupResponse.setCreatedBy(getActionUser(groups.getCreatedBy()));
-        groupResponse.setUpdatedBy(getActionUser(groups.getUpdatedBy()));
-        groupResponse.setDateUpdated(groups.getDateUpdated());
-        groupResponse.setDateCreated(groups.getDateCreated());
-        return groupResponse;
-    }
-
-    /**
-     * Method use to create the group user
-     * @param groups
-     * @param appUser
-     * @param adminUser
-     * @param userType
-     * @return GroupUser
-     * */
-    public default GroupUser getGroupUser(Groups groups, AppUser adminUser,
-        AppUser appUser, GROUP_USER_TYPE userType) {
-        GroupUser groupUser = new GroupUser();
-        groupUser.setGroups(groups);
-        groupUser.setAppUser(appUser);
-        groupUser.setCreatedBy(adminUser);
-        groupUser.setUpdatedBy(adminUser);
-        groupUser.setStatus(APPLICATION_STATUS.ACTIVE);
-        groupUser.setUserType(userType);
-        return groupUser;
-    }
-
     /***
      * Method use to get the env variable
      * @param envVariables
@@ -638,22 +599,6 @@ public interface RootService {
                     appUserEnv.setStatus(appUser.getStatus());
                     appUserEnv.setUpdatedBy(adminUser);
                     return appUserEnv;
-                }).collect(Collectors.toList());
-        }
-    }
-
-    /**
-     * Method use to enabled and disabled  the group users
-     * @param appUser
-     * @param adminUser
-     * **/
-    public default void enabledDisabledGroupUsers(AppUser appUser, AppUser adminUser) {
-        if (!BarcoUtil.isNull(appUser.getGroupUsers()) && appUser.getGroupUsers().size() > 0) {
-            appUser.getGroupUsers().stream()
-                .map(groupUser -> {
-                    groupUser.setStatus(appUser.getStatus());
-                    groupUser.setUpdatedBy(adminUser);
-                    return groupUser;
                 }).collect(Collectors.toList());
         }
     }

@@ -231,13 +231,13 @@ public class FormSettingServiceImpl implements FormSettingService {
             }
         }
         // delete all source task
-        if (!BarcoUtil.isNull(sourceTaskType.get().getGroupsLinkSourceTaskTypes())) {
-            sourceTaskType.get().getGroupsLinkSourceTaskTypes().stream()
-                .filter(grpLinkStt -> !grpLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
-                .map(grpLinkStt -> {
-                    grpLinkStt.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-                    grpLinkStt.setUpdatedBy(adminUser.get());
-                    return grpLinkStt;
+        if (!BarcoUtil.isNull(sourceTaskType.get().getAppUserLinkSourceTaskTypes())) {
+            sourceTaskType.get().getAppUserLinkSourceTaskTypes().stream()
+                .filter(appUserLinkStt -> !appUserLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
+                .map(appUserLinkStt -> {
+                    appUserLinkStt.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+                    appUserLinkStt.setUpdatedBy(adminUser.get());
+                    return appUserLinkStt;
                 }).collect(Collectors.toList());
         }
         // delete all form
@@ -291,13 +291,13 @@ public class FormSettingServiceImpl implements FormSettingService {
             sourceTaskType.get().getKafkaTaskType().setUpdatedBy(adminUser.get());
         }
         // delete all source task
-        if (!BarcoUtil.isNull(sourceTaskType.get().getGroupsLinkSourceTaskTypes())) {
-            sourceTaskType.get().getGroupsLinkSourceTaskTypes().stream()
-            .filter(grpLinkStt -> !grpLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(grpLinkStt -> {
-                grpLinkStt.setStatus(APPLICATION_STATUS.DELETE);
-                grpLinkStt.setUpdatedBy(adminUser.get());
-                return grpLinkStt;
+        if (!BarcoUtil.isNull(sourceTaskType.get().getAppUserLinkSourceTaskTypes())) {
+            sourceTaskType.get().getAppUserLinkSourceTaskTypes().stream()
+            .filter(appUserLinkStt -> !appUserLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(appUserLinkStt -> {
+                appUserLinkStt.setStatus(APPLICATION_STATUS.DELETE);
+                appUserLinkStt.setUpdatedBy(adminUser.get());
+                return appUserLinkStt;
             }).collect(Collectors.toList());
         }
         // delete all form

@@ -81,13 +81,6 @@ public class AppUserServiceImpl implements AppUserService {
                 company.getAddress(), company.getEmail(), company.getPhone());
             appUserResponse.setCompany(companyResponse);
         }
-        if (!BarcoUtil.isNull(appUser.get().getGroupUsers())) {
-            appUserResponse.setGroups(appUser.get().getGroupUsers()
-                .stream()
-                .filter(groupUser -> groupUser.getStatus().equals(APPLICATION_STATUS.ACTIVE))
-                .map(GroupUser::getGroups).map(groups -> getGroupResponse(groups))
-                .collect(Collectors.toList()));
-        }
         if (!BarcoUtil.isNull(appUser.get().getAppUserEnvs())) {
             appUserResponse.setEnVariables(appUser.get().getAppUserEnvs()
                 .stream()
@@ -486,7 +479,6 @@ public class AppUserServiceImpl implements AppUserService {
             this.enabledDisabledProfilePermissionsAccesses(appUser.get(), adminUser.get());
             this.enabledDisabledAppUserRoleAccesses(appUser.get(), adminUser.get());
             this.enabledDisabledAppUserEnvs(appUser.get(), adminUser.get());
-            this.enabledDisabledGroupUsers(appUser.get(), adminUser.get());
             // disabled all other detail same like
             if (!BarcoUtil.isNull(appUser.get().getSubAppUsers()) && appUser.get().getSubAppUsers().size() > 0) {
                 appUser.get().getSubAppUsers().stream()
@@ -499,7 +491,6 @@ public class AppUserServiceImpl implements AppUserService {
                             this.enabledDisabledProfilePermissionsAccesses(subAppUser.getAppUserChild(), adminUser.get());
                             this.enabledDisabledAppUserRoleAccesses(subAppUser.getAppUserChild(), adminUser.get());
                             this.enabledDisabledAppUserEnvs(subAppUser.getAppUserChild(), adminUser.get());
-                            this.enabledDisabledGroupUsers(subAppUser.getAppUserChild(), adminUser.get());
                             this.sendEnabledDisabledRegisterUser(subAppUser.getAppUserChild(), this.lookupDataCacheService,
                                 this.templateRegRepository, this.emailMessagesFactory);
                             this.sendNotification(appUser.get().getUsername(), MessageUtil.ACCOUNT_STATUS, (appUser.get().getStatus().equals(APPLICATION_STATUS.ACTIVE) ?
