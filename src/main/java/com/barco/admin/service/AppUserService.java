@@ -3,6 +3,8 @@ package com.barco.admin.service;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 
+import java.io.ByteArrayOutputStream;
+
 /**
  * @author Nabeel Ahmed
  */
@@ -12,8 +14,6 @@ public interface AppUserService extends RootService {
 
     public AppResponse updateAppUserProfile(UpdateUserProfileRequest payload) throws Exception;
 
-    public AppResponse updateAppUserCompany(CompanyRequest payload) throws Exception;
-
     public AppResponse updateAppUserEnvVariable(EnVariablesRequest payload) throws Exception;
 
     public AppResponse updateAppUserPassword(UpdateUserProfileRequest payload) throws Exception;
@@ -21,6 +21,10 @@ public interface AppUserService extends RootService {
     public AppResponse closeAppUserAccount(AppUserRequest payload) throws Exception;
 
     public AppResponse deleteAllAppUserAccount(AppUserRequest payload) throws Exception;
+
+    public ByteArrayOutputStream downloadAppUserAccountTemplateFile() throws Exception;
+
+    public ByteArrayOutputStream downloadAppUserAccount(AppUserRequest payload) throws Exception;
 
     public AppResponse fetchAllAppUserAccount(AppUserRequest payload) throws Exception;
 

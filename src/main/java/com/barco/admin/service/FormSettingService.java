@@ -45,6 +45,12 @@ public interface FormSettingService extends RootService {
 
     public AppResponse deleteAllSections(SectionRequest payload) throws Exception;
 
+    public AppResponse fetchAllSectionLinkControl(SectionRequest payload) throws Exception;
+
+    public AppResponse linkSectionControl(SectionRequest payload) throws Exception;
+
+    public AppResponse linkSectionControlOrder(SectionRequest payload) throws Exception;
+
     public AppResponse addControl(ControlRequest payload) throws Exception;
 
     public AppResponse editControl(ControlRequest payload) throws Exception;
@@ -56,6 +62,12 @@ public interface FormSettingService extends RootService {
     public AppResponse fetchControls(ControlRequest payload) throws Exception;
 
     public AppResponse deleteAllControls(ControlRequest payload) throws Exception;
+
+    public AppResponse fetchAllControlLinkSection(ControlRequest payload) throws Exception;
+
+    public AppResponse linkControlSection(ControlRequest payload) throws Exception;
+
+    public AppResponse linkControlSectionOrder(ControlRequest payload) throws Exception;
 
     public ByteArrayOutputStream downloadSTTCommonTemplateFile(STTFileUploadRequest payload) throws Exception;
 

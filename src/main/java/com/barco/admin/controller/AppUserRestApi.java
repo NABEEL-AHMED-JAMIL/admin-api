@@ -3,17 +3,23 @@ package com.barco.admin.controller;
 import com.barco.admin.service.AppUserService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
+import com.barco.common.utility.excel.ExcelUtil;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.security.UserSessionDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
 
 /**
  * Api use to perform crud operation
@@ -62,23 +68,7 @@ public class AppUserRestApi {
     }
 
     /**
-     * @apiName :- updateAppUserCompany
-     * @apiNote :- Api use to update app user company
-     * @param payload
-     * @return ResponseEntity<?>
-     * */
-    @RequestMapping(value = "/updateAppUserCompany", method = RequestMethod.POST)
-    public ResponseEntity<?> updateAppUserCompany(@RequestBody CompanyRequest payload) {
-        try {
-            return new ResponseEntity<>(this.appUserService.updateAppUserCompany(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while updateAppUserCompany ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- updateAppUserCompany
+     * @apiName :- updateAppUserEnvVariable
      * @apiNote :- Api use to update app user env variable
      * @param payload
      * @return ResponseEntity<?>
@@ -126,8 +116,65 @@ public class AppUserRestApi {
     }
 
     /**
-     * @apiName :- closeAppUserAccount
-     * @apiNote :- Api use to close app user account
+     * @apiName :- deleteAllAppUserAccount
+     * @apiNote :- Api use to delete all app user account
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(path="/deleteAllAppUserAccount", method=RequestMethod.POST)
+    public ResponseEntity<?> deleteAllAppUserAccount(@RequestBody AppUserRequest payload) {
+        try {
+            return new ResponseEntity<>(this.appUserService.deleteAllAppUserAccount(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while deleteAllAppUserAccount ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- downloadAppUserAccountTemplateFile
+     * @apiNote :- Api use to download app user account template file
+     * @return ResponseEntity<?> downloadAppUserAccountTemplateFile
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/downloadAppUserAccountTemplateFile", method = RequestMethod.GET)
+    public ResponseEntity<?> downloadAppUserAccountTemplateFile() {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
+            String fileName = "BatchAppUserAccountDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
+            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
+            return ResponseEntity.ok().headers(headers).body(this.appUserService.downloadAppUserAccountTemplateFile().toByteArray());
+        } catch (Exception ex) {
+            logger.error("An error occurred while downloadAppUserAccountTemplateFile xlsx file", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- downloadAppUserAccount
+     * @apiNote :- Api use to download app user account
+     * @return ResponseEntity<?> AppUserRequest
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/downloadAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> downloadAppUserAccount(@RequestBody AppUserRequest payload) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
+            String fileName = "BatchAppUserAccountDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
+            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
+            return ResponseEntity.ok().headers(headers).body(this.appUserService.downloadAppUserAccount(payload).toByteArray());
+        } catch (Exception ex) {
+            logger.error("An error occurred while downloadAppUserAccount ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- fetchAllAppUserAccount
+     * @apiNote :- Api user to fetch all app user account
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -135,8 +182,6 @@ public class AppUserRestApi {
     @RequestMapping(value = "/fetchAllAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.appUserService.fetchAllAppUserAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllAppUserAccount ", ExceptionUtil.getRootCause(ex));

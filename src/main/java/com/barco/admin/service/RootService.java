@@ -89,6 +89,70 @@ public interface RootService {
     }
 
     /**
+     * Method use to control link section
+     * @param data
+     * @return ControlLinkSectionResponse
+     * */
+    public default ControlLinkSectionResponse getControlLinkSectionResponse(HashMap<String, Object> data) {
+        ControlLinkSectionResponse controlLinkSectionResponse = new ControlLinkSectionResponse();
+        if (data.containsKey(QueryService.ID)) {
+            controlLinkSectionResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
+        }
+        if (data.containsKey(QueryService.SECTION_NAME) && !BarcoUtil.isNull(data.get(QueryService.SECTION_NAME))) {
+            controlLinkSectionResponse.setSectionName(data.get(QueryService.SECTION_NAME).toString());
+        }
+        if (data.containsKey(QueryService.DESCRIPTION) && !BarcoUtil.isNull(data.get(QueryService.DESCRIPTION))) {
+            controlLinkSectionResponse.setDescription(data.get(QueryService.DESCRIPTION).toString());
+        }
+        if (data.containsKey(QueryService.STATUS) && !BarcoUtil.isNull(data.get(QueryService.STATUS))) {
+            controlLinkSectionResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(Long.valueOf(data.get(QueryService.STATUS).toString())));
+        }
+        if (data.containsKey(QueryService.LINK_STATUS) && !BarcoUtil.isNull(data.get(QueryService.LINK_STATUS))) {
+            controlLinkSectionResponse.setLinkedControl(Boolean.valueOf(data.get(QueryService.LINK_STATUS).toString()));
+        }
+        if (data.containsKey(QueryService.LINK_SECTION_ID) && !BarcoUtil.isNull(data.get(QueryService.LINK_SECTION_ID))) {
+            controlLinkSectionResponse.setLinkSectionId(Long.valueOf(data.get(QueryService.LINK_SECTION_ID).toString()));
+        }
+        if (data.containsKey(QueryService.CONTROL_ORDER) && !BarcoUtil.isNull(data.get(QueryService.CONTROL_ORDER))) {
+            controlLinkSectionResponse.setControlOrder(Long.valueOf(data.get(QueryService.CONTROL_ORDER).toString()));
+        }
+        return controlLinkSectionResponse;
+    }
+
+    /**
+     * Method use to get section link control
+     * @param
+     * @return SectionLinkControlResponse
+     * */
+    public default SectionLinkControlResponse getSectionLinkControlResponse(HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
+        SectionLinkControlResponse sectionLinkControlResponse = new SectionLinkControlResponse();
+        if (data.containsKey(QueryService.ID)) {
+            sectionLinkControlResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
+        }
+        if (data.containsKey(QueryService.CONTROL_NAME) && !BarcoUtil.isNull(data.get(QueryService.CONTROL_NAME))) {
+            sectionLinkControlResponse.setControlName(data.get(QueryService.CONTROL_NAME).toString());
+        }
+        if (data.containsKey(QueryService.FIELD_TYPE) && !BarcoUtil.isNull(data.get(QueryService.FIELD_TYPE))) {
+            GLookup fieldType = GLookup.getGLookup(lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+                FIELD_TYPE.getName(), Long.valueOf(data.get(QueryService.FIELD_TYPE).toString())));
+            sectionLinkControlResponse.setFieldType(fieldType);
+        }
+        if (data.containsKey(QueryService.STATUS) && !BarcoUtil.isNull(data.get(QueryService.STATUS))) {
+            sectionLinkControlResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(Long.valueOf(data.get(QueryService.STATUS).toString())));
+        }
+        if (data.containsKey(QueryService.LINK_STATUS) && !BarcoUtil.isNull(data.get(QueryService.LINK_STATUS))) {
+            sectionLinkControlResponse.setLinkedSection(Boolean.valueOf(data.get(QueryService.LINK_STATUS).toString()));
+        }
+        if (data.containsKey(QueryService.LINK_CONTROL_ID) && !BarcoUtil.isNull(data.get(QueryService.LINK_CONTROL_ID))) {
+            sectionLinkControlResponse.setLinkControlId(Long.valueOf(data.get(QueryService.LINK_CONTROL_ID).toString()));
+        }
+        if (data.containsKey(QueryService.CONTROL_ORDER) && !BarcoUtil.isNull(data.get(QueryService.CONTROL_ORDER))) {
+            sectionLinkControlResponse.setControlOrder(Long.valueOf(data.get(QueryService.CONTROL_ORDER).toString()));
+        }
+        return sectionLinkControlResponse;
+    }
+
+    /**
      * Method use to wrap the auth response
      * @param authResponse
      * @param userDetails
@@ -225,7 +289,7 @@ public interface RootService {
             emailMessageRequest.setSubject(EmailUtil.USER_REGISTERED);
             emailMessageRequest.setBodyMap(metaData);
             emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
-            logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMail(emailMessageRequest));
+            logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
             return true;
         } catch (Exception ex) {
             logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
@@ -268,7 +332,7 @@ public interface RootService {
                 EmailUtil.YOUR_ACCOUNT_IS_NOW_ACTIVE : EmailUtil.YOUR_ACCOUNT_HAS_BEEN_BLOCKED);
             emailMessageRequest.setBodyMap(metaData);
             emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
-            logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMail(emailMessageRequest));
+            logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
             return true;
         } catch (Exception ex) {
             logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
@@ -311,7 +375,7 @@ public interface RootService {
             emailMessageRequest.setSubject(EmailUtil.FORGOT_PASSWORD);
             emailMessageRequest.setBodyMap(metaData);
             emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
-            logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMail(emailMessageRequest));
+            logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
             return true;
         } catch (Exception ex) {
             logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
@@ -348,7 +412,44 @@ public interface RootService {
             emailMessageRequest.setSubject(EmailUtil.PASSWORD_UPDATED);
             emailMessageRequest.setBodyMap(metaData);
             emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
-            logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMail(emailMessageRequest));
+            logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
+            return true;
+        } catch (Exception ex) {
+            logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
+            return false;
+        }
+    }
+
+
+    /**
+     * send close user account email
+     * @param appUser
+     * @param lookupDataCacheService
+     * @param templateRegRepository
+     * @param emailMessagesFactory
+     * */
+    public default boolean sendCloseUserAccountEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
+        TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
+        try {
+            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(
+                LookupUtil.NON_REPLY_EMAIL_SENDER);
+            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatusNot(
+                CLOSE_USER_ACCOUNT.name(), APPLICATION_STATUS.INACTIVE);
+            if (!templateReg.isPresent()) {
+                logger.info("No Template Found With %s", RESET_USER_PASSWORD.name());
+                return false;
+            }
+            Map<String, Object> metaData = new HashMap<>();
+            metaData.put(EmailUtil.USERNAME, appUser.getUsername());
+            metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
+            // email send request
+            EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
+            emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
+            emailMessageRequest.setRecipients(appUser.getEmail());
+            emailMessageRequest.setSubject(EmailUtil.PASSWORD_UPDATED);
+            emailMessageRequest.setBodyMap(metaData);
+            emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
+            logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
             return true;
         } catch (Exception ex) {
             logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));

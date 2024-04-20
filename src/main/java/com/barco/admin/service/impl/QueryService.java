@@ -29,12 +29,17 @@ public class QueryService {
     // Filed
     public static String ID = "id";
     public static String STATUS = "status";
+    public static String FIELD_TYPE = "field_type";
+    public static String CONTROL_NAME = "control_name";
     public static String PROFILE_NAME = "profile_name";
     public static String ROLE_NAME = "role_name";
     public static String PERMISSION_NAME = "permission_name";
     public static String DESCRIPTION = "description";
     public static String LINK_PP = "link_pp";
-    // user detail
+    public static String SECTION_NAME = "section_name";
+    public static String LINK_SECTION_ID = "link_section_id";
+    public static String LINK_CONTROL_ID = "link_control_id";
+    public static String CONTROL_ORDER = "control_order";
     public static String EMAIL = "email";
     public static String USERNAME = "username";
     public static String FULL_NAME = "full_name";
@@ -67,7 +72,7 @@ public class QueryService {
         "INNER JOIN PROFILE PRO ON PRO.ID = AU.PROFILE_ID " +
         "LEFT JOIN APP_USER_ROLE_ACCESS AURA ON AURA.APP_USER_ID = AU.ID AND AURA.ROLE_ID = %d " +
         "LEFT JOIN ROLE RL ON RL.ID = AURA.ROLE_ID " +
-        "WHERE AU.ID = %d OR AU.CREATED_BY_ID = %d " +
+        "WHERE AU.STATUS != 2 AND (AU.ID = %d OR AU.CREATED_BY_ID = %d) " +
         "ORDER BY AU.ID DESC";
     public static String FETCH_LINK_PROFILE_WITH_ROOT_USER = "SELECT DISTINCT AU.ID, AU.EMAIL, AU.USERNAME, AU.FIRST_NAME || ' ' || AU.LAST_NAME AS FULL_NAME, " +
         "AU.IMG AS PROFIlE_IMG, PRO.ID AS PROFILE_ID, PRO.PROFILE_NAME, AUPA.DATE_CREATED AS LINK_DATA, " +
@@ -76,7 +81,7 @@ public class QueryService {
         "FROM APP_USER AU " +
         "INNER JOIN PROFILE PRO ON PRO.ID = AU.PROFILE_ID " +
         "LEFT JOIN APP_USER_PROFILE_ACCESS AUPA ON AUPA.APP_USER_ID = AU.ID AND AUPA.PROFILE_ID = %d " +
-        "WHERE AU.ID = %d OR AU.CREATED_BY_ID = %d " +
+        "WHERE AU.STATUS != 2 AND (AU.ID = %d OR AU.CREATED_BY_ID = %d) " +
         "ORDER BY AU.ID DESC";
     public static String FETCH_LINK_ENVIRONMENT_VARIABLE_WITH_USER = "SELECT DISTINCT AU.ID, AU.EMAIL, AU.USERNAME, AU.FIRST_NAME || ' ' || AU.LAST_NAME AS FULL_NAME, " +
         "AU.IMG AS PROFILE_IMG, PRO.ID AS PROFILE_ID, PRO.PROFILE_NAME, AUE.DATE_CREATED AS LINK_DATA, " +
@@ -87,6 +92,18 @@ public class QueryService {
         "LEFT JOIN APP_USER_ENV AUE ON AUE.APP_USER_ID = AU.ID AND AUE.ENV_KEY_ID = %d " +
         "WHERE AU.STATUS != %d " +
         "ORDER by AU.ID DESC";
+    public static String FETCH_ALL_CONTROLS_LINK_SECTION= "SELECT GS.ID, GS.SECTION_NAME, GS.DESCRIPTION, GS.STATUS, GLG.CONTROL_ORDER, " +
+        "CASE WHEN GLG.SECTION_ID IS NOT NULL THEN 'true' ELSE 'false' END AS LINK_STATUS, GLG.ID AS LINK_SECTION_ID " +
+        "FROM GEN_SECTION GS " +
+        "LEFT JOIN GC_LINK_GS GLG ON GLG.SECTION_ID = GS.ID AND GLG.CONTROL_ID = %d AND (GS.STATUS != %d AND GLG.STATUS != %d) " +
+        "WHERE GS.CREATED_BY_ID = %d " +
+        "ORDER BY GS.DATE_CREATED DESC";
+    public static String FETCH_ALL_SECTION_LINK_CONTROLS = "SELECT GC.ID, GC.FIELD_TYPE, GC.CONTROL_NAME, GC.STATUS, GLG.CONTROL_ORDER, " +
+        "CASE WHEN GLG.SECTION_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, GLG.ID AS LINK_CONTROL_ID " +
+        "FROM GEN_CONTROL GC " +
+        "LEFT JOIN GC_LINK_GS GLG ON GLG.CONTROL_ID = GC.ID AND GLG.SECTION_ID = %d AND GC.STATUS != %d " +
+        "WHERE GC.STATUS != %d AND GC.CREATED_BY_ID = %d " +
+        "ORDER BY GC.DATE_CREATED DESC";
     public static String FETCH_ROLE_WITH_USER = "SELECT DISTINCT ROLE.NAME AS ROLE_NAME " +
         "FROM ROLE " +
         "INNER JOIN APP_USER_ROLE_ACCESS AURA ON AURA.ROLE_ID = ROLE.ID AND AURA.APP_USER_ID = %d AND AURA.STATUS = %d AND ROLE.STATUS = %d ";
