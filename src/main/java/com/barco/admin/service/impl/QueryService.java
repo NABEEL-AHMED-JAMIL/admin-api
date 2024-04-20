@@ -32,6 +32,8 @@ public class QueryService {
     public static String FIELD_TYPE = "field_type";
     public static String CONTROL_NAME = "control_name";
     public static String PROFILE_NAME = "profile_name";
+    public static String FORM_NAME = "form_name";
+    public static String FORM_TYPE = "form_type";
     public static String ROLE_NAME = "role_name";
     public static String PERMISSION_NAME = "permission_name";
     public static String DESCRIPTION = "description";
@@ -39,7 +41,9 @@ public class QueryService {
     public static String SECTION_NAME = "section_name";
     public static String LINK_SECTION_ID = "link_section_id";
     public static String LINK_CONTROL_ID = "link_control_id";
+    public static String LINK_FORM_ID = "link_form_id";
     public static String CONTROL_ORDER = "control_order";
+    public static String SECTION_ORDER = "section_order";
     public static String EMAIL = "email";
     public static String USERNAME = "username";
     public static String FULL_NAME = "full_name";
@@ -104,6 +108,20 @@ public class QueryService {
         "LEFT JOIN GC_LINK_GS GLG ON GLG.CONTROL_ID = GC.ID AND GLG.SECTION_ID = %d AND GC.STATUS != %d " +
         "WHERE GC.STATUS != %d AND GC.CREATED_BY_ID = %d " +
         "ORDER BY GC.DATE_CREATED DESC";
+    public static String FETCH_ALL_FORM_LINK_SECTION = "SELECT GF.ID, GF.FORM_NAME, GF.FORM_TYPE, GF.STATUS, " +
+        "CASE WHEN GLG.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
+        "GLG.SECTION_ORDER, GLG.ID AS LINK_FORM_ID " +
+        "FROM GEN_FORM GF " +
+        "LEFT JOIN GS_LINK_GF GLG ON GLG.FORM_ID = GF.ID AND GLG.SECTION_ID = %d AND (GF.STATUS != %d AND GLG.STATUS != %d) " +
+        "WHERE GF.CREATED_BY_ID = %d " +
+        "ORDER BY GF.DATE_CREATED DESC";
+    public static String FETCH_ALL_SECTION_LINK_FORM = "SELECT GS.ID, GS.SECTION_NAME, GS.DESCRIPTION, GS.STATUS, " +
+        "CASE WHEN GLG.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
+        "GLG.SECTION_ORDER, GLG.ID AS LINK_SECTION_ID " +
+        "FROM GEN_SECTION GS " +
+        "LEFT JOIN GS_LINK_GF GLG ON GLG.SECTION_ID = GS.ID AND GLG.FORM_ID = %d AND (GS.STATUS != %d AND GLG.STATUS != %d) " +
+        "WHERE GS.CREATED_BY_ID = %d " +
+        "ORDER BY GS.DATE_CREATED DESC";
     public static String FETCH_ROLE_WITH_USER = "SELECT DISTINCT ROLE.NAME AS ROLE_NAME " +
         "FROM ROLE " +
         "INNER JOIN APP_USER_ROLE_ACCESS AURA ON AURA.ROLE_ID = ROLE.ID AND AURA.APP_USER_ID = %d AND AURA.STATUS = %d AND ROLE.STATUS = %d ";

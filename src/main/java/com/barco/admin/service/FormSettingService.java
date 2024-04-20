@@ -33,6 +33,12 @@ public interface FormSettingService extends RootService {
 
     public AppResponse deleteAllForms(FormRequest payload) throws Exception;
 
+    public AppResponse fetchAllFormLinkSection(FormRequest payload) throws Exception;
+
+    public AppResponse linkFormSection(FormRequest payload) throws Exception;
+
+    public AppResponse linkFormSectionOrder(FormRequest payload) throws Exception;
+
     public AppResponse addSection(SectionRequest payload) throws Exception;
 
     public AppResponse editSection(SectionRequest payload) throws Exception;
@@ -50,6 +56,12 @@ public interface FormSettingService extends RootService {
     public AppResponse linkSectionControl(SectionRequest payload) throws Exception;
 
     public AppResponse linkSectionControlOrder(SectionRequest payload) throws Exception;
+
+    public AppResponse fetchAllSectionLinkForm(SectionRequest payload) throws Exception;
+
+    public AppResponse linkSectionForm(SectionRequest payload) throws Exception;
+
+    public AppResponse linkSectionFormOrder(SectionRequest payload) throws Exception;
 
     public AppResponse addControl(ControlRequest payload) throws Exception;
 

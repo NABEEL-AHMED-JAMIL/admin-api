@@ -241,6 +241,57 @@ public class FormSettingRestApi {
     }
 
     /**
+     * @apiName :- fetchAllFormLinkSection
+     * @apiNote :- Api use to fetch all form link section
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/fetchAllFormLinkSection", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllFormLinkSection(@RequestBody FormRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.fetchAllFormLinkSection(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllFormLinkSection ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- linkFormSection
+     * @apiNote :- Api use linkFormSection form link section
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/linkFormSection", method = RequestMethod.POST)
+    public ResponseEntity<?> linkFormSection(@RequestBody FormRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.linkFormSection(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while linkFormSection ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- linkFormSectionOrder
+     * @apiNote :- Api use to set form section order
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/linkFormSectionOrder", method = RequestMethod.POST)
+    public ResponseEntity<?> linkFormSectionOrder(@RequestBody FormRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.linkFormSectionOrder(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while linkFormSectionOrder ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- addSection
      * @apiNote :- Api use to add section(form section)
      * @param payload
@@ -389,6 +440,57 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkSectionControlOrder(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkSectionControlOrder ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- fetchAllSectionLinkForm
+     * @apiNote :- Api use to fetch all section link form
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/fetchAllSectionLinkForm", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllSectionLinkForm(@RequestBody SectionRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.fetchAllSectionLinkForm(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllSectionLinkForm ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- linkSectionForm
+     * @apiNote :- Api use linkControlSection link section link form
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/linkSectionForm", method = RequestMethod.POST)
+    public ResponseEntity<?> linkSectionForm(@RequestBody SectionRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.linkSectionForm(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while linkSectionForm ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- linkSectionControlOrder
+     * @apiNote :- Api use to set section link controls order
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/linkSectionFormOrder", method = RequestMethod.POST)
+    public ResponseEntity<?> linkSectionFormOrder(@RequestBody SectionRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.linkSectionFormOrder(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while linkSectionFormOrder ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }

@@ -152,6 +152,34 @@ public interface RootService {
         return sectionLinkControlResponse;
     }
 
+    public default SectionLinkFormResponse getSectionLinkFromResponse(HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
+        SectionLinkFormResponse sectionLinkFormResponse = new SectionLinkFormResponse();
+        if (data.containsKey(QueryService.ID)) {
+            sectionLinkFormResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
+        }
+        if (data.containsKey(QueryService.FORM_NAME) && !BarcoUtil.isNull(data.get(QueryService.FORM_NAME))) {
+            sectionLinkFormResponse.setFormName(data.get(QueryService.FORM_NAME).toString());
+        }
+        if (data.containsKey(QueryService.FORM_TYPE) && !BarcoUtil.isNull(data.get(QueryService.FORM_TYPE))) {
+            GLookup formType = GLookup.getGLookup(lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+                FORM_TYPE.getName(), Long.valueOf(data.get(QueryService.FORM_TYPE).toString())));
+            sectionLinkFormResponse.setFormType(formType);
+        }
+        if (data.containsKey(QueryService.STATUS) && !BarcoUtil.isNull(data.get(QueryService.STATUS))) {
+            sectionLinkFormResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(Long.valueOf(data.get(QueryService.STATUS).toString())));
+        }
+        if (data.containsKey(QueryService.LINK_STATUS) && !BarcoUtil.isNull(data.get(QueryService.LINK_STATUS))) {
+            sectionLinkFormResponse.setLinkStatus(Boolean.valueOf(data.get(QueryService.LINK_STATUS).toString()));
+        }
+        if (data.containsKey(QueryService.LINK_FORM_ID) && !BarcoUtil.isNull(data.get(QueryService.LINK_FORM_ID))) {
+            sectionLinkFormResponse.setSectionLinkForm(Long.valueOf(data.get(QueryService.LINK_FORM_ID).toString()));
+        }
+        if (data.containsKey(QueryService.SECTION_ORDER) && !BarcoUtil.isNull(data.get(QueryService.SECTION_ORDER))) {
+            sectionLinkFormResponse.setSectionOrder(Long.valueOf(data.get(QueryService.SECTION_ORDER).toString()));
+        }
+        return sectionLinkFormResponse;
+    }
+
     /**
      * Method use to wrap the auth response
      * @param authResponse
