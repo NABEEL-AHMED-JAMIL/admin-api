@@ -17,9 +17,21 @@ public interface FormSettingService extends RootService {
 
     public AppResponse fetchSTTBySttId(STTRequest payload) throws Exception;
 
-    public AppResponse fetchSTT(STTRequest payload) throws Exception;
+    public AppResponse fetchAllSTT(STTRequest payload) throws Exception;
 
-    public AppResponse deleteAllSTT(FormRequest payload) throws Exception;
+    public AppResponse deleteAllSTT(STTRequest payload) throws Exception;
+
+    // link stt -> with form
+    public AppResponse fetchAllSTTLinkForm(STTRequest payload) throws Exception;
+
+    public AppResponse linkSTTForm(STTRequest payload) throws Exception;
+
+    public AppResponse linkSTTFormOrder(STTRequest payload) throws Exception;
+
+    // link stt -> with user
+    public AppResponse fetchAllSTTLinkAppUser(STTRequest payload) throws Exception;
+
+    public AppResponse linkSTTLinkAppUser(STTRequest payload) throws Exception;
 
     public AppResponse addForm(FormRequest payload) throws Exception;
 

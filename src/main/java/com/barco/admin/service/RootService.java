@@ -152,7 +152,14 @@ public interface RootService {
         return sectionLinkControlResponse;
     }
 
-    public default SectionLinkFormResponse getSectionLinkFromResponse(HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
+    /**
+     * Method use to link section with form
+     * @param data
+     * @param lookupDataCacheService
+     * @return SectionLinkFormResponse
+     * */
+    public default SectionLinkFormResponse getSectionLinkFromResponse(
+        HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
         SectionLinkFormResponse sectionLinkFormResponse = new SectionLinkFormResponse();
         if (data.containsKey(QueryService.ID)) {
             sectionLinkFormResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
@@ -178,6 +185,37 @@ public interface RootService {
             sectionLinkFormResponse.setSectionOrder(Long.valueOf(data.get(QueryService.SECTION_ORDER).toString()));
         }
         return sectionLinkFormResponse;
+    }
+
+    /**
+     * Method use to link section with form
+     * @param data
+     * @return SectionLinkFormResponse
+     * */
+    public default FormLinkSectionResponse getFormLinkSectionResponse(HashMap<String, Object> data) {
+        FormLinkSectionResponse formLinkSectionResponse = new FormLinkSectionResponse();
+        if (data.containsKey(QueryService.ID)) {
+            formLinkSectionResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
+        }
+        if (data.containsKey(QueryService.SECTION_NAME) && !BarcoUtil.isNull(data.get(QueryService.SECTION_NAME))) {
+            formLinkSectionResponse.setSectionName(data.get(QueryService.SECTION_NAME).toString());
+        }
+        if (data.containsKey(QueryService.DESCRIPTION) && !BarcoUtil.isNull(data.get(QueryService.DESCRIPTION))) {
+            formLinkSectionResponse.setDescription(data.get(QueryService.DESCRIPTION).toString());
+        }
+        if (data.containsKey(QueryService.STATUS) && !BarcoUtil.isNull(data.get(QueryService.STATUS))) {
+            formLinkSectionResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(Long.valueOf(data.get(QueryService.STATUS).toString())));
+        }
+        if (data.containsKey(QueryService.LINK_STATUS) && !BarcoUtil.isNull(data.get(QueryService.LINK_STATUS))) {
+            formLinkSectionResponse.setLinkStatus(Boolean.valueOf(data.get(QueryService.LINK_STATUS).toString()));
+        }
+        if (data.containsKey(QueryService.LINK_SECTION_ID) && !BarcoUtil.isNull(data.get(QueryService.LINK_SECTION_ID))) {
+            formLinkSectionResponse.setFormLinkSection(Long.valueOf(data.get(QueryService.LINK_SECTION_ID).toString()));
+        }
+        if (data.containsKey(QueryService.SECTION_ORDER) && !BarcoUtil.isNull(data.get(QueryService.SECTION_ORDER))) {
+            formLinkSectionResponse.setSectionOrder(Long.valueOf(data.get(QueryService.SECTION_ORDER).toString()));
+        }
+        return formLinkSectionResponse;
     }
 
     /**
@@ -608,6 +646,34 @@ public interface RootService {
         roleResponse.setDateUpdated(role.getDateUpdated());
         roleResponse.setDateCreated(role.getDateCreated());
         return roleResponse;
+    }
+
+    /**
+     * Method use to convert source kafka task type to kafka task type resposne
+     * @param kafkaTaskType
+     * @return kafkaTaskTypeResponse
+     * **/
+    public default KafkaTaskTypeResponse getKafkaTaskTypeResponse(KafkaTaskType kafkaTaskType) {
+        KafkaTaskTypeResponse kafkaTaskTypeResponse = new KafkaTaskTypeResponse();
+        kafkaTaskTypeResponse.setKafkaId(kafkaTaskType.getId());
+        kafkaTaskTypeResponse.setServiceUrl(kafkaTaskType.getServiceUrl());
+        kafkaTaskTypeResponse.setTopicName(kafkaTaskType.getTopicName());
+        kafkaTaskTypeResponse.setNumPartitions(kafkaTaskType.getNumPartitions());
+        kafkaTaskTypeResponse.setTopicPattern(kafkaTaskType.getTopicPattern());
+        return kafkaTaskTypeResponse;
+    }
+
+    /**
+     * Method use to get api task type response
+     * @param apiTaskType
+     * @return ApiTaskTypeResponse
+     * */
+    public default ApiTaskTypeResponse getApiTaskTypeResponse(ApiTaskType apiTaskType) {
+        ApiTaskTypeResponse apiTaskTypeResponse = new ApiTaskTypeResponse();
+        apiTaskTypeResponse.setApiTaskTypeId(apiTaskType.getId());
+        apiTaskTypeResponse.setApiUrl(apiTaskType.getApiUrl());
+        apiTaskTypeResponse.setHttpMethod(apiTaskType.getHttpMethod());
+        return apiTaskTypeResponse;
     }
 
     /**

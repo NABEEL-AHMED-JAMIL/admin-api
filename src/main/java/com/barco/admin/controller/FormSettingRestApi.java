@@ -105,18 +105,18 @@ public class FormSettingRestApi {
     }
 
     /**
-     * @apiName :- fetchSTT
+     * @apiName :- fetchAllSTT
      * @apiNote :- Api use to fetch stt(source task type)
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
-    @RequestMapping(value = "/fetchSTT", method = RequestMethod.POST)
-    public ResponseEntity<?> fetchSTT(@RequestBody STTRequest payload) {
+    @RequestMapping(value = "/fetchAllSTT", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllSTT(@RequestBody STTRequest payload) {
         try {
-            return new ResponseEntity<>(this.formSettingService.fetchSTT(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.formSettingService.fetchAllSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while fetchSTT ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while fetchAllSTT ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
@@ -129,11 +129,96 @@ public class FormSettingRestApi {
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
     @RequestMapping(value = "/deleteAllSTT", method = RequestMethod.POST)
-    public ResponseEntity<?> deleteAllSTT(@RequestBody FormRequest payload) {
+    public ResponseEntity<?> deleteAllSTT(@RequestBody STTRequest payload) {
         try {
             return new ResponseEntity<>(this.formSettingService.deleteAllSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllSTT ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- fetchAllSTTLinkForm
+     * @apiNote :- Api use to fetch link stt with form
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/fetchAllSTTLinkForm", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllSTTLinkForm(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.fetchAllSTTLinkForm(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllSTTLinkForm ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- linkSTTForm
+     * @apiNote :- Api use to link stt with form
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/linkSTTForm", method = RequestMethod.POST)
+    public ResponseEntity<?> linkSTTForm(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.linkSTTForm(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while linkSTTForm ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- linkSTTFormOrder
+     * @apiNote :- Api use to link stt with form order
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/linkSTTFormOrder", method = RequestMethod.POST)
+    public ResponseEntity<?> linkSTTFormOrder(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.linkSTTFormOrder(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while linkSTTFormOrder ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- fetchAllSTTLinkAppUser
+     * @apiNote :- Api use fetch stt link with app user
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/fetchAllSTTLinkAppUser", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllSTTLinkAppUser(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.fetchAllSTTLinkAppUser(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllSTTLinkAppUser ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- linkSTTLinkAppUser
+     * @apiNote :- Api use fetch stt link with app user
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @RequestMapping(value = "/linkSTTLinkAppUser", method = RequestMethod.POST)
+    public ResponseEntity<?> linkSTTLinkAppUser(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.linkSTTLinkAppUser(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while linkSTTLinkAppUser ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
