@@ -381,7 +381,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             sttResponse.setDateCreated(sourceTaskType.getDateCreated());
             sttResponse.setTaskType(GLookup.getGLookup(this.lookupDataCacheService
                 .getChildLookupDataByParentLookupTypeAndChildLookupCode(TASK_TYPE.getName(),
-                sourceTaskType.getTaskType().getLookupCode())));
+                    sourceTaskType.getTaskType().getLookupCode())));
             if (!BarcoUtil.isNull(sourceTaskType.getCredential())) {
                 CredentialResponse credentialResponse = new CredentialResponse();
                 credentialResponse.setId(sourceTaskType.getCredential().getId());
@@ -394,8 +394,10 @@ public class FormSettingServiceImpl implements FormSettingService {
             } else if (!BarcoUtil.isNull(sourceTaskType.getApiTaskType())) {
                 sttResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.getApiTaskType(), this.lookupDataCacheService));
             }
+            // pending till task part implement
             sttResponse.setTotalTask(0l);
-            sttResponse.setTotalForm(0l);
+            sttResponse.setTotalForm(this.genFormLinkSourceTaskTypeRepository
+                .countBySourceTaskTypeAndStatusNot(sourceTaskType, APPLICATION_STATUS.DELETE));
             return sttResponse;
         }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sttListResponses);
@@ -423,8 +425,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.sourceTaskTypeRepository.saveAll(
-            this.sourceTaskTypeRepository.findAllByIdIn(payload.getIds()).stream()
-                .map(getSourceTaskType -> {
+            this.sourceTaskTypeRepository.findAllByIdIn(payload.getIds())
+                .stream().map(getSourceTaskType -> {
                     if (!BarcoUtil.isNull(getSourceTaskType.getAppUserLinkSourceTaskTypes())) {
                         this.actionAppUserLinkSourceTaskTypes(getSourceTaskType, appUser.get());
                     }
@@ -528,8 +530,9 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_LINK_STT_MISSING);
         }
         this.genFormLinkSourceTaskTypeRepository.saveAll(
-            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(payload.getSttLinkForm(), APPLICATION_STATUS.DELETE)
-                .stream().map(genFormLinkSourceTaskType -> {
+            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(
+                payload.getSttLinkForm(), APPLICATION_STATUS.DELETE).stream()
+                .map(genFormLinkSourceTaskType -> {
                     genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
                     genFormLinkSourceTaskType.setUpdatedBy(appUser.get());
                     return genFormLinkSourceTaskType;
@@ -709,12 +712,12 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
         }
         List<FormResponse> formResponses = result.stream()
-        .map(genForm -> {
-            FormResponse formResponse = getFormResponse(genForm);
-            formResponse.setTotalStt(this.genFormLinkSourceTaskTypeRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
-            formResponse.setTotalSection(this.genSectionLinkGenFormRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
-            return formResponse;
-        }).collect(Collectors.toList());
+            .map(genForm -> {
+                FormResponse formResponse = getFormResponse(genForm);
+                formResponse.setTotalStt(this.genFormLinkSourceTaskTypeRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
+                formResponse.setTotalSection(this.genSectionLinkGenFormRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
+                return formResponse;
+            }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, formResponses);
     }
 
@@ -922,7 +925,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             this.genSectionLinkGenFormRepository.saveAll(
                 getSections.stream().map(genSection -> {
                     GenSectionLinkGenForm genSectionLinkGenForm = new GenSectionLinkGenForm();
-                    genSectionLinkGenForm.setSectionOrder(0l);
+                    genSectionLinkGenForm.setSectionOrder(0l); // default order set
                     genSectionLinkGenForm.setGenForm(getForm.get());
                     genSectionLinkGenForm.setGenSection(genSection);
                     if (genSection.getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
@@ -1257,7 +1260,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                     GenControlLinkGenSection genControlLinkGenSection = new GenControlLinkGenSection();
                     genControlLinkGenSection.setGenControl(getControl);
                     genControlLinkGenSection.setGenSection(getSection.get());
-                    genControlLinkGenSection.setControlOrder(0l);
+                    genControlLinkGenSection.setControlOrder(0l); // default order set
                     if (getSection.get().getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
                             getControl.getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
                         genControlLinkGenSection.setStatus(APPLICATION_STATUS.ACTIVE);
@@ -1387,7 +1390,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             this.genSectionLinkGenFormRepository.saveAll(
                 getForms.stream().map(getForm -> {
                     GenSectionLinkGenForm genSectionLinkGenForm = new GenSectionLinkGenForm();
-                    genSectionLinkGenForm.setSectionOrder(0l);
+                    genSectionLinkGenForm.setSectionOrder(0l); // default order set
                     genSectionLinkGenForm.setGenForm(getForm);
                     genSectionLinkGenForm.setGenSection(genSection.get());
                     if (genSection.get().getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
@@ -1766,7 +1769,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                     GenControlLinkGenSection genControlLinkGenSection = new GenControlLinkGenSection();
                     genControlLinkGenSection.setGenControl(genControl.get());
                     genControlLinkGenSection.setGenSection(genSection);
-                    genControlLinkGenSection.setControlOrder(0l);
+                    genControlLinkGenSection.setControlOrder(0l);  // default order set
                     if (genSection.getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
                         genControl.get().getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
                         genControlLinkGenSection.setStatus(APPLICATION_STATUS.ACTIVE);
