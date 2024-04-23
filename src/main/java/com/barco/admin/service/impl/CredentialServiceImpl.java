@@ -128,11 +128,18 @@ public class CredentialServiceImpl implements CredentialService {
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
-        List<CredentialResponse> credentialResponseList = this.credentialRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(
-            startDate, endDate, payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE)
-            .stream().map(credential -> {
+        List<Credential> credentials;
+
+        if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
+            Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
+            Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+            credentials = this.credentialRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(
+                    startDate, endDate, payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
+        } else {
+            credentials = this.credentialRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE);
+        }
+        List<CredentialResponse> credentialResponseList = credentials.
+            stream().map(credential -> {
                 CredentialResponse credentialResponse = new CredentialResponse();
                 credentialResponse.setId(credential.getId());
                 credentialResponse.setName(credential.getName());

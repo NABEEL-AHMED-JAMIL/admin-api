@@ -219,6 +219,69 @@ public interface RootService {
     }
 
     /**
+     * Method use to fetch link form with stt
+     * @param data
+     * @return FormLinkSourceTaskTypeResponse
+     * */
+    public default FormLinkSourceTaskTypeResponse getFormLinkSourceTaskTypeResponse(
+        HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
+        FormLinkSourceTaskTypeResponse formLinkSourceTaskTypeResponse = new FormLinkSourceTaskTypeResponse();
+        if (data.containsKey(QueryService.ID)) {
+            formLinkSourceTaskTypeResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
+        }
+        if (data.containsKey(QueryService.SERVICE_NAME) && !BarcoUtil.isNull(data.get(QueryService.SERVICE_NAME))) {
+            formLinkSourceTaskTypeResponse.setServiceName(data.get(QueryService.SERVICE_NAME).toString());
+        }
+        if (data.containsKey(QueryService.TASK_TYPE) && !BarcoUtil.isNull(data.get(QueryService.TASK_TYPE))) {
+            GLookup formType = GLookup.getGLookup(lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+                TASK_TYPE.getName(), Long.valueOf(data.get(QueryService.TASK_TYPE).toString())));
+            formLinkSourceTaskTypeResponse.setTaskType(formType);
+        }
+        if (data.containsKey(QueryService.STATUS) && !BarcoUtil.isNull(data.get(QueryService.STATUS))) {
+            formLinkSourceTaskTypeResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(Long.valueOf(data.get(QueryService.STATUS).toString())));
+        }
+        if (data.containsKey(QueryService.LINK_STATUS) && !BarcoUtil.isNull(data.get(QueryService.LINK_STATUS))) {
+            formLinkSourceTaskTypeResponse.setLinkStatus(Boolean.valueOf(data.get(QueryService.LINK_STATUS).toString()));
+        }
+        if (data.containsKey(QueryService.LINK_STT_ID) && !BarcoUtil.isNull(data.get(QueryService.LINK_STT_ID))) {
+            formLinkSourceTaskTypeResponse.setFormLinkStt(Long.valueOf(data.get(QueryService.LINK_STT_ID).toString()));
+        }
+        return formLinkSourceTaskTypeResponse;
+    }
+
+    /**
+     * Method use to fetch link form with stt
+     * @param data
+     * @return SourceTaskTypeLinkFormResponse
+     * */
+    public default SourceTaskTypeLinkFormResponse getSourceTaskTypeLinkFormResponse(
+        HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
+        SourceTaskTypeLinkFormResponse seSourceTaskTypeLinkFormResponse = new SourceTaskTypeLinkFormResponse();
+        if (data.containsKey(QueryService.ID)) {
+            seSourceTaskTypeLinkFormResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
+        }
+        if (data.containsKey(QueryService.FORM_NAME) && !BarcoUtil.isNull(data.get(QueryService.FORM_NAME))) {
+            seSourceTaskTypeLinkFormResponse.setFormName(data.get(QueryService.FORM_NAME).toString());
+        }
+        if (data.containsKey(QueryService.FORM_TYPE) && !BarcoUtil.isNull(data.get(QueryService.FORM_TYPE))) {
+            GLookup formType = GLookup.getGLookup(lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+                    FORM_TYPE.getName(), Long.valueOf(data.get(QueryService.FORM_TYPE).toString())));
+            seSourceTaskTypeLinkFormResponse.setFormType(formType);
+        }
+        if (data.containsKey(QueryService.STATUS) && !BarcoUtil.isNull(data.get(QueryService.STATUS))) {
+            seSourceTaskTypeLinkFormResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(Long.valueOf(data.get(QueryService.STATUS).toString())));
+        }
+        if (data.containsKey(QueryService.LINK_STATUS) && !BarcoUtil.isNull(data.get(QueryService.LINK_STATUS))) {
+            seSourceTaskTypeLinkFormResponse.setLinkStatus(Boolean.valueOf(data.get(QueryService.LINK_STATUS).toString()));
+        }
+        if (data.containsKey(QueryService.LINK_FORM_ID) && !BarcoUtil.isNull(data.get(QueryService.LINK_FORM_ID))) {
+            seSourceTaskTypeLinkFormResponse.setSttLinkForm(Long.valueOf(data.get(QueryService.LINK_FORM_ID).toString()));
+        }
+        return seSourceTaskTypeLinkFormResponse;
+    }
+
+
+    /**
      * Method use to wrap the auth response
      * @param authResponse
      * @param userDetails
@@ -565,7 +628,8 @@ public interface RootService {
      * */
     public default GLookup getDBLoopUp(Optional<LookupData> lookupData) {
         if (lookupData.isPresent()) {
-            return new GLookup(lookupData.get().getLookupType(), lookupData.get().getLookupCode(), lookupData.get().getLookupValue());
+            return new GLookup(lookupData.get().getLookupType(),
+                lookupData.get().getLookupCode(), lookupData.get().getLookupValue());
         }
         return null;
     }
@@ -603,7 +667,7 @@ public interface RootService {
         appUserRoleAccess.setAppUser(appUser);
         appUserRoleAccess.setStatus(APPLICATION_STATUS.ACTIVE);
         if (role.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
-                appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
+            appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
             appUserRoleAccess.setStatus(APPLICATION_STATUS.INACTIVE);
         }
         return appUserRoleAccess;
@@ -624,7 +688,7 @@ public interface RootService {
         appUserRoleAccess.setAppUser(appUser);
         appUserRoleAccess.setStatus(APPLICATION_STATUS.ACTIVE);
         if (profile.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
-                appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
+            appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
             appUserRoleAccess.setStatus(APPLICATION_STATUS.INACTIVE);
         }
         return appUserRoleAccess;
@@ -668,11 +732,12 @@ public interface RootService {
      * @param apiTaskType
      * @return ApiTaskTypeResponse
      * */
-    public default ApiTaskTypeResponse getApiTaskTypeResponse(ApiTaskType apiTaskType) {
+    public default ApiTaskTypeResponse getApiTaskTypeResponse(ApiTaskType apiTaskType, LookupDataCacheService lookupDataCacheService) {
         ApiTaskTypeResponse apiTaskTypeResponse = new ApiTaskTypeResponse();
         apiTaskTypeResponse.setApiTaskTypeId(apiTaskType.getId());
         apiTaskTypeResponse.setApiUrl(apiTaskType.getApiUrl());
-        apiTaskTypeResponse.setHttpMethod(apiTaskType.getHttpMethod());
+        apiTaskTypeResponse.setHttpMethod(GLookup.getGLookup(lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+            REQUEST_METHOD.getName(), Long.valueOf(apiTaskType.getHttpMethod().ordinal()))));
         return apiTaskTypeResponse;
     }
 
@@ -796,6 +861,26 @@ public interface RootService {
                     return appUserEnv;
                 }).collect(Collectors.toList());
         }
+    }
+
+    /**
+     * Method use to get app ser env
+     * @param superAdmin
+     * @param appUser
+     * @param envVariables
+     * */
+    public default AppUserEnv getAppUserEnv(AppUser superAdmin, AppUser appUser, EnvVariables envVariables) {
+        AppUserEnv appUserEnv = new AppUserEnv();
+        appUserEnv.setCreatedBy(superAdmin);
+        appUserEnv.setUpdatedBy(superAdmin);
+        appUserEnv.setAppUser(appUser);
+        appUserEnv.setEnvVariables(envVariables);
+        appUserEnv.setStatus(APPLICATION_STATUS.ACTIVE);
+        if (envVariables.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
+                appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
+            appUserEnv.setStatus(APPLICATION_STATUS.INACTIVE);
+        }
+        return appUserEnv;
     }
 
 }

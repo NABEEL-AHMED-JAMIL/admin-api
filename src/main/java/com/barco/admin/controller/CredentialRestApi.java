@@ -33,7 +33,7 @@ public class CredentialRestApi {
      * @param payload
      * @return ResponseEntity<?> addCredential
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/addCredential", method = RequestMethod.POST)
     public ResponseEntity<?> addCredential(@RequestBody CredentialRequest payload) {
         try {
@@ -50,7 +50,7 @@ public class CredentialRestApi {
      * @param payload
      * @return ResponseEntity<?> updateCredential
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/updateCredential", method = RequestMethod.PUT)
     public ResponseEntity<?> updateCredential(@RequestBody CredentialRequest payload) {
         try {
@@ -66,7 +66,7 @@ public class CredentialRestApi {
      * @apiNote :- Api use to fetch the lookup detail
      * @return ResponseEntity<?> fetchAllCredential
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchAllCredential", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllCredential(@RequestBody CredentialRequest payload) {
         try {
@@ -83,7 +83,7 @@ public class CredentialRestApi {
      * @param payload
      * @return ResponseEntity<?> fetchCredentialByCredentialId
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchCredentialById", method = RequestMethod.POST)
     public ResponseEntity<?> fetchCredentialById(@RequestBody CredentialRequest payload) {
         try {
@@ -100,7 +100,7 @@ public class CredentialRestApi {
      * @param payload
      * @return ResponseEntity<?> deleteCredential
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/deleteCredential", method = RequestMethod.PUT)
     public ResponseEntity<?> deleteCredential(@RequestBody CredentialRequest payload) {
         try {
@@ -117,7 +117,7 @@ public class CredentialRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(path="/deleteAllCredential", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllCredential(@RequestBody CredentialRequest payload) {
         try {

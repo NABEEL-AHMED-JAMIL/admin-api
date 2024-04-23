@@ -53,6 +53,9 @@ public class QueryService {
     public static String LINK_STATUS = "link_status";
     public static String PROFILE_ID = "profile_id";
     public static String ENV_VALUE = "env_value";
+    public static String SERVICE_NAME = "service_name";
+    public static String LINK_STT_ID = "link_stt_id";
+    public static String TASK_TYPE = "task_type";
 
     // Query
     public static String DELETE_APP_USER_ROLES = "DELETE FROM APP_USER_ROLES aur WHERE aur.ROLE_ID = %d ";
@@ -122,6 +125,20 @@ public class QueryService {
         "LEFT JOIN GS_LINK_GF GLG ON GLG.SECTION_ID = GS.ID AND GLG.FORM_ID = %d AND GLG.STATUS != %d " +
         "WHERE GS.STATUS != %d AND GS.CREATED_BY_ID = %d " +
         "ORDER BY GS.DATE_CREATED DESC";
+    public static String FETCH_ALL_STT_LINK_FORM = "SELECT STT.ID, STT.SERVICE_NAME, STT.TASK_TYPE, " +
+        "CASE WHEN SLS.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
+        "SLS.ID AS LINK_STT_ID " +
+        "FROM SOURCE_TASK_TYPE STT " +
+        "LEFT JOIN STTF_LINK_STT SLS ON SLS.STT_ID = STT.ID AND SLS.FORM_ID = %d  AND SLS.STATUS != %d " +
+        "WHERE STT.STATUS != %d AND STT.CREATED_BY_ID = %d " +
+        "ORDER BY STT.DATE_CREATED DESC";
+    public static String FETCH_ALL_FORM_LINK_STT = "SELECT GF.ID, GF.FORM_NAME, GF.FORM_TYPE, GF.STATUS, " +
+        "CASE WHEN SLS.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
+        "SLS.ID AS LINK_FORM_ID " +
+        "FROM GEN_FORM GF " +
+        "LEFT JOIN STTF_LINK_STT SLS ON SLS.FORM_ID = GF.ID AND SLS.STT_ID = %d  AND SLS.STATUS != %d " +
+        "WHERE GF.STATUS != %d AND GF.CREATED_BY_ID = %d " +
+        "ORDER BY GF.DATE_CREATED DESC";
     public static String FETCH_ROLE_WITH_USER = "SELECT DISTINCT ROLE.NAME AS ROLE_NAME " +
         "FROM ROLE " +
         "INNER JOIN APP_USER_ROLE_ACCESS AURA ON AURA.ROLE_ID = ROLE.ID AND AURA.APP_USER_ID = %d AND AURA.STATUS = %d AND ROLE.STATUS = %d ";

@@ -46,6 +46,8 @@ public class AppUserServiceImpl implements AppUserService {
     @Autowired
     private AppUserEnvRepository appUserEnvRepository;
     @Autowired
+    private EnvVariablesRepository envVariablesRepository;
+    @Autowired
     private RoleRepository roleRepository;
     @Autowired
     private ProfileRepository profileRepository;
@@ -412,6 +414,10 @@ public class AppUserServiceImpl implements AppUserService {
         subAppUser.setUpdatedBy(adminUser.get());
         subAppUser.setStatus(APPLICATION_STATUS.ACTIVE);
         this.subAppUserRepository.save(subAppUser);
+        List<EnvVariables> envVariablesList = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE);
+        for (EnvVariables envVariables : envVariablesList) {
+            this.appUserEnvRepository.save(getAppUserEnv(adminUser.get(), appUser, envVariables));
+        }
         // email send to the user
         this.sendRegisterUser(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         // email send to the admin

@@ -25,6 +25,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -54,6 +56,10 @@ public class AuthServiceImpl implements AuthService {
     private LookupDataCacheService lookupDataCacheService;
     @Autowired
     private TemplateRegRepository templateRegRepository;
+    @Autowired
+    private EnvVariablesRepository envVariablesRepository;
+    @Autowired
+    private AppUserEnvRepository appUserEnvRepository;
     @Autowired
     private SubAppUserRepository subAppUserRepository;
     @Autowired
@@ -149,6 +155,10 @@ public class AuthServiceImpl implements AuthService {
         subAppUser.setUpdatedBy(superAdmin.get());
         subAppUser.setStatus(APPLICATION_STATUS.ACTIVE);
         this.subAppUserRepository.save(subAppUser);
+        List<EnvVariables> envVariablesList = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE);
+        for (EnvVariables envVariables : envVariablesList) {
+            this.appUserEnvRepository.save(getAppUserEnv(superAdmin.get(), appUser, envVariables));
+        }
         this.sendRegisterUser(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         this.sendNotification(superAdmin.get().getUsername(), MessageUtil.REQUESTED_FOR_NEW_ACCOUNT,
             String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()), superAdmin.get(), this.lookupDataCacheService, this.notificationService);

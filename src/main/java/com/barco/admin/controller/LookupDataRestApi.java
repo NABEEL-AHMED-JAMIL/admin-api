@@ -47,7 +47,7 @@ public class LookupDataRestApi {
      * @param payload
      * @return ResponseEntity<?> addLookupData
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value="/addLookupData", method=RequestMethod.POST)
     public ResponseEntity<?> addLookupData(@RequestBody LookupDataRequest payload) {
         try {
@@ -64,7 +64,7 @@ public class LookupDataRestApi {
      * @param payload
      * @return ResponseEntity<?> updateLookupData
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value="/updateLookupData", method=RequestMethod.POST)
     public ResponseEntity<?> updateLookupData(@RequestBody LookupDataRequest payload) {
         try {
@@ -80,7 +80,7 @@ public class LookupDataRestApi {
      * @apiNote :- Api use to fetch the lookup detail
      * @return ResponseEntity<?> findAllParentLookupByUsername
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/findAllParentLookupByUsername", method = RequestMethod.POST)
     public ResponseEntity<?> findAllParentLookupByUsername(@RequestBody LookupDataRequest payload) {
         try {
@@ -97,7 +97,7 @@ public class LookupDataRestApi {
      * @param payload
      * @return ResponseEntity<?> fetchSubLookupDataByParentLookupDataId
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchSubLookupDataByParentLookupDataId", method = RequestMethod.POST)
     public ResponseEntity<?> fetchSubLookupDataByParentLookupDataId(@RequestBody LookupDataRequest payload) {
         try {
@@ -130,7 +130,7 @@ public class LookupDataRestApi {
      * @param payload
      * @return ResponseEntity<?> deleteLookupData
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/deleteLookupData", method = RequestMethod.POST)
     public ResponseEntity<?> deleteLookupData(@RequestBody LookupDataRequest payload) {
         try {
@@ -146,7 +146,7 @@ public class LookupDataRestApi {
      * @apiNote :- Api use to download lookup template the lookup data
      * @return ResponseEntity<?> downloadLookupDataTemplateFile
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/downloadLookupDataTemplateFile", method = RequestMethod.GET)
     public ResponseEntity<?> downloadLookupDataTemplateFile() {
         try {
@@ -166,7 +166,7 @@ public class LookupDataRestApi {
      * @apiNote :- Api use to download the lookup data
      * @return ResponseEntity<?> downloadLookupData
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/downloadLookupData", method = RequestMethod.POST)
     public ResponseEntity<?> downloadLookupData(@RequestBody LookupDataRequest payload) {
         try {
@@ -186,7 +186,7 @@ public class LookupDataRestApi {
      * @apiNote :- Api use to upload the lookup data
      * @return ResponseEntity<?> uploadLookupData
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/uploadLookupData", method = RequestMethod.POST)
     public ResponseEntity<?> uploadLookupData(FileUploadRequest payload) {
         try {

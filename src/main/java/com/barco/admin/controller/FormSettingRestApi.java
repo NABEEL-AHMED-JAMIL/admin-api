@@ -42,7 +42,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/addSTT", method = RequestMethod.POST)
     public ResponseEntity<?> addSTT(@RequestBody STTRequest payload) {
         try {
@@ -59,7 +59,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/editSTT", method = RequestMethod.POST)
     public ResponseEntity<?> editSTT(@RequestBody STTRequest payload) {
         try {
@@ -76,7 +76,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/deleteSTT", method = RequestMethod.POST)
     public ResponseEntity<?> deleteSTT(@RequestBody STTRequest payload) {
         try {
@@ -93,7 +93,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchSTTBySttId", method = RequestMethod.POST)
     public ResponseEntity<?> fetchSTTBySttId(@RequestBody STTRequest payload) {
         try {
@@ -110,7 +110,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchAllSTT", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllSTT(@RequestBody STTRequest payload) {
         try {
@@ -127,7 +127,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/deleteAllSTT", method = RequestMethod.POST)
     public ResponseEntity<?> deleteAllSTT(@RequestBody STTRequest payload) {
         try {
@@ -144,7 +144,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchAllSTTLinkForm", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllSTTLinkForm(@RequestBody STTRequest payload) {
         try {
@@ -161,7 +161,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/linkSTTForm", method = RequestMethod.POST)
     public ResponseEntity<?> linkSTTForm(@RequestBody STTRequest payload) {
         try {
@@ -173,63 +173,12 @@ public class FormSettingRestApi {
     }
 
     /**
-     * @apiName :- linkSTTFormOrder
-     * @apiNote :- Api use to link stt with form order
-     * @param payload
-     * @return ResponseEntity<?>
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
-    @RequestMapping(value = "/linkSTTFormOrder", method = RequestMethod.POST)
-    public ResponseEntity<?> linkSTTFormOrder(@RequestBody STTRequest payload) {
-        try {
-            return new ResponseEntity<>(this.formSettingService.linkSTTFormOrder(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while linkSTTFormOrder ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- fetchAllSTTLinkAppUser
-     * @apiNote :- Api use fetch stt link with app user
-     * @param payload
-     * @return ResponseEntity<?>
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
-    @RequestMapping(value = "/fetchAllSTTLinkAppUser", method = RequestMethod.POST)
-    public ResponseEntity<?> fetchAllSTTLinkAppUser(@RequestBody STTRequest payload) {
-        try {
-            return new ResponseEntity<>(this.formSettingService.fetchAllSTTLinkAppUser(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while fetchAllSTTLinkAppUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- linkSTTLinkAppUser
-     * @apiNote :- Api use fetch stt link with app user
-     * @param payload
-     * @return ResponseEntity<?>
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
-    @RequestMapping(value = "/linkSTTLinkAppUser", method = RequestMethod.POST)
-    public ResponseEntity<?> linkSTTLinkAppUser(@RequestBody STTRequest payload) {
-        try {
-            return new ResponseEntity<>(this.formSettingService.linkSTTLinkAppUser(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while linkSTTLinkAppUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
      * @apiName :- addForm
      * @apiNote :- Api use to add form(source form)
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/addForm", method = RequestMethod.POST)
     public ResponseEntity<?> addForm(@RequestBody FormRequest payload) {
         try {
@@ -246,7 +195,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/editForm", method = RequestMethod.POST)
     public ResponseEntity<?> editForm(@RequestBody FormRequest payload) {
         try {
@@ -263,7 +212,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/deleteFormById", method = RequestMethod.POST)
     public ResponseEntity<?> deleteFormById(@RequestBody FormRequest payload) {
         try {
@@ -280,7 +229,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchFormByFormId", method = RequestMethod.POST)
     public ResponseEntity<?> fetchFormByFormId(@RequestBody FormRequest payload) {
         try {
@@ -297,7 +246,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchForms", method = RequestMethod.POST)
     public ResponseEntity<?> fetchForms(@RequestBody FormRequest payload) {
         try {
@@ -314,7 +263,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/deleteAllForms", method = RequestMethod.POST)
     public ResponseEntity<?> deleteAllForms(@RequestBody FormRequest payload) {
         try {
@@ -326,12 +275,46 @@ public class FormSettingRestApi {
     }
 
     /**
+     * @apiName :- fetchAllFormLinkSTT
+     * @apiNote :- Api use to fetch all form link stt
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value = "/fetchAllFormLinkSTT", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllFormLinkSTT(@RequestBody FormRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.fetchAllFormLinkSTT(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllFormLinkSTT ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- linkFormSTT
+     * @apiNote :- Api use link form with stt
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value = "/linkFormSTT", method = RequestMethod.POST)
+    public ResponseEntity<?> linkFormSTT(@RequestBody FormRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.linkFormSTT(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while linkFormSTT ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- fetchAllFormLinkSection
      * @apiNote :- Api use to fetch all form link section
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchAllFormLinkSection", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllFormLinkSection(@RequestBody FormRequest payload) {
         try {
@@ -348,7 +331,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/linkFormSection", method = RequestMethod.POST)
     public ResponseEntity<?> linkFormSection(@RequestBody FormRequest payload) {
         try {
@@ -365,7 +348,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/linkFormSectionOrder", method = RequestMethod.POST)
     public ResponseEntity<?> linkFormSectionOrder(@RequestBody FormRequest payload) {
         try {
@@ -382,7 +365,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/addSection", method = RequestMethod.POST)
     public ResponseEntity<?> addSection(@RequestBody SectionRequest payload) {
         try {
@@ -399,7 +382,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/editSection", method = RequestMethod.POST)
     public ResponseEntity<?> editSection(@RequestBody SectionRequest payload) {
         try {
@@ -416,7 +399,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/deleteSectionById", method = RequestMethod.POST)
     public ResponseEntity<?> deleteSectionById(@RequestBody SectionRequest payload) {
         try {
@@ -433,7 +416,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchSectionBySectionId", method = RequestMethod.POST)
     public ResponseEntity<?> fetchSectionBySectionId(@RequestBody SectionRequest payload) {
         try {
@@ -450,7 +433,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchSections", method = RequestMethod.POST)
     public ResponseEntity<?> fetchSections(@RequestBody SectionRequest payload) {
         try {
@@ -467,7 +450,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/deleteAllSections", method = RequestMethod.POST)
     public ResponseEntity<?> deleteAllSections(@RequestBody SectionRequest payload) {
         try {
@@ -484,7 +467,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchAllSectionLinkControl", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllSectionLinkControl(@RequestBody SectionRequest payload) {
         try {
@@ -501,7 +484,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/linkSectionControl", method = RequestMethod.POST)
     public ResponseEntity<?> linkSectionControl(@RequestBody SectionRequest payload) {
         try {
@@ -518,7 +501,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/linkSectionControlOrder", method = RequestMethod.POST)
     public ResponseEntity<?> linkSectionControlOrder(@RequestBody SectionRequest payload) {
         try {
@@ -535,7 +518,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchAllSectionLinkForm", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllSectionLinkForm(@RequestBody SectionRequest payload) {
         try {
@@ -552,7 +535,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/linkSectionForm", method = RequestMethod.POST)
     public ResponseEntity<?> linkSectionForm(@RequestBody SectionRequest payload) {
         try {
@@ -569,7 +552,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/linkSectionFormOrder", method = RequestMethod.POST)
     public ResponseEntity<?> linkSectionFormOrder(@RequestBody SectionRequest payload) {
         try {
@@ -586,7 +569,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/addControl", method = RequestMethod.POST)
     public ResponseEntity<?> addControl(@RequestBody ControlRequest payload) {
         try {
@@ -603,7 +586,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/editControl", method = RequestMethod.POST)
     public ResponseEntity<?> editControl(@RequestBody ControlRequest payload) {
         try {
@@ -620,7 +603,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/deleteControlById", method = RequestMethod.POST)
     public ResponseEntity<?> deleteControlById(@RequestBody ControlRequest payload) {
         try {
@@ -637,7 +620,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchControlByControlId", method = RequestMethod.POST)
     public ResponseEntity<?> fetchControlByControlId(@RequestBody ControlRequest payload) {
         try {
@@ -654,7 +637,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchControls", method = RequestMethod.POST)
     public ResponseEntity<?> fetchControls(@RequestBody ControlRequest payload) {
         try {
@@ -671,7 +654,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/deleteAllControls", method = RequestMethod.POST)
     public ResponseEntity<?> deleteAllControls(@RequestBody ControlRequest payload) {
         try {
@@ -688,7 +671,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchAllControlLinkSection", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllControlLinkSection(@RequestBody ControlRequest payload) {
         try {
@@ -705,7 +688,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/linkControlSection", method = RequestMethod.POST)
     public ResponseEntity<?> linkControlSection(@RequestBody ControlRequest payload) {
         try {
@@ -722,7 +705,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/linkControlSectionOrder", method = RequestMethod.POST)
     public ResponseEntity<?> linkControlSectionOrder(@RequestBody ControlRequest payload) {
         try {
@@ -739,7 +722,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/downloadSTTCommonTemplateFile", method = RequestMethod.POST)
     public ResponseEntity<?> downloadSTTCommonTemplateFile(@RequestBody STTFileUploadRequest payload) {
         try {
@@ -760,7 +743,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/downloadSTTCommon", method = RequestMethod.POST)
     public ResponseEntity<?> downloadSTTCommon(@RequestBody STTFileUploadRequest payload) {
         try {
@@ -781,7 +764,7 @@ public class FormSettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/uploadSTTCommon", method = RequestMethod.POST)
     public ResponseEntity<?> uploadSTTCommon(FileUploadRequest payload) {
         try {

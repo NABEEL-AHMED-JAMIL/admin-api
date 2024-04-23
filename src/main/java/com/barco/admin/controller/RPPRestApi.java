@@ -633,7 +633,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/fetchProfileWithUser", method=RequestMethod.POST)
     public ResponseEntity<?> fetchProfileWithUser(@RequestBody LinkPURequest payload) {
         try {
@@ -652,7 +652,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/fetchRoleWithUser", method=RequestMethod.POST)
     public ResponseEntity<?> fetchRoleWithUser(@RequestBody LinkRURequest payload) {
         try {

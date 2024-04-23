@@ -26,13 +26,6 @@ public interface FormSettingService extends RootService {
 
     public AppResponse linkSTTForm(STTRequest payload) throws Exception;
 
-    public AppResponse linkSTTFormOrder(STTRequest payload) throws Exception;
-
-    // link stt -> with user
-    public AppResponse fetchAllSTTLinkAppUser(STTRequest payload) throws Exception;
-
-    public AppResponse linkSTTLinkAppUser(STTRequest payload) throws Exception;
-
     public AppResponse addForm(FormRequest payload) throws Exception;
 
     public AppResponse editForm(FormRequest payload) throws Exception;
@@ -44,6 +37,10 @@ public interface FormSettingService extends RootService {
     public AppResponse fetchForms(FormRequest payload) throws Exception;
 
     public AppResponse deleteAllForms(FormRequest payload) throws Exception;
+
+    public AppResponse fetchAllFormLinkSTT(FormRequest payload) throws Exception;
+
+    public AppResponse linkFormSTT(FormRequest payload) throws Exception;
 
     public AppResponse fetchAllFormLinkSection(FormRequest payload) throws Exception;
 

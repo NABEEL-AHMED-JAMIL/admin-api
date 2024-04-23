@@ -466,18 +466,4 @@ public class EVariableServiceImpl implements EVariableService {
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, ""), payload);
     }
 
-    private static AppUserEnv getAppUserEnv(AppUser superAdmin, AppUser appUser, EnvVariables envVariables) {
-        AppUserEnv appUserEnv = new AppUserEnv();
-        appUserEnv.setCreatedBy(superAdmin);
-        appUserEnv.setUpdatedBy(superAdmin);
-        appUserEnv.setAppUser(appUser);
-        appUserEnv.setEnvVariables(envVariables);
-        appUserEnv.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (envVariables.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
-            appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
-            appUserEnv.setStatus(APPLICATION_STATUS.INACTIVE);
-        }
-        return appUserEnv;
-    }
-
 }

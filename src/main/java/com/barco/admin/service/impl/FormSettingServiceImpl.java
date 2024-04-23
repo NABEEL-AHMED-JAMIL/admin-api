@@ -61,6 +61,10 @@ public class FormSettingServiceImpl implements FormSettingService {
     @Autowired
     private LookupDataCacheService lookupDataCacheService;
     @Autowired
+    private KafkaTaskTypeRepository kafkaTaskTypeRepository;
+    @Autowired
+    private ApiTaskTypeRepository apiTaskTypeRepository;
+    @Autowired
     private GenFormLinkSourceTaskTypeRepository genFormLinkSourceTaskTypeRepository;
     @Autowired
     private AppUserLinkSourceTaskTypeRepository appUserLinkSourceTaskTypeRepository;
@@ -123,7 +127,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             } else if (BarcoUtil.isNull(apiTaskTypeRequest.getHttpMethod())) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.HTTP_METHOD_MISSING);
             }
-            sourceTaskType.setApiTaskType(getApiTaskType(apiTaskTypeRequest, adminUser));
+            ApiTaskType apiTaskType = this.apiTaskTypeRepository.save(getApiTaskType(apiTaskTypeRequest, adminUser));
+            sourceTaskType.setApiTaskType(apiTaskType);
         } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode())) {
             KafkaTaskTypeRequest kafkaTaskTypeRequest = payload.getKafkaTaskType();
             if (BarcoUtil.isNull(kafkaTaskTypeRequest.getNumPartitions())) {
@@ -135,9 +140,18 @@ public class FormSettingServiceImpl implements FormSettingService {
             } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getTopicPattern())) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_TOPIC_PATTERN_MISSING);
             }
-            sourceTaskType.setKafkaTaskType(getKafkaTaskType(kafkaTaskTypeRequest, adminUser));
+            KafkaTaskType kafkaTaskType = this.kafkaTaskTypeRepository.save(getKafkaTaskType(kafkaTaskTypeRequest, adminUser));
+            sourceTaskType.setKafkaTaskType(kafkaTaskType);
         }
         this.sourceTaskTypeRepository.save(sourceTaskType);
+        // link app user stt giving service status
+        AppUserLinkSourceTaskType appUserSTT = new AppUserLinkSourceTaskType();
+        appUserSTT.setSourceTaskType(sourceTaskType);
+        appUserSTT.setAppUser(adminUser.get());
+        appUserSTT.setStatus(sourceTaskType.getStatus());
+        appUserSTT.setCreatedBy(adminUser.get());
+        appUserSTT.setUpdatedBy(adminUser.get());
+        this.appUserLinkSourceTaskTypeRepository.save(appUserSTT);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, sourceTaskType.getId().toString()), payload);
     }
 
@@ -176,7 +190,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
         if (!sourceTaskType.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
-        } else if (!sourceTaskType.get().getTaskType().equals(payload.getTaskType())) {
+        } else if (!sourceTaskType.get().getTaskType().getLookupCode().equals(payload.getTaskType())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_CANNOT_CHANGE_TO_DIFFERENT_TASK_TYPE);
         }
         sourceTaskType.get().setServiceName(payload.getServiceName());
@@ -319,12 +333,15 @@ public class FormSettingServiceImpl implements FormSettingService {
             .getChildLookupDataByParentLookupTypeAndChildLookupCode(TASK_TYPE.getName(),
                 sourceTaskType.get().getTaskType().getLookupCode())));
         if (!BarcoUtil.isNull(sourceTaskType.get().getCredential())) {
-            sourceTaskTypeResponse.setCredentialId(sourceTaskType.get().getCredential().getId());
+            CredentialResponse credentialResponse = new CredentialResponse();
+            credentialResponse.setId(sourceTaskType.get().getCredential().getId());
+            credentialResponse.setName(sourceTaskType.get().getCredential().getName());
+            sourceTaskTypeResponse.setCredential(credentialResponse);
         }
         if (sourceTaskType.get().getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode())) {
             sourceTaskTypeResponse.setKafkaTaskType(getKafkaTaskTypeResponse(sourceTaskType.get().getKafkaTaskType()));
         } else {
-            sourceTaskTypeResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.get().getApiTaskType()));
+            sourceTaskTypeResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.get().getApiTaskType(), this.lookupDataCacheService));
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, payload);
     }
@@ -371,12 +388,12 @@ public class FormSettingServiceImpl implements FormSettingService {
                 credentialResponse.setName(sourceTaskType.getCredential().getName());
                 sttResponse.setCredential(credentialResponse);
             }
-            if (sourceTaskType.getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode())) {
+            if (sourceTaskType.getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode())
+                && !BarcoUtil.isNull(sourceTaskType.getKafkaTaskType())) {
                 sttResponse.setKafkaTaskType(getKafkaTaskTypeResponse(sourceTaskType.getKafkaTaskType()));
-            } else {
-                sttResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.getApiTaskType()));
+            } else if (!BarcoUtil.isNull(sourceTaskType.getApiTaskType())) {
+                sttResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.getApiTaskType(), this.lookupDataCacheService));
             }
-            sttResponse.setTotalUser(0l);
             sttResponse.setTotalTask(0l);
             sttResponse.setTotalForm(0l);
             return sttResponse;
@@ -408,14 +425,13 @@ public class FormSettingServiceImpl implements FormSettingService {
         this.sourceTaskTypeRepository.saveAll(
             this.sourceTaskTypeRepository.findAllByIdIn(payload.getIds()).stream()
                 .map(getSourceTaskType -> {
-                    // edit all source task
                     if (!BarcoUtil.isNull(getSourceTaskType.getAppUserLinkSourceTaskTypes())) {
                         this.actionAppUserLinkSourceTaskTypes(getSourceTaskType, appUser.get());
                     }
-                    // edit all form
                     if (!BarcoUtil.isNull(getSourceTaskType.getGenFormLinkSourceTaskTypes())) {
                         this.actionGenFormLinkSourceTaskTypes(getSourceTaskType, appUser.get());
                     }
+                    // de-link all source task
                     getSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
                     getSourceTaskType.setUpdatedBy(appUser.get());
                     return getSourceTaskType;
@@ -424,29 +440,101 @@ public class FormSettingServiceImpl implements FormSettingService {
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
     }
 
+    /**
+     * Method use to fetch the stt link form
+     * @param payload
+     * @return AppResponse
+     * **/
     @Override
     public AppResponse fetchAllSTTLinkForm(STTRequest payload) throws Exception {
-        return null;
+        logger.info("Request fetchAllSTTLinkForm :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
+        }
+        Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
+            payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
+        if (!sourceTaskType.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
+        }
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_FORM_LINK_STT,
+            sourceTaskType.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
+        List<SourceTaskTypeLinkFormResponse> sourceTaskTypeLinkFormResponses = new ArrayList<>();
+        if (!BarcoUtil.isNull(queryResponse.getData())) {
+            for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
+                sourceTaskTypeLinkFormResponses.add(getSourceTaskTypeLinkFormResponse(data, this.lookupDataCacheService));
+            }
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sourceTaskTypeLinkFormResponses);
     }
 
+    /**
+     * Method use to link the stt with form
+     * @param payload
+     * @return AppResponse
+     * **/
     @Override
     public AppResponse linkSTTForm(STTRequest payload) throws Exception {
-        return null;
-    }
-
-    @Override
-    public AppResponse linkSTTFormOrder(STTRequest payload) throws Exception {
-        return null;
-    }
-
-    @Override
-    public AppResponse fetchAllSTTLinkAppUser(STTRequest payload) throws Exception {
-        return null;
-    }
-
-    @Override
-    public AppResponse linkSTTLinkAppUser(STTRequest payload) throws Exception {
-        return null;
+        logger.info("Request linkSTTForm :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+                payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getAction())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACTION_MISSING);
+        }
+        if (payload.getAction().equals(ACTION.LINK)) {
+            if (BarcoUtil.isNull(payload.getId())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
+            } else if (BarcoUtil.isNull(payload.getFormId()) && payload.getFormId().size() > 0) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
+            }
+            Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
+                payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
+            if (!sourceTaskType.isPresent()) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
+            }
+            List<GenForm> getForms = this.genFormRepository.findAllByIdInAndStatusNot(payload.getFormId(), APPLICATION_STATUS.DELETE);
+            if (getForms.size() == 0) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
+            }
+            this.genFormLinkSourceTaskTypeRepository.saveAll(
+                getForms.stream().map(getForm -> {
+                    GenFormLinkSourceTaskType genFormLinkSourceTaskType = new GenFormLinkSourceTaskType();
+                    genFormLinkSourceTaskType.setGenForm(getForm);
+                    genFormLinkSourceTaskType.setSourceTaskType(sourceTaskType.get());
+                    if (getForm.getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
+                        getForm.getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
+                        genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
+                    } else {
+                        genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.INACTIVE);
+                    }
+                    genFormLinkSourceTaskType.setCreatedBy(appUser.get());
+                    genFormLinkSourceTaskType.setUpdatedBy(appUser.get());
+                    return genFormLinkSourceTaskType;
+                }).collect(Collectors.toList()));
+            return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()), payload);
+        }
+        if (BarcoUtil.isNull(payload.getSttLinkForm())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_LINK_STT_MISSING);
+        }
+        this.genFormLinkSourceTaskTypeRepository.saveAll(
+            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(payload.getSttLinkForm(), APPLICATION_STATUS.DELETE)
+                .stream().map(genFormLinkSourceTaskType -> {
+                    genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
+                    genFormLinkSourceTaskType.setUpdatedBy(appUser.get());
+                    return genFormLinkSourceTaskType;
+                }).collect(Collectors.toList()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
     /**
@@ -665,6 +753,103 @@ public class FormSettingServiceImpl implements FormSettingService {
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
     }
 
+    /**
+     * Method use to delete all forms
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchAllFormLinkSTT(FormRequest payload) throws Exception {
+        logger.info("Request fetchAllFormLinkSTT :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+                payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
+        }
+        Optional<GenForm> getForm = this.genFormRepository.findByIdAndCreatedByAndStatusNot(
+                payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
+        if (!getForm.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
+        }
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_STT_LINK_FORM,
+            getForm.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
+        List<FormLinkSourceTaskTypeResponse> formLinkSourceTaskTypeResponses = new ArrayList<>();
+        if (!BarcoUtil.isNull(queryResponse.getData())) {
+            for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
+                formLinkSourceTaskTypeResponses.add(getFormLinkSourceTaskTypeResponse(data, this.lookupDataCacheService));
+            }
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, formLinkSourceTaskTypeResponses);
+    }
+
+    /**
+     * Method use to delete all forms
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse linkFormSTT(FormRequest payload) throws Exception {
+        logger.info("Request linkFormSTT :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getAction())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACTION_MISSING);
+        }
+        if (payload.getAction().equals(ACTION.LINK)) {
+            if (BarcoUtil.isNull(payload.getId())) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
+            } else if (BarcoUtil.isNull(payload.getSttId()) && payload.getSttId().size() > 0) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_ID_MISSING);
+            }
+            Optional<GenForm> getForm = this.genFormRepository.findByIdAndCreatedByAndStatusNot(
+                payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
+            if (!getForm.isPresent()) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
+            }
+            List<SourceTaskType> sourceTaskTypes = this.sourceTaskTypeRepository.findAllByIdInAndStatusNot(
+                payload.getSttId(), APPLICATION_STATUS.DELETE);
+            if (sourceTaskTypes.size() == 0) {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
+            }
+            this.genFormLinkSourceTaskTypeRepository.saveAll(
+                sourceTaskTypes.stream().map(geSourceTaskType -> {
+                    GenFormLinkSourceTaskType genFormLinkSourceTaskType = new GenFormLinkSourceTaskType();
+                    genFormLinkSourceTaskType.setGenForm(getForm.get());
+                    genFormLinkSourceTaskType.setSourceTaskType(geSourceTaskType);
+                    if (geSourceTaskType.getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
+                        getForm.get().getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
+                        genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
+                    } else {
+                        genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.INACTIVE);
+                    }
+                    genFormLinkSourceTaskType.setCreatedBy(appUser.get());
+                    genFormLinkSourceTaskType.setUpdatedBy(appUser.get());
+                    return genFormLinkSourceTaskType;
+                }).collect(Collectors.toList()));
+            return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()), payload);
+        }
+        if (BarcoUtil.isNull(payload.getFormLinkStt())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_LINK_STT_MISSING);
+        }
+        this.genFormLinkSourceTaskTypeRepository.saveAll(
+            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(payload.getFormLinkStt(), APPLICATION_STATUS.DELETE)
+                .stream().map(genFormLinkSourceTaskType -> {
+                    genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
+                    genFormLinkSourceTaskType.setUpdatedBy(appUser.get());
+                    return genFormLinkSourceTaskType;
+                }).collect(Collectors.toList()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
+    }
 
     /**
      * Method use to fetch all form link section
@@ -757,8 +942,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         this.genSectionLinkGenFormRepository.saveAll(
             this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(payload.getFormLinkSection(), APPLICATION_STATUS.DELETE)
-                .stream()
-                .map(genSectionLinkGenForm -> {
+                .stream().map(genSectionLinkGenForm -> {
                     genSectionLinkGenForm.setStatus(APPLICATION_STATUS.DELETE);
                     genSectionLinkGenForm.setUpdatedBy(appUser.get());
                     return genSectionLinkGenForm;
@@ -1196,8 +1380,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             if (!genSection.isPresent()) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_NOT_FOUND);
             }
-            List<GenForm> getForms = this.genFormRepository.findAllByIdInAndStatusNot(
-                payload.getFormId(), APPLICATION_STATUS.DELETE);
+            List<GenForm> getForms = this.genFormRepository.findAllByIdInAndStatusNot(payload.getFormId(), APPLICATION_STATUS.DELETE);
             if (getForms.size() == 0) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
             }
