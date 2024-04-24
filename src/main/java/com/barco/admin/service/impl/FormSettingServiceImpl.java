@@ -413,8 +413,6 @@ public class FormSettingServiceImpl implements FormSettingService {
         logger.info("Request deleteAllSTT :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        } else if (BarcoUtil.isNull(payload.getId())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_ID_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
@@ -427,15 +425,15 @@ public class FormSettingServiceImpl implements FormSettingService {
         this.sourceTaskTypeRepository.saveAll(
             this.sourceTaskTypeRepository.findAllByIdIn(payload.getIds())
                 .stream().map(getSourceTaskType -> {
+                    // de-link all source task
+                    getSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
+                    getSourceTaskType.setUpdatedBy(appUser.get());
                     if (!BarcoUtil.isNull(getSourceTaskType.getAppUserLinkSourceTaskTypes())) {
                         this.actionAppUserLinkSourceTaskTypes(getSourceTaskType, appUser.get());
                     }
                     if (!BarcoUtil.isNull(getSourceTaskType.getGenFormLinkSourceTaskTypes())) {
                         this.actionGenFormLinkSourceTaskTypes(getSourceTaskType, appUser.get());
                     }
-                    // de-link all source task
-                    getSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
-                    getSourceTaskType.setUpdatedBy(appUser.get());
                     return getSourceTaskType;
                 }).collect(Collectors.toList())
         );
@@ -1547,6 +1545,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!genControl.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_NOT_FOUND);
         }
+        genControl.get().setFieldType(FIELD_TYPE.getByLookupCode(payload.getFieldType()));
         if (FIELD_TYPE.RADIO.getLookupCode().equals(payload.getFieldType()) ||
             FIELD_TYPE.CHECKBOX.getLookupCode().equals(payload.getFieldType()) ||
             FIELD_TYPE.SELECT.getLookupCode().equals(payload.getFieldType()) ||

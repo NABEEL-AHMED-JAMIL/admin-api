@@ -409,7 +409,8 @@ public interface RootService {
             Map<String, Object> metaData = new HashMap<>();
             metaData.put(EmailUtil.USERNAME, appUser.getUsername());
             metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream().map(role -> role.getName()).collect(Collectors.joining(",")));
+            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream()
+                .map(role -> role.getName()).collect(Collectors.joining(",")));
             metaData.put(EmailUtil.PROFILE, appUser.getProfile().getProfileName());
             // email send request
             EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
@@ -881,6 +882,25 @@ public interface RootService {
             appUserEnv.setStatus(APPLICATION_STATUS.INACTIVE);
         }
         return appUserEnv;
+    }
+
+    /**
+     * Method use to fetch the refresh token resposne
+     * @param refreshToken
+     * @return RefreshTokenResponse
+     * */
+    public default RefreshTokenResponse getRefreshTokenResponse(RefreshToken refreshToken) {
+        RefreshTokenResponse refreshTokenResponse = new RefreshTokenResponse();
+        refreshTokenResponse.setId(refreshToken.getId());
+        refreshTokenResponse.setToken(refreshToken.getToken());
+        refreshTokenResponse.setExpiryDate(refreshToken.getExpiryDate());
+        refreshTokenResponse.setIpAddress(refreshToken.getIpAddress());
+        refreshTokenResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(refreshToken.getStatus().getLookupType()));
+        refreshTokenResponse.setCreatedBy(getActionUser(refreshToken.getCreatedBy()));
+        refreshTokenResponse.setUpdatedBy(getActionUser(refreshToken.getUpdatedBy()));
+        refreshTokenResponse.setDateUpdated(refreshToken.getDateUpdated());
+        refreshTokenResponse.setDateCreated(refreshToken.getDateCreated());
+        return refreshTokenResponse;
     }
 
 }
