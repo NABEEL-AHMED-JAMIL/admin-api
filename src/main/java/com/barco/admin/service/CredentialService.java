@@ -6,16 +6,18 @@ import com.barco.model.dto.response.AppResponse;
 /**
  * @author Nabeel Ahmed
  */
-public interface CredentialService {
+public interface CredentialService extends RootService {
 
-    public AppResponse addCredential(CredentialRequest requestPayload) throws Exception ;
+    public AppResponse addCredential(CredentialRequest payload) throws Exception;
 
-    public AppResponse updateCredential(CredentialRequest requestPayload) throws Exception ;
+    public AppResponse updateCredential(CredentialRequest payload) throws Exception;
 
-    public AppResponse fetchAllCredential(CredentialRequest requestPayload) throws Exception ;
+    public AppResponse fetchAllCredential(CredentialRequest payload) throws Exception;
 
-    public AppResponse fetchCredentialByCredentialId(CredentialRequest requestPayload) throws Exception ;
+    public AppResponse fetchCredentialById(CredentialRequest payload) throws Exception;
 
-    public AppResponse deleteCredential(CredentialRequest requestPayload) throws Exception ;
+    public AppResponse deleteCredential(CredentialRequest payload) throws Exception;
+
+    public AppResponse deleteAllCredential(CredentialRequest payload) throws Exception;
 
 }

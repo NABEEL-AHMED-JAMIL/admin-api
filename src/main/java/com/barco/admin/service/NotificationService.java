@@ -1,25 +1,21 @@
 package com.barco.admin.service;
 
-
 import com.barco.model.dto.request.NotificationRequest;
 import com.barco.model.dto.response.AppResponse;
-import com.barco.model.pojo.NotificationAudit;
+import com.barco.model.dto.response.NotificationResponse;
+import com.barco.model.pojo.AppUser;
 
 /**
  * @author Nabeel Ahmed
  */
 public interface NotificationService {
 
-    // inside method
-    public void addNotification(NotificationAudit notificationAudit) throws Exception;
+    public void addNotification(NotificationRequest payload, AppUser appUser) throws Exception;
 
-    // api call
-    public AppResponse updateNotification(NotificationRequest requestPayload) throws Exception ;
+    public AppResponse updateNotification(NotificationRequest payload) throws Exception ;
 
-    // api call
-    public AppResponse fetchAllNotification(NotificationRequest requestPayload) throws Exception ;
+    public AppResponse fetchAllNotification(String username) throws Exception ;
 
-    // inside method
-    public void sendNotificationToSpecificUser(NotificationRequest requestPayload) throws Exception;
+    public void sendNotificationToSpecificUser(NotificationResponse payload) throws Exception;
 
 }

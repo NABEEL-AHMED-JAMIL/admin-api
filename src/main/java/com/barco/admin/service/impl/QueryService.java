@@ -1,5 +1,6 @@
 package com.barco.admin.service.impl;
 
+import com.barco.common.utility.BarcoUtil;
 import com.barco.model.dto.response.QueryResponse;
 import com.google.gson.Gson;
 import org.hibernate.query.internal.NativeQueryImpl;
@@ -25,28 +26,184 @@ public class QueryService {
     @PersistenceContext
     private EntityManager _em;
 
+    // Filed
+    public static String ID = "id";
+    public static String STATUS = "status";
+    public static String FIELD_TYPE = "field_type";
+    public static String CONTROL_NAME = "control_name";
+    public static String PROFILE_NAME = "profile_name";
+    public static String FORM_NAME = "form_name";
+    public static String FORM_TYPE = "form_type";
+    public static String ROLE_NAME = "role_name";
+    public static String PERMISSION_NAME = "permission_name";
+    public static String DESCRIPTION = "description";
+    public static String LINK_PP = "link_pp";
+    public static String SECTION_NAME = "section_name";
+    public static String LINK_SECTION_ID = "link_section_id";
+    public static String LINK_CONTROL_ID = "link_control_id";
+    public static String LINK_FORM_ID = "link_form_id";
+    public static String CONTROL_ORDER = "control_order";
+    public static String SECTION_ORDER = "section_order";
+    public static String EMAIL = "email";
+    public static String USERNAME = "username";
+    public static String FULL_NAME = "full_name";
+    public static String PROFILE_IMG = "profile_img";
+    public static String LINK_DATA = "link_data";
+    public static String LINKED = "linked";
+    public static String LINK_STATUS = "link_status";
+    public static String PROFILE_ID = "profile_id";
+    public static String ENV_VALUE = "env_value";
+    public static String SERVICE_NAME = "service_name";
+    public static String LINK_STT_ID = "link_stt_id";
+    public static String TASK_TYPE = "task_type";
+
+    // Query
+    public static String DELETE_APP_USER_ROLES = "DELETE FROM APP_USER_ROLES aur WHERE aur.ROLE_ID = %d ";
+    public static String DELETE_APP_USER_ROLE_ACCESS_BY_ROLE_ID = "DELETE FROM APP_USER_ROLE_ACCESS aura WHERE aura.ROLE_ID = %d ";
+    public static String DELETE_PROFILE_PERMISSION_BY_PROFILE_ID = "DELETE FROM PROFILE_PERMISSION pp WHERE pp.PROFILE_ID = %d ";
+    public static String DELETE_APP_USER_PROFILE_ACCESS_BY_PROFILE_ID = "DELETE FROM APP_USER_PROFILE_ACCESS aupp WHERE aupp.PROFILE_ID = %d ";
+    public static String DELETE_PROFILE_PERMISSION_BY_PERMISSION_ID = "DELETE FROM PROFILE_PERMISSION pp WHERE pp.PERMISSION_ID = %d ";
+    public static String DELETE_APP_USER_ENV_BY_ENV_KEY_ID = "DELETE FROM APP_USER_ENV aue WHERE aue.ENV_KEY_ID = %d ";
+    public static String FETCH_PROFILE = "SELECT PRO.ID, PRO.PROFILE_NAME, PRO.STATUS, PRO.DESCRIPTION FROM PROFILE PRO WHERE PRO.CREATED_BY_ID = %d ";
+    public static String FETCH_PERMISSION = "SELECT PER.ID, PER.PERMISSION_NAME, PER.STATUS, PER.DESCRIPTION FROM PERMISSION PER WHERE PER.CREATED_BY_ID = %d";
+    public static String FETCH_PROFILE_PERMISSION = "SELECT PP.PROFILE_ID || 'X' || PP.PERMISSION_ID AS LINK_PP, PP.STATUS AS STATUS FROM PROFILE_PERMISSION PP WHERE PP.CREATED_BY_ID = %d";
+    public static String DELETE_PROFILE_PERMISSION_BY_PROFILE_ID_AND_PERMISSION_ID = "DELETE FROM PROFILE_PERMISSION pp WHERE pp.PROFILE_ID = %d AND pp.PERMISSION_ID = %d ";
+    public static String DELETE_APP_USER_ROLE_ACCESS_BY_ROLE_ID_AND_APP_USER_ID = "DELETE FROM APP_USER_ROLE_ACCESS aura WHERE aura.ROLE_ID = %d AND aura.APP_USER_ID = %d ";
+    public static String DELETE_APP_USER_ENV_BY_ENV_KEY_ID_AND_APP_USER_ID = "DELETE FROM APP_USER_ENV aue WHERE aue.ENV_KEY_ID = %d AND aue.APP_USER_ID = %d  ";
+    public static String DELETE_APP_USER_PROFILE_ACCESS_BY_ROLE_ID_AND_APP_USER_ID = "DELETE FROM APP_USER_PROFILE_ACCESS aupa WHERE aupa.PROFILE_ID = %d AND aupa.APP_USER_ID = %d ";
+    public static String FETCH_LINK_ROLE_WITH_ROOT_USER = "SELECT DISTINCT AU.ID, AU.EMAIL, AU.USERNAME, AU.FIRST_NAME || ' ' || AU.LAST_NAME AS FULL_NAME, " +
+        "AU.IMG AS PROFIlE_IMG, PRO.ID AS PROFILE_ID, PRO.PROFILE_NAME, AURA.DATE_CREATED AS LINK_DATA, " +
+        "CASE WHEN AURA.DATE_CREATED IS NULL THEN FALSE ELSE TRUE END LINKED, " +
+        "CASE WHEN AURA.STATUS IS NOT NULL THEN AURA.STATUS WHEN AU.STATUS = 0 OR RL.STATUS = 0 THEN 0 ELSE 1 END AS LINK_STATUS " +
+        "FROM APP_USER AU " +
+        "INNER JOIN PROFILE PRO ON PRO.ID = AU.PROFILE_ID " +
+        "LEFT JOIN APP_USER_ROLE_ACCESS AURA ON AURA.APP_USER_ID = AU.ID AND AURA.ROLE_ID = %d " +
+        "LEFT JOIN ROLE RL ON RL.ID = AURA.ROLE_ID " +
+        "WHERE AU.STATUS != 2 AND (AU.ID = %d OR AU.CREATED_BY_ID = %d) " +
+        "ORDER BY AU.ID DESC";
+    public static String FETCH_LINK_PROFILE_WITH_ROOT_USER = "SELECT DISTINCT AU.ID, AU.EMAIL, AU.USERNAME, AU.FIRST_NAME || ' ' || AU.LAST_NAME AS FULL_NAME, " +
+        "AU.IMG AS PROFIlE_IMG, PRO.ID AS PROFILE_ID, PRO.PROFILE_NAME, AUPA.DATE_CREATED AS LINK_DATA, " +
+        "CASE WHEN AUPA.DATE_CREATED IS NULL THEN FALSE ELSE TRUE END LINKED, " +
+        "CASE WHEN AUPA.STATUS IS NOT NULL THEN AUPA.STATUS WHEN AU.STATUS = 0 OR PRO.STATUS = 0 THEN 0 ELSE 1 END AS LINK_STATUS " +
+        "FROM APP_USER AU " +
+        "INNER JOIN PROFILE PRO ON PRO.ID = AU.PROFILE_ID " +
+        "LEFT JOIN APP_USER_PROFILE_ACCESS AUPA ON AUPA.APP_USER_ID = AU.ID AND AUPA.PROFILE_ID = %d " +
+        "WHERE AU.STATUS != 2 AND (AU.ID = %d OR AU.CREATED_BY_ID = %d) " +
+        "ORDER BY AU.ID DESC";
+    public static String FETCH_LINK_ENVIRONMENT_VARIABLE_WITH_USER = "SELECT DISTINCT AU.ID, AU.EMAIL, AU.USERNAME, AU.FIRST_NAME || ' ' || AU.LAST_NAME AS FULL_NAME, " +
+        "AU.IMG AS PROFILE_IMG, PRO.ID AS PROFILE_ID, PRO.PROFILE_NAME, AUE.DATE_CREATED AS LINK_DATA, " +
+        "CASE WHEN AUE.DATE_CREATED IS NULL THEN FALSE ELSE TRUE END LINKED, AUE.ENV_VALUE, " +
+        "CASE WHEN AUE.STATUS IS NOT NULL THEN AUE.STATUS WHEN AU.STATUS = 0 OR PRO.STATUS = 0 THEN 0 ELSE 1 END AS LINK_STATUS " +
+        "FROM APP_USER AU " +
+        "INNER JOIN PROFILE PRO ON PRO.ID = AU.PROFILE_ID " +
+        "LEFT JOIN APP_USER_ENV AUE ON AUE.APP_USER_ID = AU.ID AND AUE.ENV_KEY_ID = %d " +
+        "WHERE AU.STATUS != %d " +
+        "ORDER by AU.ID DESC";
+    public static String FETCH_ALL_CONTROLS_LINK_SECTION= "SELECT GS.ID, GS.SECTION_NAME, GS.DESCRIPTION, GS.STATUS, GLG.CONTROL_ORDER, " +
+        "CASE WHEN GLG.SECTION_ID IS NOT NULL THEN 'true' ELSE 'false' END AS LINK_STATUS, GLG.ID AS LINK_SECTION_ID " +
+        "FROM GEN_SECTION GS " +
+        "LEFT JOIN GC_LINK_GS GLG ON GLG.SECTION_ID = GS.ID AND GLG.CONTROL_ID = %d AND GLG.STATUS != %d " +
+        "WHERE GS.STATUS != %d AND GS.CREATED_BY_ID = %d " +
+        "ORDER BY GS.DATE_CREATED DESC";
+    public static String FETCH_ALL_SECTION_LINK_CONTROLS = "SELECT GC.ID, GC.FIELD_TYPE, GC.CONTROL_NAME, GC.STATUS, GLG.CONTROL_ORDER, " +
+        "CASE WHEN GLG.SECTION_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, GLG.ID AS LINK_CONTROL_ID " +
+        "FROM GEN_CONTROL GC " +
+        "LEFT JOIN GC_LINK_GS GLG ON GLG.CONTROL_ID = GC.ID AND GLG.SECTION_ID = %d AND GC.STATUS != %d " +
+        "WHERE GC.STATUS != %d AND GC.CREATED_BY_ID = %d " +
+        "ORDER BY GC.DATE_CREATED DESC";
+    public static String FETCH_ALL_FORM_LINK_SECTION = "SELECT GF.ID, GF.FORM_NAME, GF.FORM_TYPE, GF.STATUS, " +
+        "CASE WHEN GLG.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
+        "GLG.SECTION_ORDER, GLG.ID AS LINK_FORM_ID " +
+        "FROM GEN_FORM GF " +
+        "LEFT JOIN GS_LINK_GF GLG ON GLG.FORM_ID = GF.ID AND GLG.SECTION_ID = %d AND GLG.STATUS != %d " +
+        "WHERE GF.STATUS != %d AND GF.CREATED_BY_ID = %d " +
+        "ORDER BY GF.DATE_CREATED DESC";
+    public static String FETCH_ALL_SECTION_LINK_FORM = "SELECT GS.ID, GS.SECTION_NAME, GS.DESCRIPTION, GS.STATUS, " +
+        "CASE WHEN GLG.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
+        "GLG.SECTION_ORDER, GLG.ID AS LINK_SECTION_ID " +
+        "FROM GEN_SECTION GS " +
+        "LEFT JOIN GS_LINK_GF GLG ON GLG.SECTION_ID = GS.ID AND GLG.FORM_ID = %d AND GLG.STATUS != %d " +
+        "WHERE GS.STATUS != %d AND GS.CREATED_BY_ID = %d " +
+        "ORDER BY GS.DATE_CREATED DESC";
+    public static String FETCH_ALL_STT_LINK_FORM = "SELECT STT.ID, STT.SERVICE_NAME, STT.TASK_TYPE, " +
+        "CASE WHEN SLS.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
+        "SLS.ID AS LINK_STT_ID " +
+        "FROM SOURCE_TASK_TYPE STT " +
+        "LEFT JOIN STTF_LINK_STT SLS ON SLS.STT_ID = STT.ID AND SLS.FORM_ID = %d  AND SLS.STATUS != %d " +
+        "WHERE STT.STATUS != %d AND STT.CREATED_BY_ID = %d " +
+        "ORDER BY STT.DATE_CREATED DESC";
+    public static String FETCH_ALL_FORM_LINK_STT = "SELECT GF.ID, GF.FORM_NAME, GF.FORM_TYPE, GF.STATUS, " +
+        "CASE WHEN SLS.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
+        "SLS.ID AS LINK_FORM_ID " +
+        "FROM GEN_FORM GF " +
+        "LEFT JOIN STTF_LINK_STT SLS ON SLS.FORM_ID = GF.ID AND SLS.STT_ID = %d  AND SLS.STATUS != %d " +
+        "WHERE GF.STATUS != %d AND GF.CREATED_BY_ID = %d " +
+        "ORDER BY GF.DATE_CREATED DESC";
+    public static String FETCH_ROLE_WITH_USER = "SELECT DISTINCT ROLE.NAME AS ROLE_NAME " +
+        "FROM ROLE " +
+        "INNER JOIN APP_USER_ROLE_ACCESS AURA ON AURA.ROLE_ID = ROLE.ID AND AURA.APP_USER_ID = %d AND AURA.STATUS = %d AND ROLE.STATUS = %d ";
+    public static String FETCH_PROFILE_WITH_USER = "SELECT DISTINCT PRO.ID, PRO.PROFILE_NAME " +
+        "FROM PROFILE PRO " +
+        "INNER JOIN APP_USER_PROFILE_ACCESS AUPA ON AUPA.PROFILE_ID = PRO.ID AND AUPA.APP_USER_ID = %d AND AUPA.STATUS = %d AND PRO.STATUS = %d ";
+
+    public QueryService() {}
+
+    /**
+     * Method use to perform the delete query
+     * @param queryStr
+     * @return Object
+     * */
+    public Object deleteQuery(String queryStr) {
+        logger.info("Execute Query :- " + queryStr);
+        Query query = this._em.createNativeQuery(queryStr);
+        int rowsDeleted = query.executeUpdate();
+        logger.info("Execute deleted :- " + rowsDeleted);
+        return rowsDeleted;
+    }
+
+    /**
+     * Method use to perform the single result query
+     * @param queryStr
+     * @return Object
+     * */
     public Object executeQueryForSingleResult(String queryStr) {
         logger.info("Execute Query :- " + queryStr);
         Query query = this._em.createNativeQuery(queryStr);
         return query.getSingleResult();
     }
 
+    /**
+     * Method use to execute query for fetch the result
+     * @param queryStr
+     * @return List<Object[]>
+     * */
     public List<Object[]> executeQuery(String queryStr) {
         logger.info("Execute Query :- " + queryStr);
         Query query = this._em.createNativeQuery(queryStr);
         return query.getResultList();
     }
 
+    /**
+     * Method use to execute query for paging
+     * @param queryStr
+     * @param paging
+     * @return List<Object[]>
+     * **/
     public List<Object[]> executeQuery(String queryStr, Pageable paging) {
         logger.info("Execute Query :- " + queryStr);
         Query query = this._em.createNativeQuery(queryStr);
-        if (paging != null) {
+        if (!BarcoUtil.isNull(paging)) {
             query.setFirstResult(paging.getPageNumber() * paging.getPageSize());
             query.setMaxResults(paging.getPageSize());
         }
         return query.getResultList();
     }
 
+    /**
+     * Method use to execute query for dynamic result
+     * @param queryString
+     * @return QueryResponse
+     * */
     public QueryResponse executeQueryResponse(String queryString) {
         logger.info("Execute Query :- " + queryString);
         Query query = this._em.createNativeQuery(queryString);

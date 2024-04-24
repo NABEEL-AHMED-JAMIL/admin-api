@@ -1,41 +1,41 @@
 package com.barco.admin.service;
 
+import com.barco.common.utility.excel.SheetFiled;
 import com.barco.model.dto.request.FileUploadRequest;
 import com.barco.model.dto.request.LookupDataRequest;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.dto.response.LookupDataResponse;
-import com.barco.model.util.lookuputil.GLookup;
 import java.io.ByteArrayOutputStream;
+import java.util.Map;
 
 /**
  * @author Nabeel Ahmed
  */
-public interface LookupDataCacheService {
+public interface LookupDataCacheService extends RootService {
 
     public AppResponse fetchCacheData() throws Exception;
 
-    public AppResponse addLookupData(LookupDataRequest requestPayload) throws Exception;
+    public AppResponse addLookupData(LookupDataRequest payload) throws Exception;
 
-    public AppResponse updateLookupData(LookupDataRequest requestPayload) throws Exception;
+    public AppResponse updateLookupData(LookupDataRequest payload) throws Exception;
 
-    public AppResponse fetchSubLookupByParentId(LookupDataRequest requestPayload) throws Exception;
+    public AppResponse findAllParentLookupByUsername(LookupDataRequest payload) throws Exception;
 
-    public AppResponse fetchLookupByLookupType(LookupDataRequest requestPayload) throws Exception;
+    public AppResponse fetchSubLookupDataByParentLookupDataId(LookupDataRequest payload) throws Exception;
 
-    public AppResponse fetchAllLookup(LookupDataRequest requestPayload) throws Exception;
+    public AppResponse fetchLookupDataByLookupType(LookupDataRequest payload) throws Exception;
 
-    public AppResponse deleteLookupData(LookupDataRequest requestPayload) throws Exception;
+    public AppResponse deleteLookupData(LookupDataRequest payload) throws Exception;
 
-    public ByteArrayOutputStream downloadLookupTemplateFile() throws Exception;
+    public ByteArrayOutputStream downloadLookupDataTemplateFile() throws Exception;
 
-    public ByteArrayOutputStream downloadLookup(LookupDataRequest requestPayload) throws Exception;
+    public ByteArrayOutputStream downloadLookupData(LookupDataRequest payload) throws Exception;
 
-    public AppResponse uploadLookup(FileUploadRequest requestPayload) throws Exception;
+    public AppResponse uploadLookupData(FileUploadRequest payload) throws Exception;
 
-    public LookupDataResponse getParentLookupById(String lookupType);
+    public LookupDataResponse getParentLookupDataByParentLookupType(String parentLookupType);
 
-    public LookupDataResponse getChildLookupById(String parentLookupType, Long childLookupCode);
+    public LookupDataResponse getChildLookupDataByParentLookupTypeAndChildLookupCode(String parentLookupType, Long lookupCode);
 
-    public GLookup<Long, String> getGLookup(String parentLookup, Long childLookupCode);
-
+    public Map<String, SheetFiled> getSheetFiledMap();
 }
