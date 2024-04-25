@@ -131,7 +131,7 @@ public class QueryService {
         "SLS.ID AS LINK_FORM_ID " +
         "FROM GEN_FORM GF " +
         "LEFT JOIN STTF_LINK_STT SLS ON SLS.FORM_ID = GF.ID AND SLS.STT_ID = %d  AND SLS.STATUS != %d " +
-        "WHERE GF.STATUS != %d AND GF.CREATED_BY_ID = %d " +
+        "WHERE GF.STATUS != %d AND GF.FORM_TYPE = %d AND GF.CREATED_BY_ID = %d " +
         "ORDER BY GF.DATE_CREATED DESC";
     public static String FETCH_ROLE_WITH_USER = "SELECT DISTINCT ROLE.NAME AS ROLE_NAME " +
         "FROM ROLE " +
