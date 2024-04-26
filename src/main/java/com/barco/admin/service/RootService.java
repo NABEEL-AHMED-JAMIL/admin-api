@@ -903,4 +903,18 @@ public interface RootService {
         return refreshTokenResponse;
     }
 
+    /**
+     * Method use to convert object to EnVariablesResponse
+     * @param appUserEnv
+     * @return EnVariablesResponse
+     * */
+    public default EnVariablesResponse getEnVariablesResponse(AppUserEnv appUserEnv) {
+        EnVariablesResponse enVariables = new EnVariablesResponse();
+        enVariables.setId(appUserEnv.getId());
+        enVariables.setEnvKey(appUserEnv.getEnvVariables().getEnvKey());
+        enVariables.setEnvValue(appUserEnv.getEnvValue());
+        enVariables.setDescription(appUserEnv.getEnvVariables().getDescription());
+        return enVariables;
+    }
+
 }

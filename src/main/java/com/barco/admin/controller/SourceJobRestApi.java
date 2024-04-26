@@ -1,20 +1,17 @@
 package com.barco.admin.controller;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author Nabeel Ahmed
  */
-@Entity
-@Table(name = "source_job.json")
-@JsonIgnoreProperties(ignoreUnknown=true)
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@RestController
+@CrossOrigin(origins="*")
+@RequestMapping(value="/source_job.json")
 public class SourceJobRestApi {
 
     private Logger logger = LoggerFactory.getLogger(SourceJobRestApi.class);

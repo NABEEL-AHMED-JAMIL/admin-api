@@ -38,7 +38,7 @@ public class EVariableRestApi {
 
     /**
      * @apiName :- addEnVariable
-     * @apiNote :- Method use to fetch the data
+     * @apiNote :- Method use to add en variable
      * @param payload
      * @return ResponseEntity
      * */
@@ -55,7 +55,7 @@ public class EVariableRestApi {
 
     /**
      * @apiName :- updateEnVariable
-     * @apiNote :- Method use to fetch the data
+     * @apiNote :- Method use to edit the en variable
      * @param payload
      * @return ResponseEntity
      * */
