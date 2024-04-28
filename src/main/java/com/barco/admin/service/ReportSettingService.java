@@ -14,9 +14,9 @@ public interface ReportSettingService extends RootService {
 
     public AppResponse fetchAllReportSetting(ReportSettingRequest payload) throws Exception;
 
-    public AppResponse fetchAllReportByGroup(ReportSettingRequest payload) throws Exception;
-    
     public AppResponse fetchReportSettingByReportId(ReportSettingRequest payload) throws Exception;
+
+    public AppResponse fetchAllReportByGroup(ReportSettingRequest payload) throws Exception;
 
     public AppResponse deleteReportSettingById(ReportSettingRequest payload) throws Exception;
 

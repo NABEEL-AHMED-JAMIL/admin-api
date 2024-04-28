@@ -9,9 +9,7 @@ import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.common.utility.excel.BulkExcel;
 import com.barco.common.utility.excel.SheetFiled;
-import com.barco.model.dto.request.ForgotPasswordRequest;
-import com.barco.model.dto.request.MessageRequest;
-import com.barco.model.dto.request.NotificationRequest;
+import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.*;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.TemplateRegRepository;
@@ -915,6 +913,65 @@ public interface RootService {
         enVariables.setEnvValue(appUserEnv.getEnvValue());
         enVariables.setDescription(appUserEnv.getEnvVariables().getDescription());
         return enVariables;
+    }
+
+    /**
+     * Method use to get dashboard setting
+     * @param payload
+     * @param adminUser
+     * */
+    public default DashboardSetting getDashboardSetting(DashboardSettingRequest payload, AppUser adminUser) {
+        DashboardSetting dashboardSetting = new DashboardSetting();
+        dashboardSetting.setName(payload.getName());
+        dashboardSetting.setGroupType(payload.getGroupType());
+        dashboardSetting.setDescription(payload.getDescription());
+        dashboardSetting.setBoardType(DASHBOARD_TYPE.getByLookupCode(payload.getBoardType()));
+        dashboardSetting.setDashboardUrl(payload.getDashboardUrl());
+        dashboardSetting.setIframe(payload.getIframe());
+        dashboardSetting.setStatus(APPLICATION_STATUS.ACTIVE);
+        dashboardSetting.setCreatedBy(adminUser);
+        dashboardSetting.setUpdatedBy(adminUser);
+        return dashboardSetting;
+    }
+
+    /**
+     * Method use to get dashboard setting
+     * @param payload
+     * @return DashboardSettingResponse
+     * */
+    public default DashboardSettingResponse getDashboardSettingResponse(DashboardSetting payload) {
+        DashboardSettingResponse dashboardSettingResponse = new DashboardSettingResponse();
+        dashboardSettingResponse.setId(payload.getId());
+        dashboardSettingResponse.setName(payload.getName());
+        dashboardSettingResponse.setDescription(payload.getDescription());
+        dashboardSettingResponse.setDashboardUrl(payload.getDashboardUrl());
+        dashboardSettingResponse.setIframe(payload.getIframe());
+        dashboardSettingResponse.setCreatedBy(getActionUser(payload.getCreatedBy()));
+        dashboardSettingResponse.setUpdatedBy(getActionUser(payload.getUpdatedBy()));
+        dashboardSettingResponse.setDateUpdated(payload.getDateUpdated());
+        dashboardSettingResponse.setDateCreated(payload.getDateCreated());
+        return dashboardSettingResponse;
+    }
+
+    /**
+     * Method use to get dashboard setting
+     * @param payload
+     * @return ReportSettingResponse
+     * */
+    public default ReportSettingResponse getReportSettingResponse(ReportSetting payload) {
+        ReportSettingResponse reportSettingResponse = new ReportSettingResponse();
+        reportSettingResponse.setId(payload.getId());
+        return reportSettingResponse;
+    }
+
+    /**
+     * Method use to get dashboard setting
+     * @param payload
+     * @param adminUser
+     * */
+    public default ReportSetting getDashboardSetting(ReportSettingRequest payload, AppUser adminUser) {
+        ReportSetting reportSetting = new ReportSetting();
+        return reportSetting;
     }
 
 }

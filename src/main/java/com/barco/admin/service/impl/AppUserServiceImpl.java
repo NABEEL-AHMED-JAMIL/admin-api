@@ -10,7 +10,6 @@ import com.barco.common.utility.excel.SheetFiled;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.dto.response.AppUserResponse;
-import com.barco.model.dto.response.EnVariablesResponse;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.*;
 import com.barco.model.util.MessageUtil;

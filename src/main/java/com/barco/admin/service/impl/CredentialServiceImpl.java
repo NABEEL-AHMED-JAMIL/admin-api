@@ -109,7 +109,7 @@ public class CredentialServiceImpl implements CredentialService {
             credential.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
         }
         this.credentialRepository.save(credential.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format("Credential save with %d.", payload.getId()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()));
     }
 
     /**
@@ -129,7 +129,6 @@ public class CredentialServiceImpl implements CredentialService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         List<Credential> credentials;
-
         if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
             Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
             Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
@@ -215,7 +214,7 @@ public class CredentialServiceImpl implements CredentialService {
         }
         credential.get().setStatus(APPLICATION_STATUS.DELETE);
         this.credentialRepository.save(credential.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId().toString()));
     }
 
     /**
