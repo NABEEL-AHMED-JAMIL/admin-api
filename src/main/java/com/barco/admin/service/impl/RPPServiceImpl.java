@@ -130,6 +130,7 @@ public class RPPServiceImpl implements RPPService {
             role.get().getRoleAccesses().stream()
                 .map(appUserRoleAccess -> {
                     appUserRoleAccess.setStatus(role.get().getStatus());
+                    appUserRoleAccess.setUpdatedBy(appUser.get());
                     return appUserRoleAccess;
                 }).collect(Collectors.toList());
         }
@@ -184,9 +185,6 @@ public class RPPServiceImpl implements RPPService {
         if (!role.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ROLE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
-        // delete with role user
-        //this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_ROLES, role.get().getId()));
-        //this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_ROLE_ACCESS_BY_ROLE_ID, role.get().getId()));
         this.roleRepository.delete(role.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED,payload.getId().toString()));
     }
@@ -475,7 +473,6 @@ public class RPPServiceImpl implements RPPService {
         if (!profile.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.PROFILE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
-        // delete with permission user
         this.profileRepository.delete(profile.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED,payload.getId().toString()));
     }
@@ -699,11 +696,11 @@ public class RPPServiceImpl implements RPPService {
         // active and in-active
         if (!BarcoUtil.isNull(payload.getStatus())) {
             permission.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-            permission.get().getProfilePermissions()
-                .stream().map(profilePermission -> {
-                    profilePermission.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-                    return profilePermission;
-                }).collect(Collectors.toList());
+            permission.get().getProfilePermissions().stream().map(profilePermission -> {
+                profilePermission.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+                profilePermission.setUpdatedBy(appUser.get());
+                return profilePermission;
+            }).collect(Collectors.toList());
         }
         permission.get().setUpdatedBy(appUser.get());
         this.permissionRepository.save(permission.get());
@@ -1209,8 +1206,8 @@ public class RPPServiceImpl implements RPPService {
         List<ProfileResponse> profileResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                profileResponses.add(new ProfileResponse(Long.valueOf(
-                    data.get(QueryService.ID).toString()), data.get(QueryService.PROFILE_NAME).toString()));
+                profileResponses.add(new ProfileResponse(Long.valueOf(data.get(QueryService.ID).toString()),
+                    data.get(QueryService.PROFILE_NAME).toString()));
             }
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, profileResponses);
@@ -1240,6 +1237,5 @@ public class RPPServiceImpl implements RPPService {
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, roleResponses);
     }
-
 
 }

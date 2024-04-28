@@ -10,7 +10,6 @@ import com.barco.common.utility.excel.SheetFiled;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.dto.response.AppUserResponse;
-import com.barco.model.dto.response.EnVariablesResponse;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.*;
 import com.barco.model.util.MessageUtil;
@@ -157,8 +156,7 @@ public class AppUserServiceImpl implements AppUserService {
         } else if (BarcoUtil.isNull(payload.getNewPassword())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.NEW_PASSWORD_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
@@ -540,20 +538,6 @@ public class AppUserServiceImpl implements AppUserService {
             String.format(MessageUtil.ACCOUNT_ENABLED, appUser.get().getUsername()) : String.format(MessageUtil.ACCOUNT_DISABLED, appUser.get().getUsername())),
             adminUser.get(), this.lookupDataCacheService, this.notificationService);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, appUser.get().getUsername()), payload);
-    }
-
-    /**
-     * Method use to convert object to EnVariablesResponse
-     * @param appUserEnv
-     * @return EnVariablesResponse
-     * */
-    private EnVariablesResponse getEnVariablesResponse(AppUserEnv appUserEnv) {
-        EnVariablesResponse enVariables = new EnVariablesResponse();
-        enVariables.setId(appUserEnv.getId());
-        enVariables.setEnvKey(appUserEnv.getEnvVariables().getEnvKey());
-        enVariables.setEnvValue(appUserEnv.getEnvValue());
-        enVariables.setDescription(appUserEnv.getEnvVariables().getDescription());
-        return enVariables;
     }
 
 }

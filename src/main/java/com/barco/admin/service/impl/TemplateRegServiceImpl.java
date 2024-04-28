@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
-import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -154,13 +153,9 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.templateRegRepository.findAllByDateCreatedBetweenAndUsernameOrderByDateCreatedDesc(
-                startDate, endDate, appUser.get().getUsername())
-                .stream().map(templateReg -> getTemplateRegResponse(templateReg))
-                .collect(Collectors.toList()));
+            this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(appUser.get().getUsername())
+            .stream().map(templateReg -> getTemplateRegResponse(templateReg)).collect(Collectors.toList()));
     }
 
     /**

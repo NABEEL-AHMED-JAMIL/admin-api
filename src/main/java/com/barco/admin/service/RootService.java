@@ -9,9 +9,7 @@ import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.common.utility.excel.BulkExcel;
 import com.barco.common.utility.excel.SheetFiled;
-import com.barco.model.dto.request.ForgotPasswordRequest;
-import com.barco.model.dto.request.MessageRequest;
-import com.barco.model.dto.request.NotificationRequest;
+import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.*;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.TemplateRegRepository;
@@ -409,7 +407,8 @@ public interface RootService {
             Map<String, Object> metaData = new HashMap<>();
             metaData.put(EmailUtil.USERNAME, appUser.getUsername());
             metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream().map(role -> role.getName()).collect(Collectors.joining(",")));
+            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream()
+                .map(role -> role.getName()).collect(Collectors.joining(",")));
             metaData.put(EmailUtil.PROFILE, appUser.getProfile().getProfileName());
             // email send request
             EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
@@ -881,6 +880,98 @@ public interface RootService {
             appUserEnv.setStatus(APPLICATION_STATUS.INACTIVE);
         }
         return appUserEnv;
+    }
+
+    /**
+     * Method use to fetch the refresh token resposne
+     * @param refreshToken
+     * @return RefreshTokenResponse
+     * */
+    public default RefreshTokenResponse getRefreshTokenResponse(RefreshToken refreshToken) {
+        RefreshTokenResponse refreshTokenResponse = new RefreshTokenResponse();
+        refreshTokenResponse.setId(refreshToken.getId());
+        refreshTokenResponse.setToken(refreshToken.getToken());
+        refreshTokenResponse.setExpiryDate(refreshToken.getExpiryDate());
+        refreshTokenResponse.setIpAddress(refreshToken.getIpAddress());
+        refreshTokenResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(refreshToken.getStatus().getLookupType()));
+        refreshTokenResponse.setCreatedBy(getActionUser(refreshToken.getCreatedBy()));
+        refreshTokenResponse.setUpdatedBy(getActionUser(refreshToken.getUpdatedBy()));
+        refreshTokenResponse.setDateUpdated(refreshToken.getDateUpdated());
+        refreshTokenResponse.setDateCreated(refreshToken.getDateCreated());
+        return refreshTokenResponse;
+    }
+
+    /**
+     * Method use to convert object to EnVariablesResponse
+     * @param appUserEnv
+     * @return EnVariablesResponse
+     * */
+    public default EnVariablesResponse getEnVariablesResponse(AppUserEnv appUserEnv) {
+        EnVariablesResponse enVariables = new EnVariablesResponse();
+        enVariables.setId(appUserEnv.getId());
+        enVariables.setEnvKey(appUserEnv.getEnvVariables().getEnvKey());
+        enVariables.setEnvValue(appUserEnv.getEnvValue());
+        enVariables.setDescription(appUserEnv.getEnvVariables().getDescription());
+        return enVariables;
+    }
+
+    /**
+     * Method use to get dashboard setting
+     * @param payload
+     * @param adminUser
+     * */
+    public default DashboardSetting getDashboardSetting(DashboardSettingRequest payload, AppUser adminUser) {
+        DashboardSetting dashboardSetting = new DashboardSetting();
+        dashboardSetting.setName(payload.getName());
+        dashboardSetting.setGroupType(payload.getGroupType());
+        dashboardSetting.setDescription(payload.getDescription());
+        dashboardSetting.setBoardType(DASHBOARD_TYPE.getByLookupCode(payload.getBoardType()));
+        dashboardSetting.setDashboardUrl(payload.getDashboardUrl());
+        dashboardSetting.setIframe(payload.getIframe());
+        dashboardSetting.setStatus(APPLICATION_STATUS.ACTIVE);
+        dashboardSetting.setCreatedBy(adminUser);
+        dashboardSetting.setUpdatedBy(adminUser);
+        return dashboardSetting;
+    }
+
+    /**
+     * Method use to get dashboard setting
+     * @param payload
+     * @return DashboardSettingResponse
+     * */
+    public default DashboardSettingResponse getDashboardSettingResponse(DashboardSetting payload) {
+        DashboardSettingResponse dashboardSettingResponse = new DashboardSettingResponse();
+        dashboardSettingResponse.setId(payload.getId());
+        dashboardSettingResponse.setName(payload.getName());
+        dashboardSettingResponse.setDescription(payload.getDescription());
+        dashboardSettingResponse.setDashboardUrl(payload.getDashboardUrl());
+        dashboardSettingResponse.setIframe(payload.getIframe());
+        dashboardSettingResponse.setCreatedBy(getActionUser(payload.getCreatedBy()));
+        dashboardSettingResponse.setUpdatedBy(getActionUser(payload.getUpdatedBy()));
+        dashboardSettingResponse.setDateUpdated(payload.getDateUpdated());
+        dashboardSettingResponse.setDateCreated(payload.getDateCreated());
+        return dashboardSettingResponse;
+    }
+
+    /**
+     * Method use to get dashboard setting
+     * @param payload
+     * @return ReportSettingResponse
+     * */
+    public default ReportSettingResponse getReportSettingResponse(ReportSetting payload) {
+        ReportSettingResponse reportSettingResponse = new ReportSettingResponse();
+        reportSettingResponse.setId(payload.getId());
+        return reportSettingResponse;
+    }
+
+    /**
+     * Method use to get dashboard setting
+     * @param payload
+     * @param adminUser
+     * */
+    public default ReportSetting getDashboardSetting(ReportSettingRequest payload, AppUser adminUser) {
+        ReportSetting reportSetting = new ReportSetting();
+        return reportSetting;
     }
 
 }
