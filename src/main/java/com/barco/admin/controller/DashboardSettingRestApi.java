@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @CrossOrigin(origins="*")
-@RequestMapping(value="/dashboard_setting.json")
+@RequestMapping(value="/dashboardSetting.json")
 public class DashboardSettingRestApi {
 
     private Logger logger = LoggerFactory.getLogger(DashboardSettingRestApi.class);
