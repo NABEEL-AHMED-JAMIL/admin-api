@@ -15,6 +15,7 @@ import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.DASHBOARD_TYPE;
 import com.barco.model.util.lookup.GLookup;
+import com.barco.model.util.lookup.UI_LOOKUP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,8 +71,8 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         } else if (BarcoUtil.isNull(payload.getIframe())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.DASHBOARD_IFRAME_MISSING);
         }
-        this.dashboardSettingRepository.save(getDashboardSetting(payload, adminUser.get()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId().toString()));
+        DashboardSetting dashboardSetting = this.dashboardSettingRepository.save(getDashboardSetting(payload, adminUser.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, dashboardSetting.getId().toString()));
     }
 
     /**
@@ -114,7 +115,7 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         dashboardSetting.get().setDescription(payload.getDescription());
         dashboardSetting.get().setBoardType(DASHBOARD_TYPE.getByLookupCode(payload.getBoardType()));
         dashboardSetting.get().setDashboardUrl(payload.getDashboardUrl());
-        dashboardSetting.get().setIframe(payload.getIframe());
+        dashboardSetting.get().setIframe(UI_LOOKUP.getByLookupCode(payload.getIframe()));
         dashboardSetting.get().setUpdatedBy(adminUser.get());
         if (!BarcoUtil.isNull(payload.getStatus())) {
             dashboardSetting.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));

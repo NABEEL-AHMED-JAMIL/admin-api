@@ -36,6 +36,8 @@ public interface FormSettingService extends RootService {
 
     public AppResponse fetchForms(FormRequest payload) throws Exception;
 
+    public AppResponse fetchFormsByFormType(FormRequest payload) throws Exception;
+
     public AppResponse deleteAllForms(FormRequest payload) throws Exception;
 
     public AppResponse fetchAllFormLinkSTT(FormRequest payload) throws Exception;

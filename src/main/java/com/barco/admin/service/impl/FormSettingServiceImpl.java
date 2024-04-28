@@ -655,6 +655,9 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!BarcoUtil.isNull(genForm.get().getGenSectionLinkGenForms())) {
             this.actionOnGenSectionLinkGenForms(genForm.get(), adminUser.get());
         }
+        if (!BarcoUtil.isNull(genForm.get().getReportSettings())) {
+            this.actionOnReportSettingLinkGenForms(genForm.get(), adminUser.get());
+        }
         this.genFormRepository.save(genForm.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
     }
@@ -719,6 +722,32 @@ public class FormSettingServiceImpl implements FormSettingService {
     }
 
     /**
+     * Method use to fetch the form by form type
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchFormsByFormType(FormRequest payload) throws Exception {
+        logger.info("Request fetchForms :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getFormType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_TYPE_MISSING);
+        }
+        List<GenForm> result = this.genFormRepository.findAllByFormTypeAndStatusNot(FORM_TYPE.REPORT_FORM, APPLICATION_STATUS.DELETE);
+        if (result.isEmpty()) {
+            return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+            result.stream().map(genForm -> getFormResponse(genForm)).collect(Collectors.toList()));
+    }
+
+    /**
      * Method use to delete all forms
      * @param payload
      * @return AppResponse
@@ -746,6 +775,9 @@ public class FormSettingServiceImpl implements FormSettingService {
                     }
                     if (!BarcoUtil.isNull(genForm.getGenSectionLinkGenForms())) {
                         this.actionOnGenSectionLinkGenForms(genForm, appUser.get());
+                    }
+                    if (!BarcoUtil.isNull(genForm.getReportSettings())) {
+                        this.actionOnReportSettingLinkGenForms(genForm, appUser.get());
                     }
                     return genForm;
                 }).collect(Collectors.toList())
@@ -2319,6 +2351,21 @@ public class FormSettingServiceImpl implements FormSettingService {
                 genFormLinkSection.setUpdatedBy(appUser);
                 return genFormLinkSection;
             }).collect(Collectors.toList());
+    }
+
+    /***
+     * Method use to action on link report setting with gen form
+     * @param genForm
+     * @param appUser
+     * */
+    private void actionOnReportSettingLinkGenForms(GenForm genForm, AppUser appUser) {
+        genForm.getReportSettings().stream()
+            .filter(reportSetting -> !reportSetting.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(reportSetting -> {
+                reportSetting.setGenForm(null);
+                reportSetting.setUpdatedBy(appUser);
+                return reportSetting;
+        }).collect(Collectors.toList());
     }
 
     /**

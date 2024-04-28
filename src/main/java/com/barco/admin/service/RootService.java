@@ -926,8 +926,8 @@ public interface RootService {
         dashboardSetting.setGroupType(payload.getGroupType());
         dashboardSetting.setDescription(payload.getDescription());
         dashboardSetting.setBoardType(DASHBOARD_TYPE.getByLookupCode(payload.getBoardType()));
+        dashboardSetting.setIframe(UI_LOOKUP.getByLookupCode(payload.getIframe()));
         dashboardSetting.setDashboardUrl(payload.getDashboardUrl());
-        dashboardSetting.setIframe(payload.getIframe());
         dashboardSetting.setStatus(APPLICATION_STATUS.ACTIVE);
         dashboardSetting.setCreatedBy(adminUser);
         dashboardSetting.setUpdatedBy(adminUser);
@@ -936,41 +936,59 @@ public interface RootService {
 
     /**
      * Method use to get dashboard setting
-     * @param payload
+     * @param dashboardSetting
      * @return DashboardSettingResponse
      * */
-    public default DashboardSettingResponse getDashboardSettingResponse(DashboardSetting payload) {
+    public default DashboardSettingResponse getDashboardSettingResponse(DashboardSetting dashboardSetting) {
         DashboardSettingResponse dashboardSettingResponse = new DashboardSettingResponse();
-        dashboardSettingResponse.setId(payload.getId());
-        dashboardSettingResponse.setName(payload.getName());
-        dashboardSettingResponse.setDescription(payload.getDescription());
-        dashboardSettingResponse.setDashboardUrl(payload.getDashboardUrl());
-        dashboardSettingResponse.setIframe(payload.getIframe());
-        dashboardSettingResponse.setCreatedBy(getActionUser(payload.getCreatedBy()));
-        dashboardSettingResponse.setUpdatedBy(getActionUser(payload.getUpdatedBy()));
-        dashboardSettingResponse.setDateUpdated(payload.getDateUpdated());
-        dashboardSettingResponse.setDateCreated(payload.getDateCreated());
+        dashboardSettingResponse.setId(dashboardSetting.getId());
+        dashboardSettingResponse.setName(dashboardSetting.getName());
+        dashboardSettingResponse.setDescription(dashboardSetting.getDescription());
+        dashboardSettingResponse.setDashboardUrl(dashboardSetting.getDashboardUrl());
+        dashboardSettingResponse.setIframe(UI_LOOKUP.getStatusByLookupType(dashboardSetting.getIframe().getLookupType()));
+        dashboardSettingResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(dashboardSetting.getStatus().getLookupType()));
+        dashboardSettingResponse.setCreatedBy(getActionUser(dashboardSetting.getCreatedBy()));
+        dashboardSettingResponse.setUpdatedBy(getActionUser(dashboardSetting.getUpdatedBy()));
+        dashboardSettingResponse.setDateUpdated(dashboardSetting.getDateUpdated());
+        dashboardSettingResponse.setDateCreated(dashboardSetting.getDateCreated());
         return dashboardSettingResponse;
     }
 
     /**
      * Method use to get dashboard setting
      * @param payload
-     * @return ReportSettingResponse
      * */
-    public default ReportSettingResponse getReportSettingResponse(ReportSetting payload) {
-        ReportSettingResponse reportSettingResponse = new ReportSettingResponse();
-        reportSettingResponse.setId(payload.getId());
-        return reportSettingResponse;
-    }
-
-    /**
-     * Method use to get dashboard setting
-     * @param payload
-     * @param adminUser
-     * */
-    public default ReportSetting getDashboardSetting(ReportSettingRequest payload, AppUser adminUser) {
-        ReportSetting reportSetting = new ReportSetting();
+    public default ReportSetting getReportSetting(ReportSettingRequest payload, ReportSetting reportSetting) {
+        reportSetting.setName(payload.getName());
+        reportSetting.setGroupType(payload.getGroupType());
+        reportSetting.setDescription(payload.getDescription());
+        reportSetting.setPayloadRef(PAYLOAD_REF.getByLookupCode(payload.getPayloadRef()));
+        reportSetting.setIsPdf(UI_LOOKUP.getByLookupCode(payload.getIsPdf()));
+        reportSetting.setPdfUrl(payload.getPdfUrl());
+        reportSetting.setPdfApiToken(payload.getPdfApiToken());
+        reportSetting.setIsXlsx(UI_LOOKUP.getByLookupCode(payload.getIsXlsx()));
+        reportSetting.setXlsxUrl(payload.getXlsxUrl());
+        reportSetting.setXlsxApiToken(payload.getXlsxApiToken());
+        reportSetting.setIsCsv(UI_LOOKUP.getByLookupCode(payload.getIsCsv()));
+        reportSetting.setCsvUrl(payload.getCsvUrl());
+        reportSetting.setCsvApiToken(payload.getCsvApiToken());
+        reportSetting.setIsData(UI_LOOKUP.getByLookupCode(payload.getIsData()));
+        reportSetting.setDataUrl(payload.getDataUrl());
+        reportSetting.setDataApiToken(payload.getDataApiToken());
+        reportSetting.setIsFirstDimension(UI_LOOKUP.getByLookupCode(payload.getIsFirstDimension()));
+        reportSetting.setFirstDimensionUrl(payload.getFirstDimensionUrl());
+        reportSetting.setFirstDimensionLKValue(payload.getFirstDimensionLKValue());
+        reportSetting.setFirstDimensionApiToken(payload.getFirstDimensionApiToken());
+        reportSetting.setIsSecondDimension(UI_LOOKUP.getByLookupCode(payload.getIsSecondDimension()));
+        reportSetting.setSecondDimensionUrl(payload.getSecondDimensionUrl());
+        reportSetting.setSecondDimensionLKValue(payload.getSecondDimensionLKValue());
+        reportSetting.setSecondDimensionApiToken(payload.getSecondDimensionApiToken());
+        reportSetting.setIsThirdDimension(UI_LOOKUP.getByLookupCode(payload.getIsThirdDimension()));
+        reportSetting.setThirdDimensionUrl(payload.getThirdDimensionUrl());
+        reportSetting.setThirdDimensionLKValue(payload.getThirdDimensionLKValue());
+        reportSetting.setThirdDimensionApiToken(payload.getThirdDimensionApiToken());
+        reportSetting.setDistinctLKValue(payload.getDistinctLKValue());
+        reportSetting.setAggLKValue(payload.getAggLKValue());
         return reportSetting;
     }
 

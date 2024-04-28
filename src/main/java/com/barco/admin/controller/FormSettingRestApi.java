@@ -258,6 +258,23 @@ public class FormSettingRestApi {
     }
 
     /**
+     * @apiName :- fetchFormsByFormType
+     * @apiNote :- Api use to fetch form by form type
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value = "/fetchFormsByFormType", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchFormsByFormType(@RequestBody FormRequest payload) {
+        try {
+            return new ResponseEntity<>(this.formSettingService.fetchFormsByFormType(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchFormsByFormType ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- deleteAllForms
      * @apiNote :- Api use to fetch form
      * @param payload

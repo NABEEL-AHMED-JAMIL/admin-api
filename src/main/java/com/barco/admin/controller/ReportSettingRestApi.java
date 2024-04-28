@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @CrossOrigin(origins="*")
-@RequestMapping(value="/report_setting.json")
+@RequestMapping(value="/reportSetting.json")
 public class ReportSettingRestApi {
 
     private Logger logger = LoggerFactory.getLogger(ReportSettingRestApi.class);
