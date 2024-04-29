@@ -95,7 +95,7 @@ public class NotificationServiceImpl implements NotificationService {
      * */
     @Override
     public AppResponse fetchAllNotification(String username) throws Exception {
-        logger.info("Request findAppUserProfile :- " + username);
+        logger.info("Request fetchAllNotification :- " + username);
         if (BarcoUtil.isNull(username)) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -106,7 +106,7 @@ public class NotificationServiceImpl implements NotificationService {
         LookupDataResponse notificationTime = this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NOTIFICATION_DISAPPEAR_TIME);
         Page<NotificationAudit> notificationAuditPage = this.notificationAuditRepository.findAll(
             new NotificationSpecification(appUser.get(), Long.valueOf(notificationTime.getLookupValue())),
-            PageRequest.of(0, 200, Sort.by(Sort.Order.asc(NOTIFY_ID))));
+            PageRequest.of(0, 5000, Sort.by(Sort.Order.asc(NOTIFY_ID))));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             notificationAuditPage.map(notificationAudit -> (getNotificationResponse(notificationAudit))).getContent());
     }
