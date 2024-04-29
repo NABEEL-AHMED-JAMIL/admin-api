@@ -83,9 +83,9 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_THIRD_DIMENSION_MISSING);
         }
         Optional<GenForm> genForm = Optional.empty();
-        if (BarcoUtil.isNull(payload.getFormRequest())) {
+        if (!BarcoUtil.isNull(payload.getFormRequestId())) {
             genForm = this.genFormRepository.findByIdAndCreatedByAndStatusNot(
-                payload.getFormRequest().getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
+                payload.getFormRequestId(), adminUser.get(), APPLICATION_STATUS.DELETE);
             if (!genForm.isPresent()) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
             }
@@ -150,14 +150,14 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_NOT_FOUND);
         }
         Optional<GenForm> genForm = Optional.empty();
-        if (BarcoUtil.isNull(payload.getFormRequest())) {
+        if (!BarcoUtil.isNull(payload.getFormRequestId())) {
             genForm = this.genFormRepository.findByIdAndCreatedByAndStatusNot(
-                payload.getFormRequest().getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
+                payload.getFormRequestId(), adminUser.get(), APPLICATION_STATUS.DELETE);
             if (!genForm.isPresent()) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
             }
         }
-        reportSetting.get().setGenForm(genForm.get());
+        reportSetting.get().setGenForm(genForm.orElse(null));
         reportSetting.get().setUpdatedBy(adminUser.get());
         if (!BarcoUtil.isNull(payload.getStatus())) {
             reportSetting.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
@@ -347,6 +347,14 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         reportSettingResponse.setThirdDimensionApiToken(reportSetting.getThirdDimensionApiToken());
         reportSettingResponse.setDistinctLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getDistinctLKValue())));
         reportSettingResponse.setAggLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getAggLKValue())));
+        reportSettingResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(reportSetting.getStatus().getLookupType()));
+        if (!BarcoUtil.isNull(reportSetting.getGenForm())) {
+            reportSettingResponse.setFormRequestId(reportSetting.getGenForm().getId());
+        }
+        reportSettingResponse.setCreatedBy(getActionUser(reportSetting.getCreatedBy()));
+        reportSettingResponse.setUpdatedBy(getActionUser(reportSetting.getUpdatedBy()));
+        reportSettingResponse.setDateUpdated(reportSetting.getDateUpdated());
+        reportSettingResponse.setDateCreated(reportSetting.getDateCreated());
         return reportSettingResponse;
     }
 }
