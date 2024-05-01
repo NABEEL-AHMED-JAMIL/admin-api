@@ -69,8 +69,6 @@ public class FormSettingServiceImpl implements FormSettingService {
     @Autowired
     private AppUserLinkSourceTaskTypeRepository appUserLinkSourceTaskTypeRepository;
     @Autowired
-    private GenControlInteractionsRepository genControlInteractionsRepository;
-    @Autowired
     private GenControlLinkGenSectionRepository genControlLinkGenSectionRepository;
     @Autowired
     private GenSectionLinkGenFormRepository genSectionLinkGenFormRepository;
@@ -109,8 +107,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         sourceTaskType.setDescription(payload.getDescription());
         sourceTaskType.setTaskType(TASK_TYPE.getRequestMethodByValue(payload.getTaskType()));
         if (!BarcoUtil.isNull(payload.getCredentialId())) {
-            Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(payload.getCredentialId(),
-                adminUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
+            Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(
+                payload.getCredentialId(), adminUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
             if (credential.isPresent()) {
                 sourceTaskType.setCredential(credential.get());
             }
@@ -367,37 +365,38 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (result.isEmpty()) {
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
         }
-        List<STTListResponse> sttListResponses = result.stream().map(sourceTaskType -> {
-            STTListResponse sttResponse = new STTListResponse();
-            sttResponse.setId(sourceTaskType.getId());
-            sttResponse.setServiceName(sourceTaskType.getServiceName());
-            sttResponse.setDescription(sourceTaskType.getDescription());
-            sttResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTaskType.getStatus().getLookupType()));
-            sttResponse.setCreatedBy(getActionUser(sourceTaskType.getCreatedBy()));
-            sttResponse.setUpdatedBy(getActionUser(sourceTaskType.getUpdatedBy()));
-            sttResponse.setDateUpdated(sourceTaskType.getDateUpdated());
-            sttResponse.setDateCreated(sourceTaskType.getDateCreated());
-            sttResponse.setTaskType(GLookup.getGLookup(this.lookupDataCacheService
-                .getChildLookupDataByParentLookupTypeAndChildLookupCode(TASK_TYPE.getName(),
-                    sourceTaskType.getTaskType().getLookupCode())));
-            if (!BarcoUtil.isNull(sourceTaskType.getCredential())) {
-                CredentialResponse credentialResponse = new CredentialResponse();
-                credentialResponse.setId(sourceTaskType.getCredential().getId());
-                credentialResponse.setName(sourceTaskType.getCredential().getName());
-                sttResponse.setCredential(credentialResponse);
-            }
-            if (sourceTaskType.getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode())
-                && !BarcoUtil.isNull(sourceTaskType.getKafkaTaskType())) {
-                sttResponse.setKafkaTaskType(getKafkaTaskTypeResponse(sourceTaskType.getKafkaTaskType()));
-            } else if (!BarcoUtil.isNull(sourceTaskType.getApiTaskType())) {
-                sttResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.getApiTaskType(), this.lookupDataCacheService));
-            }
-            // pending till task part implement
-            sttResponse.setTotalTask(0l);
-            sttResponse.setTotalForm(this.genFormLinkSourceTaskTypeRepository
-                .countBySourceTaskTypeAndStatusNot(sourceTaskType, APPLICATION_STATUS.DELETE));
-            return sttResponse;
-        }).collect(Collectors.toList());
+        List<STTListResponse> sttListResponses = result.stream()
+            .map(sourceTaskType -> {
+                STTListResponse sttResponse = new STTListResponse();
+                sttResponse.setId(sourceTaskType.getId());
+                sttResponse.setServiceName(sourceTaskType.getServiceName());
+                sttResponse.setDescription(sourceTaskType.getDescription());
+                sttResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTaskType.getStatus().getLookupType()));
+                sttResponse.setCreatedBy(getActionUser(sourceTaskType.getCreatedBy()));
+                sttResponse.setUpdatedBy(getActionUser(sourceTaskType.getUpdatedBy()));
+                sttResponse.setDateUpdated(sourceTaskType.getDateUpdated());
+                sttResponse.setDateCreated(sourceTaskType.getDateCreated());
+                sttResponse.setTaskType(GLookup.getGLookup(this.lookupDataCacheService
+                    .getChildLookupDataByParentLookupTypeAndChildLookupCode(
+                        TASK_TYPE.getName(), sourceTaskType.getTaskType().getLookupCode())));
+                if (!BarcoUtil.isNull(sourceTaskType.getCredential())) {
+                    CredentialResponse credentialResponse = new CredentialResponse();
+                    credentialResponse.setId(sourceTaskType.getCredential().getId());
+                    credentialResponse.setName(sourceTaskType.getCredential().getName());
+                    sttResponse.setCredential(credentialResponse);
+                }
+                if (sourceTaskType.getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode())
+                    && !BarcoUtil.isNull(sourceTaskType.getKafkaTaskType())) {
+                    sttResponse.setKafkaTaskType(getKafkaTaskTypeResponse(sourceTaskType.getKafkaTaskType()));
+                } else if (!BarcoUtil.isNull(sourceTaskType.getApiTaskType())) {
+                    sttResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.getApiTaskType(), this.lookupDataCacheService));
+                }
+                // pending till task part implement
+                sttResponse.setTotalTask(0l);
+                sttResponse.setTotalForm(this.genFormLinkSourceTaskTypeRepository.countBySourceTaskTypeAndStatusNot(
+                    sourceTaskType, APPLICATION_STATUS.DELETE));
+                return sttResponse;
+            }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sttListResponses);
     }
 
@@ -421,8 +420,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.sourceTaskTypeRepository.saveAll(
-            this.sourceTaskTypeRepository.findAllByIdIn(payload.getIds())
-                .stream().map(getSourceTaskType -> {
+            this.sourceTaskTypeRepository.findAllByIdIn(payload.getIds()).stream()
+                .map(getSourceTaskType -> {
                     // de-link all source task
                     getSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
                     getSourceTaskType.setUpdatedBy(appUser.get());
@@ -506,8 +505,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             if (getForms.size() == 0) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
             }
-            this.genFormLinkSourceTaskTypeRepository.saveAll(
-                getForms.stream().map(getForm -> {
+            this.genFormLinkSourceTaskTypeRepository.saveAll(getForms.stream()
+                .map(getForm -> {
                     GenFormLinkSourceTaskType genFormLinkSourceTaskType = new GenFormLinkSourceTaskType();
                     genFormLinkSourceTaskType.setGenForm(getForm);
                     genFormLinkSourceTaskType.setSourceTaskType(sourceTaskType.get());
@@ -527,8 +526,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_LINK_STT_MISSING);
         }
         this.genFormLinkSourceTaskTypeRepository.saveAll(
-            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(
-                payload.getSttLinkForm(), APPLICATION_STATUS.DELETE).stream()
+            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(payload.getSttLinkForm(), APPLICATION_STATUS.DELETE).stream()
                 .map(genFormLinkSourceTaskType -> {
                     genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
                     genFormLinkSourceTaskType.setUpdatedBy(appUser.get());
@@ -714,8 +712,10 @@ public class FormSettingServiceImpl implements FormSettingService {
         List<FormResponse> formResponses = result.stream()
             .map(genForm -> {
                 FormResponse formResponse = getFormResponse(genForm);
-                formResponse.setTotalStt(this.genFormLinkSourceTaskTypeRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
-                formResponse.setTotalSection(this.genSectionLinkGenFormRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
+                formResponse.setTotalStt(this.genFormLinkSourceTaskTypeRepository
+                    .countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
+                formResponse.setTotalSection(this.genSectionLinkGenFormRepository
+                    .countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
                 return formResponse;
             }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, formResponses);
@@ -739,12 +739,13 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getFormType())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_TYPE_MISSING);
         }
-        List<GenForm> result = this.genFormRepository.findAllByFormTypeAndStatusNot(FORM_TYPE.REPORT_FORM, APPLICATION_STATUS.DELETE);
+        List<GenForm> result = this.genFormRepository.findAllByFormTypeAndStatusNot(
+            FORM_TYPE.REPORT_FORM, APPLICATION_STATUS.DELETE);
         if (result.isEmpty()) {
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            result.stream().map(genForm -> getFormResponse(genForm)).collect(Collectors.toList()));
+    return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, result.stream()
+            .map(genForm -> getFormResponse(genForm)).collect(Collectors.toList()));
     }
 
     /**
@@ -853,8 +854,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             if (sourceTaskTypes.size() == 0) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
             }
-            this.genFormLinkSourceTaskTypeRepository.saveAll(
-                sourceTaskTypes.stream().map(geSourceTaskType -> {
+            this.genFormLinkSourceTaskTypeRepository.saveAll(sourceTaskTypes.stream()
+                .map(geSourceTaskType -> {
                     GenFormLinkSourceTaskType genFormLinkSourceTaskType = new GenFormLinkSourceTaskType();
                     genFormLinkSourceTaskType.setGenForm(getForm.get());
                     genFormLinkSourceTaskType.setSourceTaskType(geSourceTaskType);
@@ -874,8 +875,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_LINK_STT_MISSING);
         }
         this.genFormLinkSourceTaskTypeRepository.saveAll(
-            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(payload.getFormLinkStt(), APPLICATION_STATUS.DELETE)
-                .stream().map(genFormLinkSourceTaskType -> {
+            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(payload.getFormLinkStt(), APPLICATION_STATUS.DELETE).stream()
+                .map(genFormLinkSourceTaskType -> {
                     genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
                     genFormLinkSourceTaskType.setUpdatedBy(appUser.get());
                     return genFormLinkSourceTaskType;
@@ -951,8 +952,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             if (getSections.size() == 0) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_NOT_FOUND);
             }
-            this.genSectionLinkGenFormRepository.saveAll(
-                getSections.stream().map(genSection -> {
+            this.genSectionLinkGenFormRepository.saveAll(getSections.stream()
+                .map(genSection -> {
                     GenSectionLinkGenForm genSectionLinkGenForm = new GenSectionLinkGenForm();
                     genSectionLinkGenForm.setSectionOrder(0l); // default order set
                     genSectionLinkGenForm.setGenForm(getForm.get());
@@ -972,13 +973,13 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (BarcoUtil.isNull(payload.getFormLinkSection())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_LINK_SECTION_MISSING);
         }
-        this.genSectionLinkGenFormRepository.saveAll(
-            this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(payload.getFormLinkSection(), APPLICATION_STATUS.DELETE)
-                .stream().map(genSectionLinkGenForm -> {
-                    genSectionLinkGenForm.setStatus(APPLICATION_STATUS.DELETE);
-                    genSectionLinkGenForm.setUpdatedBy(appUser.get());
-                    return genSectionLinkGenForm;
-                }).collect(Collectors.toList()));
+        this.genSectionLinkGenFormRepository.saveAll(this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
+            payload.getFormLinkSection(), APPLICATION_STATUS.DELETE).stream()
+            .map(genSectionLinkGenForm -> {
+                genSectionLinkGenForm.setStatus(APPLICATION_STATUS.DELETE);
+                genSectionLinkGenForm.setUpdatedBy(appUser.get());
+                return genSectionLinkGenForm;
+            }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
@@ -1003,14 +1004,13 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getSectionOrder())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_LINK_FORM_ORDER_MISSING);
         }
-        this.genSectionLinkGenFormRepository.saveAll(
-            this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
-                payload.getFormLinkSection(), APPLICATION_STATUS.DELETE).stream()
-                .map(getSectionLinkGenForm -> {
-                    getSectionLinkGenForm.setSectionOrder(payload.getSectionOrder());
-                    getSectionLinkGenForm.setUpdatedBy(appUser.get());
-                    return getSectionLinkGenForm;
-                }).collect(Collectors.toList()));
+        this.genSectionLinkGenFormRepository.saveAll(this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
+            payload.getFormLinkSection(), APPLICATION_STATUS.DELETE).stream()
+            .map(getSectionLinkGenForm -> {
+                getSectionLinkGenForm.setSectionOrder(payload.getSectionOrder());
+                getSectionLinkGenForm.setUpdatedBy(appUser.get());
+                return getSectionLinkGenForm;
+            }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getFormLinkSection()), payload);
     }
 
@@ -1080,7 +1080,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                 this.actionOnGenSectionLinkGenForms(genSection.get(), adminUser.get());
             }
             if (!BarcoUtil.isNull(genSection.get().getGenControlLinkGenSections())) {
-                this.actionOnGenControlLinkGenSections(genSection.get(), adminUser.get());
+                this.actionOnGenSectionsLinkGenControl(genSection.get(), adminUser.get());
             }
         }
         genSection.get().setUpdatedBy(adminUser.get());
@@ -1116,7 +1116,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             this.actionOnGenSectionLinkGenForms(genSection.get(), adminUser.get());
         }
         if (!BarcoUtil.isNull(genSection.get().getGenControlLinkGenSections())) {
-            this.actionOnGenControlLinkGenSections(genSection.get(), adminUser.get());
+            this.actionOnGenSectionsLinkGenControl(genSection.get(), adminUser.get());
         }
         this.genSectionRepository.save(genSection.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
@@ -1160,7 +1160,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-                payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
@@ -1173,10 +1173,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         List<SectionResponse> sectionResponses = result.stream().map(genSection -> {
             SectionResponse sectionResponse = getSectionResponse(genSection);
-            sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository.countByGenSectionAndStatusNot(
-                genSection, APPLICATION_STATUS.DELETE));
-            sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository.countByGenSectionAndStatusNot(
-                genSection, APPLICATION_STATUS.DELETE));
+            sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository.countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
+            sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository.countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
             return sectionResponse;
         }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sectionResponses);
@@ -1200,18 +1198,17 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
-        this.genSectionRepository.saveAll(
-            this.genSectionRepository.findAllByIdIn(payload.getIds()).stream()
-                .map((genSection -> {
-                    genSection.setStatus(APPLICATION_STATUS.DELETE);
-                    if (!BarcoUtil.isNull(genSection.getGenSectionLinkGenForms())) {
-                        this.actionOnGenSectionLinkGenForms(genSection, appUser.get());
-                    }
-                    if (!BarcoUtil.isNull(genSection.getGenControlLinkGenSections())) {
-                        this.actionOnGenControlLinkGenSections(genSection, appUser.get());
-                    }
-                    return genSection;
-                })).collect(Collectors.toList())
+        this.genSectionRepository.saveAll(this.genSectionRepository.findAllByIdIn(payload.getIds()).stream()
+            .map((genSection -> {
+                genSection.setStatus(APPLICATION_STATUS.DELETE);
+                if (!BarcoUtil.isNull(genSection.getGenSectionLinkGenForms())) {
+                    this.actionOnGenSectionLinkGenForms(genSection, appUser.get());
+                }
+                if (!BarcoUtil.isNull(genSection.getGenControlLinkGenSections())) {
+                    this.actionOnGenSectionsLinkGenControl(genSection, appUser.get());
+                }
+                return genSection;
+            })).collect(Collectors.toList())
         );
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
     }
@@ -1305,15 +1302,13 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (BarcoUtil.isNull(payload.getSectionLinkControl())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_LINK_CONTROL_MISSING);
         }
-        this.genControlLinkGenSectionRepository.saveAll(
-            this.genControlLinkGenSectionRepository.findAllByIdInAndStatusNot(
-                payload.getSectionLinkControl(), APPLICATION_STATUS.DELETE)
-                .stream()
-                .map(genControlLinkGenSection -> {
-                    genControlLinkGenSection.setStatus(APPLICATION_STATUS.DELETE);
-                    genControlLinkGenSection.setUpdatedBy(appUser.get());
-                    return genControlLinkGenSection;
-                }).collect(Collectors.toList()));
+        this.genControlLinkGenSectionRepository.saveAll(this.genControlLinkGenSectionRepository.findAllByIdInAndStatusNot(
+            payload.getSectionLinkControl(), APPLICATION_STATUS.DELETE).stream()
+            .map(genControlLinkGenSection -> {
+                genControlLinkGenSection.setStatus(APPLICATION_STATUS.DELETE);
+                genControlLinkGenSection.setUpdatedBy(appUser.get());
+                return genControlLinkGenSection;
+            }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
@@ -1339,13 +1334,14 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_LINK_SECTION_ORDER_MISSING);
         }
         this.genControlLinkGenSectionRepository.saveAll(
-            this.genControlLinkGenSectionRepository.findAllByIdInAndStatusNot(
-                payload.getSectionLinkControl(), APPLICATION_STATUS.DELETE).stream()
-                .map(genControlLinkGenSection -> {
-                    genControlLinkGenSection.setControlOrder(payload.getControlOrder());
-                    genControlLinkGenSection.setUpdatedBy(appUser.get());
-                    return genControlLinkGenSection;
-                }).collect(Collectors.toList()));
+            this.genControlLinkGenSectionRepository.findAllByIdInAndStatusNot(payload.getSectionLinkControl(),
+            APPLICATION_STATUS.DELETE).stream().map(genControlLinkGenSection -> {
+                genControlLinkGenSection.setControlOrder(payload.getControlOrder());
+                genControlLinkGenSection.setVisiblePattern(payload.getVisiblePattern());
+                genControlLinkGenSection.setDisabledPattern(payload.getDisabledPattern());
+                genControlLinkGenSection.setUpdatedBy(appUser.get());
+                return genControlLinkGenSection;
+            }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getSectionLinkControl()), payload);
     }
 
@@ -1416,8 +1412,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             if (getForms.size() == 0) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
             }
-            this.genSectionLinkGenFormRepository.saveAll(
-                getForms.stream().map(getForm -> {
+            this.genSectionLinkGenFormRepository.saveAll(getForms.stream()
+                .map(getForm -> {
                     GenSectionLinkGenForm genSectionLinkGenForm = new GenSectionLinkGenForm();
                     genSectionLinkGenForm.setSectionOrder(0l); // default order set
                     genSectionLinkGenForm.setGenForm(getForm);
@@ -1437,14 +1433,13 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (BarcoUtil.isNull(payload.getSectionLinkForm())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_LINK_FORM_MISSING);
         }
-        this.genSectionLinkGenFormRepository.saveAll(
-            this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
-                payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
-                .map(genSectionLinkGenForm -> {
-                    genSectionLinkGenForm.setStatus(APPLICATION_STATUS.DELETE);
-                    genSectionLinkGenForm.setUpdatedBy(appUser.get());
-                    return genSectionLinkGenForm;
-                }).collect(Collectors.toList()));
+        this.genSectionLinkGenFormRepository.saveAll(this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
+            payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
+            .map(genSectionLinkGenForm -> {
+                genSectionLinkGenForm.setStatus(APPLICATION_STATUS.DELETE);
+                genSectionLinkGenForm.setUpdatedBy(appUser.get());
+                return genSectionLinkGenForm;
+            }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
@@ -1469,14 +1464,13 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getSectionOrder())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_LINK_FORM_ORDER_MISSING);
         }
-        this.genControlLinkGenSectionRepository.saveAll(
-            this.genControlLinkGenSectionRepository.findAllByIdInAndStatusNot(
-                payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
-                .map(genControlLinkGenSection -> {
-                    genControlLinkGenSection.setControlOrder(payload.getSectionOrder());
-                    genControlLinkGenSection.setUpdatedBy(appUser.get());
-                    return genControlLinkGenSection;
-                }).collect(Collectors.toList()));
+        this.genSectionLinkGenFormRepository.saveAll(this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
+            payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
+            .map(sectionLinkGenForm -> {
+                sectionLinkGenForm.setSectionOrder(payload.getSectionOrder());
+                sectionLinkGenForm.setUpdatedBy(appUser.get());
+                return sectionLinkGenForm;
+            }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getSectionLinkForm()), payload);
     }
 
@@ -1716,11 +1710,9 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.genControlRepository.saveAll(
-            this.genControlRepository.findAllByIdIn(payload.getIds()).stream().map(genControl -> {
+            this.genControlRepository.findAllByIdIn(payload.getIds())
+            .stream().map(genControl -> {
                 genControl.setStatus(APPLICATION_STATUS.DELETE);
-                if (!BarcoUtil.isNull(genControl.getGenControlLinkGenSections())) {
-                    this.actionOnGenControlLinkGenSections(genControl, appUser.get());
-                }
                 return genControl;
             }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
@@ -1815,15 +1807,13 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (BarcoUtil.isNull(payload.getControlLinkSection())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_LINK_SECTION_MISSING);
         }
-        this.genControlLinkGenSectionRepository.saveAll(
-            this.genControlLinkGenSectionRepository.findAllByIdInAndStatusNot(
-                payload.getControlLinkSection(), APPLICATION_STATUS.DELETE)
-                .stream()
-                .map(genControlLinkGenSection -> {
-                    genControlLinkGenSection.setStatus(APPLICATION_STATUS.DELETE);
-                    genControlLinkGenSection.setUpdatedBy(appUser.get());
-                    return genControlLinkGenSection;
-                }).collect(Collectors.toList()));
+        this.genControlLinkGenSectionRepository.saveAll(this.genControlLinkGenSectionRepository.findAllByIdInAndStatusNot(
+            payload.getControlLinkSection(), APPLICATION_STATUS.DELETE).stream()
+            .map(genControlLinkGenSection -> {
+                genControlLinkGenSection.setStatus(APPLICATION_STATUS.DELETE);
+                genControlLinkGenSection.setUpdatedBy(appUser.get());
+                return genControlLinkGenSection;
+            }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
@@ -1853,6 +1843,8 @@ public class FormSettingServiceImpl implements FormSettingService {
                 payload.getControlLinkSection(), APPLICATION_STATUS.DELETE).stream()
                 .map(genControlLinkGenSection -> {
                     genControlLinkGenSection.setControlOrder(payload.getControlOrder());
+                    genControlLinkGenSection.setVisiblePattern(payload.getVisiblePattern());
+                    genControlLinkGenSection.setVisiblePattern(payload.getVisiblePattern());
                     genControlLinkGenSection.setUpdatedBy(appUser.get());
                     return genControlLinkGenSection;
                 }).collect(Collectors.toList()));
@@ -2388,7 +2380,7 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @param genSection
      * @param appUser
      * */
-    private void actionOnGenControlLinkGenSections(GenSection genSection, AppUser appUser) {
+    private void actionOnGenSectionsLinkGenControl(GenSection genSection, AppUser appUser) {
         genSection.getGenControlLinkGenSections().stream()
             .filter(genGenControlLinkGenSections -> !genGenControlLinkGenSections.getStatus().equals(APPLICATION_STATUS.DELETE))
             .map(genGenControlLinkGenSections -> {

@@ -114,6 +114,12 @@ public interface RootService {
         if (data.containsKey(QueryService.CONTROL_ORDER) && !BarcoUtil.isNull(data.get(QueryService.CONTROL_ORDER))) {
             controlLinkSectionResponse.setControlOrder(Long.valueOf(data.get(QueryService.CONTROL_ORDER).toString()));
         }
+        if (data.containsKey(QueryService.DISABLED_PATTERN) && !BarcoUtil.isNull(data.get(QueryService.DISABLED_PATTERN))) {
+            controlLinkSectionResponse.setDisabledPattern(data.get(QueryService.DISABLED_PATTERN).toString());
+        }
+        if (data.containsKey(QueryService.VISIBLE_PATTERN) && !BarcoUtil.isNull(data.get(QueryService.VISIBLE_PATTERN))) {
+            controlLinkSectionResponse.setVisiblePattern(data.get(QueryService.VISIBLE_PATTERN).toString());
+        }
         return controlLinkSectionResponse;
     }
 
@@ -146,6 +152,12 @@ public interface RootService {
         }
         if (data.containsKey(QueryService.CONTROL_ORDER) && !BarcoUtil.isNull(data.get(QueryService.CONTROL_ORDER))) {
             sectionLinkControlResponse.setControlOrder(Long.valueOf(data.get(QueryService.CONTROL_ORDER).toString()));
+        }
+        if (data.containsKey(QueryService.DISABLED_PATTERN) && !BarcoUtil.isNull(data.get(QueryService.DISABLED_PATTERN))) {
+            sectionLinkControlResponse.setDisabledPattern(data.get(QueryService.DISABLED_PATTERN).toString());
+        }
+        if (data.containsKey(QueryService.VISIBLE_PATTERN) && !BarcoUtil.isNull(data.get(QueryService.VISIBLE_PATTERN))) {
+            sectionLinkControlResponse.setVisiblePattern(data.get(QueryService.VISIBLE_PATTERN).toString());
         }
         return sectionLinkControlResponse;
     }

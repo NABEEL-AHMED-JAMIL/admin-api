@@ -43,6 +43,8 @@ public class QueryService {
     public static String LINK_CONTROL_ID = "link_control_id";
     public static String LINK_FORM_ID = "link_form_id";
     public static String CONTROL_ORDER = "control_order";
+    public static String DISABLED_PATTERN = "disabled_pattern";
+    public static String VISIBLE_PATTERN = "visible_pattern";
     public static String SECTION_ORDER = "section_order";
     public static String EMAIL = "email";
     public static String USERNAME = "username";
@@ -93,13 +95,15 @@ public class QueryService {
         "LEFT JOIN APP_USER_ENV AUE ON AUE.APP_USER_ID = AU.ID AND AUE.ENV_KEY_ID = %d " +
         "WHERE AU.STATUS != %d " +
         "ORDER by AU.ID DESC";
-    public static String FETCH_ALL_CONTROLS_LINK_SECTION= "SELECT GS.ID, GS.SECTION_NAME, GS.DESCRIPTION, GS.STATUS, GLG.CONTROL_ORDER, " +
+    public static String FETCH_ALL_CONTROLS_LINK_SECTION= "SELECT GS.ID, GS.SECTION_NAME, GS.DESCRIPTION, GS.STATUS, " +
+        "GLG.CONTROL_ORDER, GLG.DISABLED_PATTERN, GLG.VISIBLE_PATTERN, " +
         "CASE WHEN GLG.SECTION_ID IS NOT NULL THEN 'true' ELSE 'false' END AS LINK_STATUS, GLG.ID AS LINK_SECTION_ID " +
         "FROM GEN_SECTION GS " +
         "LEFT JOIN GC_LINK_GS GLG ON GLG.SECTION_ID = GS.ID AND GLG.CONTROL_ID = %d AND GLG.STATUS != %d " +
         "WHERE GS.STATUS != %d AND GS.CREATED_BY_ID = %d " +
         "ORDER BY GS.DATE_CREATED DESC";
-    public static String FETCH_ALL_SECTION_LINK_CONTROLS = "SELECT GC.ID, GC.FIELD_TYPE, GC.CONTROL_NAME, GC.STATUS, GLG.CONTROL_ORDER, " +
+    public static String FETCH_ALL_SECTION_LINK_CONTROLS = "SELECT GC.ID, GC.FIELD_TYPE, GC.CONTROL_NAME, GC.STATUS, " +
+        "GLG.CONTROL_ORDER, GLG.DISABLED_PATTERN, GLG.VISIBLE_PATTERN, " +
         "CASE WHEN GLG.SECTION_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, GLG.ID AS LINK_CONTROL_ID " +
         "FROM GEN_CONTROL GC " +
         "LEFT JOIN GC_LINK_GS GLG ON GLG.CONTROL_ID = GC.ID AND GLG.SECTION_ID = %d AND GC.STATUS != %d " +
