@@ -995,10 +995,6 @@ public interface RootService {
         reportSetting.setSecondDimensionUrl(payload.getSecondDimensionUrl());
         reportSetting.setSecondDimensionLKValue(payload.getSecondDimensionLKValue());
         reportSetting.setSecondDimensionApiToken(payload.getSecondDimensionApiToken());
-        reportSetting.setIsThirdDimension(UI_LOOKUP.getByLookupCode(payload.getIsThirdDimension()));
-        reportSetting.setThirdDimensionUrl(payload.getThirdDimensionUrl());
-        reportSetting.setThirdDimensionLKValue(payload.getThirdDimensionLKValue());
-        reportSetting.setThirdDimensionApiToken(payload.getThirdDimensionApiToken());
         reportSetting.setDistinctLKValue(payload.getDistinctLKValue());
         reportSetting.setAggLKValue(payload.getAggLKValue());
         return reportSetting;

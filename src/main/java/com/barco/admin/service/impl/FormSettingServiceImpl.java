@@ -65,9 +65,9 @@ public class FormSettingServiceImpl implements FormSettingService {
     @Autowired
     private ApiTaskTypeRepository apiTaskTypeRepository;
     @Autowired
-    private GenFormLinkSourceTaskTypeRepository genFormLinkSourceTaskTypeRepository;
-    @Autowired
     private AppUserLinkSourceTaskTypeRepository appUserLinkSourceTaskTypeRepository;
+    @Autowired
+    private GenFormLinkSourceTaskTypeRepository genFormLinkSourceTaskTypeRepository;
     @Autowired
     private GenControlLinkGenSectionRepository genControlLinkGenSectionRepository;
     @Autowired
@@ -740,7 +740,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_TYPE_MISSING);
         }
         List<GenForm> result = this.genFormRepository.findAllByFormTypeAndStatusNot(
-            FORM_TYPE.REPORT_FORM, APPLICATION_STATUS.DELETE);
+            FORM_TYPE.getByLookupCode(payload.getFormType()), APPLICATION_STATUS.DELETE);
         if (result.isEmpty()) {
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
         }
@@ -1494,10 +1494,6 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_FIELD_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getFieldTitle())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_FIELD_TITLE_MISSING);
-        } else if (BarcoUtil.isNull(payload.getFieldWidth())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_FIELD_WIDTH_MISSING);
-        } else if (BarcoUtil.isNull(payload.getMandatory())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_MANDATORY_MISSING);
         }
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
@@ -1555,10 +1551,6 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_FIELD_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getFieldTitle())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_FIELD_TITLE_MISSING);
-        } else if (BarcoUtil.isNull(payload.getFieldWidth())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_FIELD_WIDTH_MISSING);
-        } else if (BarcoUtil.isNull(payload.getMandatory())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_MANDATORY_MISSING);
         }
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
