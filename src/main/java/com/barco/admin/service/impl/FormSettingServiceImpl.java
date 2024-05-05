@@ -1287,6 +1287,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                     genControlLinkGenSection.setGenControl(getControl);
                     genControlLinkGenSection.setGenSection(getSection.get());
                     genControlLinkGenSection.setControlOrder(0l); // default order set
+                    genControlLinkGenSection.setFieldWidth(0l); // default order set
                     if (getSection.get().getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
                             getControl.getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
                         genControlLinkGenSection.setStatus(APPLICATION_STATUS.ACTIVE);
@@ -1339,6 +1340,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                 genControlLinkGenSection.setControlOrder(payload.getControlOrder());
                 genControlLinkGenSection.setVisiblePattern(payload.getVisiblePattern());
                 genControlLinkGenSection.setDisabledPattern(payload.getDisabledPattern());
+                genControlLinkGenSection.setFieldWidth(payload.getFieldWidth());
                 genControlLinkGenSection.setUpdatedBy(appUser.get());
                 return genControlLinkGenSection;
             }).collect(Collectors.toList()));
@@ -1507,7 +1509,6 @@ public class FormSettingServiceImpl implements FormSettingService {
         genControl.setFieldName(payload.getFieldName());
         genControl.setDescription(payload.getDescription());
         genControl.setPlaceHolder(payload.getPlaceHolder());
-        genControl.setFieldWidth(payload.getFieldWidth());
         genControl.setMinLength(payload.getMinLength());
         genControl.setMaxLength(payload.getMaxLength());
         if (FIELD_TYPE.RADIO.getLookupCode().equals(payload.getFieldType()) ||
@@ -1516,7 +1517,6 @@ public class FormSettingServiceImpl implements FormSettingService {
             FIELD_TYPE.MULTI_SELECT.getLookupCode().equals(payload.getFieldType())) {
             genControl.setFieldLkValue(payload.getFieldLkValue());
         }
-        genControl.setDisabled(IS_DEFAULT.getByLookupCode(payload.getDisabled()));
         genControl.setMandatory(IS_DEFAULT.getByLookupCode(payload.getMandatory()));
         genControl.setIsDefault(IS_DEFAULT.getByLookupCode(payload.getIsDefault()));
         genControl.setDefaultValue(payload.getDefaultValue());
@@ -1574,10 +1574,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         genControl.get().setFieldName(payload.getFieldName());
         genControl.get().setDescription(payload.getDescription());
         genControl.get().setPlaceHolder(payload.getPlaceHolder());
-        genControl.get().setFieldWidth(payload.getFieldWidth());
         genControl.get().setMinLength(payload.getMinLength());
         genControl.get().setMaxLength(payload.getMaxLength());
-        genControl.get().setDisabled(IS_DEFAULT.getByLookupCode(payload.getDisabled()));
         genControl.get().setMandatory(IS_DEFAULT.getByLookupCode(payload.getMandatory()));
         genControl.get().setIsDefault(IS_DEFAULT.getByLookupCode(payload.getIsDefault()));
         genControl.get().setDefaultValue(payload.getDefaultValue());
@@ -1784,6 +1782,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                     genControlLinkGenSection.setGenControl(genControl.get());
                     genControlLinkGenSection.setGenSection(genSection);
                     genControlLinkGenSection.setControlOrder(0l);  // default order set
+                    genControlLinkGenSection.setFieldWidth(0l);
                     if (genSection.getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
                         genControl.get().getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
                         genControlLinkGenSection.setStatus(APPLICATION_STATUS.ACTIVE);
@@ -1836,7 +1835,8 @@ public class FormSettingServiceImpl implements FormSettingService {
                 .map(genControlLinkGenSection -> {
                     genControlLinkGenSection.setControlOrder(payload.getControlOrder());
                     genControlLinkGenSection.setVisiblePattern(payload.getVisiblePattern());
-                    genControlLinkGenSection.setVisiblePattern(payload.getVisiblePattern());
+                    genControlLinkGenSection.setDisabledPattern(payload.getDisabledPattern());
+                    genControlLinkGenSection.setFieldWidth(payload.getFieldWidth());
                     genControlLinkGenSection.setUpdatedBy(appUser.get());
                     return genControlLinkGenSection;
                 }).collect(Collectors.toList()));
@@ -1935,8 +1935,6 @@ public class FormSettingServiceImpl implements FormSettingService {
                 dataCellValue.add(genControl.getDescription());
                 dataCellValue.add(genControl.getFieldName());
                 dataCellValue.add(genControl.getFieldTitle());
-                dataCellValue.add(!BarcoUtil.isNull(genControl.getFieldWidth()) ?
-                    genControl.getFieldWidth().toString(): this.bulkExcel.BLANK_VAL);
                 dataCellValue.add(genControl.getPlaceHolder());
                 dataCellValue.add(genControl.getPattern());
                 dataCellValue.add(genControl.getFieldType().name());
@@ -2164,8 +2162,6 @@ public class FormSettingServiceImpl implements FormSettingService {
                     } else if (i == ++index) {
                         sttcValidation.setFieldTitle(this.bulkExcel.getCellDetail(currentRow, i));
                     } else if (i == ++index) {
-                        sttcValidation.setFieldWidth(this.bulkExcel.getCellDetail(currentRow, i));
-                    } else if (i == ++index) {
                         sttcValidation.setPlaceHolder(this.bulkExcel.getCellDetail(currentRow, i));
                     } else if (i == ++index) {
                         sttcValidation.setPattern(this.bulkExcel.getCellDetail(currentRow, i));
@@ -2198,9 +2194,6 @@ public class FormSettingServiceImpl implements FormSettingService {
             genControl.setFieldTitle(sttcValidation.getFieldTitle());
             genControl.setFieldName(sttcValidation.getFieldName());
             genControl.setPlaceHolder(sttcValidation.getPlaceHolder());
-            if (!BarcoUtil.isNull(sttcValidation.getFieldWidth())) {
-                genControl.setFieldWidth(Long.valueOf(sttcValidation.getFieldWidth()));
-            }
             if (!BarcoUtil.isNull(sttcValidation.getMinLength())) {
                 genControl.setMinLength(Long.valueOf(sttcValidation.getMinLength()));
             }
@@ -2215,7 +2208,6 @@ public class FormSettingServiceImpl implements FormSettingService {
             }
             genControl.setMandatory(IS_DEFAULT.findEnumByName(sttcValidation.getRequired()));
             genControl.setIsDefault(IS_DEFAULT.NO_DEFAULT);
-            genControl.setDisabled(IS_DEFAULT.NO_DEFAULT);
             genControl.setPattern(sttcValidation.getPattern());
             genControl.setStatus(APPLICATION_STATUS.ACTIVE);
             genControl.setCreatedBy(appUser);
@@ -2284,7 +2276,6 @@ public class FormSettingServiceImpl implements FormSettingService {
         controlResponse.setFieldTitle(genControl.getFieldTitle());
         controlResponse.setFieldName(genControl.getFieldName());
         controlResponse.setPlaceHolder(genControl.getPlaceHolder());
-        controlResponse.setFieldWidth(genControl.getFieldWidth());
         controlResponse.setMinLength(genControl.getMinLength());
         controlResponse.setMaxLength(genControl.getMaxLength());
         controlResponse.setFieldLkValue(genControl.getFieldLkValue());
@@ -2294,9 +2285,6 @@ public class FormSettingServiceImpl implements FormSettingService {
         controlResponse.setIsDefault(GLookup.getGLookup(this.lookupDataCacheService
             .getChildLookupDataByParentLookupTypeAndChildLookupCode(IS_DEFAULT.getName(),
                 genControl.getIsDefault().getLookupCode())));
-        controlResponse.setDisabled(GLookup.getGLookup(this.lookupDataCacheService
-            .getChildLookupDataByParentLookupTypeAndChildLookupCode(IS_DEFAULT.getName(),
-                genControl.getDisabled().getLookupCode())));
         controlResponse.setDefaultValue(genControl.getDefaultValue());
         controlResponse.setPattern(genControl.getPattern());
         controlResponse.setCreatedBy(getActionUser(genControl.getCreatedBy()));
@@ -2417,7 +2405,8 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @param sourceTaskType
      * @param adminUser
      * */
-    public void actionGenFormLinkSourceTaskTypes(SourceTaskType sourceTaskType, AppUser adminUser) {
+    public void actionGenFormLinkSourceTaskTypes(
+        SourceTaskType sourceTaskType, AppUser adminUser) {
         sourceTaskType.getGenFormLinkSourceTaskTypes().stream()
             .filter(genFormLinkStt -> !genFormLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
             .map(genFormLinkStt -> {
@@ -2433,7 +2422,8 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @param adminUser
      * @return ApiTaskType
      * */
-    private static KafkaTaskType getKafkaTaskType(KafkaTaskTypeRequest kafkaTaskTypeRequest, Optional<AppUser> adminUser) {
+    private static KafkaTaskType getKafkaTaskType(
+        KafkaTaskTypeRequest kafkaTaskTypeRequest, Optional<AppUser> adminUser) {
         KafkaTaskType kafkaTaskType = new KafkaTaskType();
         kafkaTaskType.setServiceUrl(kafkaTaskTypeRequest.getServiceUrl());
         kafkaTaskType.setNumPartitions(kafkaTaskTypeRequest.getNumPartitions());
@@ -2451,7 +2441,8 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @param adminUser
      * @return ApiTaskType
      * */
-    private static ApiTaskType getApiTaskType(ApiTaskTypeRequest apiTaskTypeRequest, Optional<AppUser> adminUser) {
+    private static ApiTaskType getApiTaskType(
+        ApiTaskTypeRequest apiTaskTypeRequest, Optional<AppUser> adminUser) {
         ApiTaskType apiTaskType = new ApiTaskType();
         apiTaskType.setApiUrl(apiTaskTypeRequest.getApiUrl());
         apiTaskType.setHttpMethod(apiTaskTypeRequest.getHttpMethod());
