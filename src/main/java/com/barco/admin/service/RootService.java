@@ -9,8 +9,13 @@ import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.common.utility.excel.BulkExcel;
 import com.barco.common.utility.excel.SheetFiled;
+import com.barco.model.dto.dform.IDynamicControl;
+import com.barco.model.dto.dform.IDynamicForm;
+import com.barco.model.dto.dform.IDynamicSection;
+import com.barco.model.dto.dform.IDynamicValidation;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.*;
+import com.barco.model.enums.ErrorAssosiation;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.TemplateRegRepository;
 import com.barco.model.security.UserSessionDetail;
@@ -27,9 +32,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import static com.barco.model.util.lookup.EMAIL_TEMPLATE.*;
 import static com.barco.model.util.lookup.EMAIL_TEMPLATE.REGISTER_USER;
@@ -114,6 +117,15 @@ public interface RootService {
         if (data.containsKey(QueryService.CONTROL_ORDER) && !BarcoUtil.isNull(data.get(QueryService.CONTROL_ORDER))) {
             controlLinkSectionResponse.setControlOrder(Long.valueOf(data.get(QueryService.CONTROL_ORDER).toString()));
         }
+        if (data.containsKey(QueryService.DISABLED_PATTERN) && !BarcoUtil.isNull(data.get(QueryService.DISABLED_PATTERN))) {
+            controlLinkSectionResponse.setDisabledPattern(data.get(QueryService.DISABLED_PATTERN).toString());
+        }
+        if (data.containsKey(QueryService.VISIBLE_PATTERN) && !BarcoUtil.isNull(data.get(QueryService.VISIBLE_PATTERN))) {
+            controlLinkSectionResponse.setVisiblePattern(data.get(QueryService.VISIBLE_PATTERN).toString());
+        }
+        if (data.containsKey(QueryService.FILED_WIDTH) && !BarcoUtil.isNull(data.get(QueryService.FILED_WIDTH))) {
+            controlLinkSectionResponse.setFieldWidth(Long.valueOf(data.get(QueryService.FILED_WIDTH).toString()));
+        }
         return controlLinkSectionResponse;
     }
 
@@ -146,6 +158,15 @@ public interface RootService {
         }
         if (data.containsKey(QueryService.CONTROL_ORDER) && !BarcoUtil.isNull(data.get(QueryService.CONTROL_ORDER))) {
             sectionLinkControlResponse.setControlOrder(Long.valueOf(data.get(QueryService.CONTROL_ORDER).toString()));
+        }
+        if (data.containsKey(QueryService.DISABLED_PATTERN) && !BarcoUtil.isNull(data.get(QueryService.DISABLED_PATTERN))) {
+            sectionLinkControlResponse.setDisabledPattern(data.get(QueryService.DISABLED_PATTERN).toString());
+        }
+        if (data.containsKey(QueryService.VISIBLE_PATTERN) && !BarcoUtil.isNull(data.get(QueryService.VISIBLE_PATTERN))) {
+            sectionLinkControlResponse.setVisiblePattern(data.get(QueryService.VISIBLE_PATTERN).toString());
+        }
+        if (data.containsKey(QueryService.FILED_WIDTH) && !BarcoUtil.isNull(data.get(QueryService.FILED_WIDTH))) {
+            sectionLinkControlResponse.setFieldWidth(Long.valueOf(data.get(QueryService.FILED_WIDTH).toString()));
         }
         return sectionLinkControlResponse;
     }
@@ -983,10 +1004,6 @@ public interface RootService {
         reportSetting.setSecondDimensionUrl(payload.getSecondDimensionUrl());
         reportSetting.setSecondDimensionLKValue(payload.getSecondDimensionLKValue());
         reportSetting.setSecondDimensionApiToken(payload.getSecondDimensionApiToken());
-        reportSetting.setIsThirdDimension(UI_LOOKUP.getByLookupCode(payload.getIsThirdDimension()));
-        reportSetting.setThirdDimensionUrl(payload.getThirdDimensionUrl());
-        reportSetting.setThirdDimensionLKValue(payload.getThirdDimensionLKValue());
-        reportSetting.setThirdDimensionApiToken(payload.getThirdDimensionApiToken());
         reportSetting.setDistinctLKValue(payload.getDistinctLKValue());
         reportSetting.setAggLKValue(payload.getAggLKValue());
         return reportSetting;

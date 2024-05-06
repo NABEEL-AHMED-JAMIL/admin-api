@@ -79,8 +79,6 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_FIRST_DIMENSION_MISSING);
         } else if (BarcoUtil.isNull(payload.getIsSecondDimension())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_SECOND_DIMENSION_MISSING);
-        } else if (BarcoUtil.isNull(payload.getIsThirdDimension())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_THIRD_DIMENSION_MISSING);
         }
         Optional<GenForm> genForm = Optional.empty();
         if (!BarcoUtil.isNull(payload.getFormRequestId())) {
@@ -141,8 +139,6 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_FIRST_DIMENSION_MISSING);
         } else if (BarcoUtil.isNull(payload.getIsSecondDimension())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_SECOND_DIMENSION_MISSING);
-        } else if (BarcoUtil.isNull(payload.getIsThirdDimension())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_THIRD_DIMENSION_MISSING);
         }
         Optional<ReportSetting> reportSetting = this.reportSettingRepository.findByIdAndUsernameAndStatusNot(
             payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
@@ -333,18 +329,17 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         reportSettingResponse.setIsData(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsData().getLookupType()));
         reportSettingResponse.setDataUrl(reportSetting.getDataUrl());
         reportSettingResponse.setDataApiToken(reportSetting.getDataApiToken());
+        // first dimension
         reportSettingResponse.setIsFirstDimension(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsFirstDimension().getLookupType()));
         reportSettingResponse.setFirstDimensionUrl(reportSetting.getFirstDimensionUrl());
         reportSettingResponse.setFirstDimensionLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getFirstDimensionLKValue())));
         reportSettingResponse.setFirstDimensionApiToken(reportSetting.getFirstDimensionApiToken());
+        // second dimension
         reportSettingResponse.setIsSecondDimension(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsSecondDimension().getLookupType()));
         reportSettingResponse.setSecondDimensionUrl(reportSetting.getSecondDimensionUrl());
         reportSettingResponse.setSecondDimensionLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getSecondDimensionLKValue())));
         reportSettingResponse.setSecondDimensionApiToken(reportSetting.getSecondDimensionApiToken());
-        reportSettingResponse.setIsThirdDimension(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsThirdDimension().getLookupType()));
-        reportSettingResponse.setThirdDimensionUrl(reportSetting.getThirdDimensionUrl());
-        reportSettingResponse.setThirdDimensionLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getThirdDimensionLKValue())));
-        reportSettingResponse.setThirdDimensionApiToken(reportSetting.getThirdDimensionApiToken());
+        // lk value
         reportSettingResponse.setDistinctLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getDistinctLKValue())));
         reportSettingResponse.setAggLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getAggLKValue())));
         reportSettingResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(reportSetting.getStatus().getLookupType()));
