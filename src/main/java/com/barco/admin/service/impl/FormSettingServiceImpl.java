@@ -1522,6 +1522,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         genControl.setMandatory(IS_DEFAULT.getByLookupCode(payload.getMandatory()));
         genControl.setIsDefault(IS_DEFAULT.getByLookupCode(payload.getIsDefault()));
         genControl.setDefaultValue(payload.getDefaultValue());
+        genControl.setApiLkValue(payload.getApiLkValue());
         genControl.setPattern(payload.getPattern());
         genControl.setStatus(APPLICATION_STATUS.ACTIVE);
         genControl.setCreatedBy(adminUser.get());
@@ -1581,6 +1582,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         genControl.get().setMandatory(IS_DEFAULT.getByLookupCode(payload.getMandatory()));
         genControl.get().setIsDefault(IS_DEFAULT.getByLookupCode(payload.getIsDefault()));
         genControl.get().setDefaultValue(payload.getDefaultValue());
+        genControl.get().setApiLkValue(payload.getApiLkValue());
         genControl.get().setPattern(payload.getPattern());
         if (FIELD_TYPE.RADIO.getLookupCode().equals(payload.getFieldType()) ||
             FIELD_TYPE.CHECKBOX.getLookupCode().equals(payload.getFieldType()) ||
@@ -2291,6 +2293,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             .getChildLookupDataByParentLookupTypeAndChildLookupCode(IS_DEFAULT.getName(),
                 genControl.getIsDefault().getLookupCode())));
         controlResponse.setDefaultValue(genControl.getDefaultValue());
+        controlResponse.setApiLkValue(genControl.getApiLkValue());
         controlResponse.setPattern(genControl.getPattern());
         controlResponse.setCreatedBy(getActionUser(genControl.getCreatedBy()));
         controlResponse.setUpdatedBy(getActionUser(genControl.getUpdatedBy()));

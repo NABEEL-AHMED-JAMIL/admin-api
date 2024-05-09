@@ -122,6 +122,7 @@ public class DynamicFormService {
             dynamicControl.setSelectMenuOptions(this.getGLookup((Map<String, Object>) this.lookupDataCacheService
                 .fetchLookupDataByLookupType(new LookupDataRequest(genCntLinkGenSct.getGenControl().getFieldLkValue())).getData()));
         }
+        dynamicControl.setApiLkValue(genCntLinkGenSct.getGenControl().getApiLkValue());
         this.addValidation(dynamicControl, genCntLinkGenSct.getGenControl());
         return dynamicControl;
     }
