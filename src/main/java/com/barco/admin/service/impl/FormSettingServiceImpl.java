@@ -1173,8 +1173,10 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         List<SectionResponse> sectionResponses = result.stream().map(genSection -> {
             SectionResponse sectionResponse = getSectionResponse(genSection);
-            sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository.countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
-            sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository.countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
+            sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository
+                .countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
+            sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository
+                .countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
             return sectionResponse;
         }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sectionResponses);
@@ -1703,6 +1705,9 @@ public class FormSettingServiceImpl implements FormSettingService {
             this.genControlRepository.findAllByIdIn(payload.getIds())
             .stream().map(genControl -> {
                 genControl.setStatus(APPLICATION_STATUS.DELETE);
+                if (!BarcoUtil.isNull(genControl.getGenControlLinkGenSections())) {
+                    this.actionOnGenControlLinkGenSections(genControl, appUser.get());
+                }
                 return genControl;
             }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);

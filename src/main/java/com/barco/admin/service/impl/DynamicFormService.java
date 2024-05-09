@@ -110,6 +110,7 @@ public class DynamicFormService {
         dynamicControl.setLabel(genCntLinkGenSct.getGenControl().getFieldTitle());
         dynamicControl.setName(genCntLinkGenSct.getGenControl().getFieldName() + "-" +
             genCntLinkGenSct.getGenControl().getId()+"-"+genCntLinkGenSct.getGenSection().getId());
+        dynamicControl.setPattern(genCntLinkGenSct.getGenControl().getPattern());
         if (dynamicControl.getType().getLookupCode().equals(FIELD_TYPE.MULTI_SELECT.getLookupCode())) {
             dynamicControl.setValue(!BarcoUtil.isBlank(genCntLinkGenSct.getGenControl().getDefaultValue())
                 ? genCntLinkGenSct.getGenControl().getDefaultValue().split(","): new Object[]{});
@@ -138,19 +139,34 @@ public class DynamicFormService {
         }
         if (!BarcoUtil.isNull(genControl.getMinLength())) {
             dynamicValidations.add(new IDynamicValidation(ErrorAssosiation.MIN_LENGTH.getAssosiation(),
-                String.format("%s min length.", dynamicControl.getLabel()), String.valueOf(genControl.getMinLength())));
+                String.format("%s min %s length.", dynamicControl.getLabel(), genControl.getMinLength()),
+                    String.valueOf(genControl.getMinLength())));
         }
         if (!BarcoUtil.isNull(genControl.getMaxLength())) {
             dynamicValidations.add(new IDynamicValidation(ErrorAssosiation.MAX_LENGTH.getAssosiation(),
-                String.format("%s max length.", dynamicControl.getLabel()), String.valueOf(genControl.getMaxLength())));
+                String.format("%s max %s length.", dynamicControl.getLabel(), genControl.getMaxLength()),
+                    String.valueOf(genControl.getMaxLength())));
         }
-        if (!BarcoUtil.isNull(genControl.getPattern())) {
+        if (patternNotRequiredFiled(genControl) && !BarcoUtil.isNull(genControl.getPattern())) {
             dynamicValidations.add(new IDynamicValidation(ErrorAssosiation.PATTERN.getAssosiation(),
                 String.format("%s not match with pattern.", dynamicControl.getLabel()), genControl.getPattern()));
         }
-        if (dynamicValidations.size() > 0) {
-            dynamicControl.setValidators(dynamicValidations);
+        dynamicControl.setValidators(dynamicValidations);
+    }
+
+    /**
+     * Method use to check the pattern not required field
+     * @param genControl
+     * @return boolean
+     * */
+    private boolean patternNotRequiredFiled(GenControl genControl) {
+        if (genControl.getFieldType().equals(FIELD_TYPE.DATE) ||
+            genControl.getFieldType().equals(FIELD_TYPE.MONTH) ||
+            genControl.getFieldType().equals(FIELD_TYPE.YEAR) ||
+            genControl.getFieldType().equals(FIELD_TYPE.WEEK)) {
+            return false;
         }
+        return true;
     }
 
     /**
