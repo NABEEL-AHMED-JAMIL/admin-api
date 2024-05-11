@@ -23,7 +23,6 @@ import com.barco.model.util.lookup.IS_DEFAULT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -34,7 +33,6 @@ import java.util.stream.Collectors;
  * @author Nabeel Ahmed
  * dynamic form
  */
-@Service
 public class DynamicFormService {
 
     private Logger logger = LoggerFactory.getLogger(DynamicFormService.class);
@@ -108,8 +106,7 @@ public class DynamicFormService {
             .getChildLookupDataByParentLookupTypeAndChildLookupCode(FIELD_TYPE.getName(),
                 genCntLinkGenSct.getGenControl().getFieldType().getLookupCode())));
         dynamicControl.setLabel(genCntLinkGenSct.getGenControl().getFieldTitle());
-        dynamicControl.setName(genCntLinkGenSct.getGenControl().getFieldName() + "-" +
-            genCntLinkGenSct.getGenControl().getId()+"-"+genCntLinkGenSct.getGenSection().getId());
+        dynamicControl.setName(genCntLinkGenSct.getGenControl().getFieldName());
         dynamicControl.setPattern(genCntLinkGenSct.getGenControl().getPattern());
         if (dynamicControl.getType().getLookupCode().equals(FIELD_TYPE.MULTI_SELECT.getLookupCode())) {
             dynamicControl.setValue(!BarcoUtil.isBlank(genCntLinkGenSct.getGenControl().getDefaultValue())

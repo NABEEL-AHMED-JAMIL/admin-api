@@ -28,21 +28,6 @@ public class PlayGroundRestApi {
     private PlayGroundService playGroundService;
 
     /**
-     * @apiName :- fetchPlayGroundData
-     * @apiNote :- Api use to add form in play ground
-     * @return ResponseEntity<?>
-     * */
-    @RequestMapping(value = "/fetchPlayGroundData", method = RequestMethod.GET)
-    public ResponseEntity<?> fetchPlayGroundData() {
-        try {
-            return new ResponseEntity<>(this.playGroundService.fetchPlayGroundData(), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while fetchPlayGroundData ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
      * @apiName :- fetchAllFormForPlayGround
      * @apiNote :- Api use to add form in play ground
      * @return ResponseEntity<?>
