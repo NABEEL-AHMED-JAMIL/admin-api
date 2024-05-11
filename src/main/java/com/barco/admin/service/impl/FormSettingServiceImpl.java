@@ -1173,8 +1173,10 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         List<SectionResponse> sectionResponses = result.stream().map(genSection -> {
             SectionResponse sectionResponse = getSectionResponse(genSection);
-            sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository.countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
-            sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository.countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
+            sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository
+                .countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
+            sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository
+                .countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
             return sectionResponse;
         }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sectionResponses);
@@ -1520,6 +1522,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         genControl.setMandatory(IS_DEFAULT.getByLookupCode(payload.getMandatory()));
         genControl.setIsDefault(IS_DEFAULT.getByLookupCode(payload.getIsDefault()));
         genControl.setDefaultValue(payload.getDefaultValue());
+        genControl.setApiLkValue(payload.getApiLkValue());
         genControl.setPattern(payload.getPattern());
         genControl.setStatus(APPLICATION_STATUS.ACTIVE);
         genControl.setCreatedBy(adminUser.get());
@@ -1579,6 +1582,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         genControl.get().setMandatory(IS_DEFAULT.getByLookupCode(payload.getMandatory()));
         genControl.get().setIsDefault(IS_DEFAULT.getByLookupCode(payload.getIsDefault()));
         genControl.get().setDefaultValue(payload.getDefaultValue());
+        genControl.get().setApiLkValue(payload.getApiLkValue());
         genControl.get().setPattern(payload.getPattern());
         if (FIELD_TYPE.RADIO.getLookupCode().equals(payload.getFieldType()) ||
             FIELD_TYPE.CHECKBOX.getLookupCode().equals(payload.getFieldType()) ||
@@ -1703,6 +1707,9 @@ public class FormSettingServiceImpl implements FormSettingService {
             this.genControlRepository.findAllByIdIn(payload.getIds())
             .stream().map(genControl -> {
                 genControl.setStatus(APPLICATION_STATUS.DELETE);
+                if (!BarcoUtil.isNull(genControl.getGenControlLinkGenSections())) {
+                    this.actionOnGenControlLinkGenSections(genControl, appUser.get());
+                }
                 return genControl;
             }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
@@ -2286,6 +2293,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             .getChildLookupDataByParentLookupTypeAndChildLookupCode(IS_DEFAULT.getName(),
                 genControl.getIsDefault().getLookupCode())));
         controlResponse.setDefaultValue(genControl.getDefaultValue());
+        controlResponse.setApiLkValue(genControl.getApiLkValue());
         controlResponse.setPattern(genControl.getPattern());
         controlResponse.setCreatedBy(getActionUser(genControl.getCreatedBy()));
         controlResponse.setUpdatedBy(getActionUser(genControl.getUpdatedBy()));
