@@ -85,12 +85,12 @@ public class DashboardSettingRestApi {
      * @return ResponseEntity
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/fetchDashboardSettingByDashboardId", method= RequestMethod.POST)
-    public ResponseEntity<?> fetchDashboardSettingByDashboardId(@RequestBody DashboardSettingRequest payload) {
+    @RequestMapping(value="/fetchDashboardSettingById", method= RequestMethod.POST)
+    public ResponseEntity<?> fetchDashboardSettingById(@RequestBody DashboardSettingRequest payload) {
         try {
-            return new ResponseEntity<>(this.dashboardSettingService.fetchDashboardSettingByDashboardId(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.dashboardSettingService.fetchDashboardSettingById(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while fetchDashboardSettingByDashboardId ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while fetchDashboardSettingById ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }

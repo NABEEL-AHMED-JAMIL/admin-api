@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -248,7 +249,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         }
         Map<String, List<ReportSettingResponse>> reportSettingHashtable = reportSettings.stream()
             .map(reportSetting -> getReportSettingResponse(reportSetting))
-            .collect(Collectors.groupingBy(reportSetting -> reportSetting.getGroupType().getLookupType(), Collectors.toList()));
+            .collect(Collectors.groupingBy(reportSetting -> (String) reportSetting.getGroupType().getLookupValue(), Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, reportSettingHashtable);
     }
 
