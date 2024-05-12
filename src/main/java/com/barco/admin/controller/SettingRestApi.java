@@ -6,6 +6,7 @@ import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.common.utility.XmlOutTagInfoUtil;
 import com.barco.model.dto.request.QueryRequest;
+import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.util.MessageUtil;
 import org.slf4j.Logger;
@@ -37,6 +38,22 @@ public class SettingRestApi {
     private SettingService settingService;
     @Autowired
     private XmlOutTagInfoUtil xmlOutTagInfoUtil;
+
+    /**
+     * @apiName :- fetchSettingDashboard
+     * @apiName :- Api use to fetch the dashboard for admin section
+     * @return ResponseEntity<?>
+     * */
+    @RequestMapping(value="/fetchSettingDashboard", method=RequestMethod.POST)
+    public ResponseEntity<?> fetchSettingDashboard(@RequestBody SessionUser sessionUser) {
+        try {
+            return new ResponseEntity<>(this.settingService.fetchSettingDashboard(sessionUser), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchSettingDashboard ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
 
     /**
      * @apiName :- dynamicQueryResponse
