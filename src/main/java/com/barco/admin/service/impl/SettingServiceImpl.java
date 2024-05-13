@@ -71,6 +71,8 @@ public class SettingServiceImpl implements SettingService {
             appUser.get().getId())));
         settingDashboard.put("SERVICE_SETTING_STATISTICS", this.queryService.executeQueryResponse(String.format(QueryService.SERVICE_SETTING_STATISTICS,
             appUser.get().getId(), appUser.get().getId(), appUser.get().getId())));
+        settingDashboard.put("SESSION_COUNT_STATISTICS", this.queryService.executeQueryResponse(String.format(QueryService.SESSION_COUNT_STATISTICS,
+                appUser.get().getId(), appUser.get().getId(), appUser.get().getId())));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, settingDashboard);
     }
 

@@ -10,7 +10,6 @@ import java.io.ByteArrayOutputStream;
  */
 public interface SettingService extends RootService {
 
-
     public AppResponse fetchSettingDashboard(SessionUser principal);
 
     public AppResponse dynamicQueryResponse(QueryRequest payload);
