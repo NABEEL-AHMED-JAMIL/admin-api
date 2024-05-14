@@ -339,7 +339,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else {
             sourceTaskTypeResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.get().getApiTaskType(), this.lookupDataCacheService));
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, payload);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sourceTaskTypeResponse);
     }
 
     /***

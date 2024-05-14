@@ -32,7 +32,7 @@ public class PlayGroundRestApi {
      * @apiNote :- Api use to add form in play ground
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchAllFormForPlayGround", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllFormForPlayGround(@RequestBody PlayGroundRequest payload) {
         try {
@@ -48,7 +48,7 @@ public class PlayGroundRestApi {
      * @apiNote :- Api use to add form in play ground
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(value = "/fetchFormForPlayGroundByFormId", method = RequestMethod.POST)
     public ResponseEntity<?> fetchFormForPlayGroundByFormId(@RequestBody PlayGroundRequest payload) {
         try {
@@ -58,7 +58,5 @@ public class PlayGroundRestApi {
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
-
-
 
 }
