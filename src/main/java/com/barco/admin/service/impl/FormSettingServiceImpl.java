@@ -65,6 +65,8 @@ public class FormSettingServiceImpl implements FormSettingService {
     @Autowired
     private ApiTaskTypeRepository apiTaskTypeRepository;
     @Autowired
+    private SourceTaskRepository sourceTaskRepository;
+    @Autowired
     private AppUserLinkSourceTaskTypeRepository appUserLinkSourceTaskTypeRepository;
     @Autowired
     private GenFormLinkSourceTaskTypeRepository genFormLinkSourceTaskTypeRepository;
@@ -262,37 +264,55 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
+        if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_ID_MISSING);
         }
         Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
-            payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
+            payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
         if (!sourceTaskType.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
         }
-        sourceTaskType.get().setUpdatedBy(adminUser.get());
+        sourceTaskType.get().setUpdatedBy(appUser.get());
         sourceTaskType.get().setStatus(APPLICATION_STATUS.DELETE);
         // delete api task type
         if (!BarcoUtil.isNull(sourceTaskType.get().getApiTaskType())) {
             sourceTaskType.get().getApiTaskType().setStatus(APPLICATION_STATUS.DELETE);
-            sourceTaskType.get().getApiTaskType().setUpdatedBy(adminUser.get());
+            sourceTaskType.get().getApiTaskType().setUpdatedBy(appUser.get());
         } else if (!BarcoUtil.isNull(sourceTaskType.get().getKafkaTaskType())) {
             sourceTaskType.get().getKafkaTaskType().setStatus(APPLICATION_STATUS.DELETE);
-            sourceTaskType.get().getKafkaTaskType().setUpdatedBy(adminUser.get());
+            sourceTaskType.get().getKafkaTaskType().setUpdatedBy(appUser.get());
         }
         // edit all source task
         if (!BarcoUtil.isNull(sourceTaskType.get().getAppUserLinkSourceTaskTypes())) {
-            this.actionAppUserLinkSourceTaskTypes(sourceTaskType.get(), adminUser.get());
+            this.actionAppUserLinkSourceTaskTypes(sourceTaskType.get(), appUser.get());
         }
         // edit all form
         if (!BarcoUtil.isNull(sourceTaskType.get().getGenFormLinkSourceTaskTypes())) {
-            this.actionGenFormLinkSourceTaskTypes(sourceTaskType.get(), adminUser.get());
+            this.actionGenFormLinkSourceTaskTypes(sourceTaskType.get(), appUser.get());
         }
-        sourceTaskType.get().setUpdatedBy(adminUser.get());
+        // **-> setting null mean we are de-linkin the source task with source task type
+        if (!BarcoUtil.isNull(sourceTaskType.get().getSourceTasks())) {
+            sourceTaskType.get().getSourceTasks().stream()
+                .filter(sourceTask -> !sourceTask.getStatus().equals(APPLICATION_STATUS.DELETE))
+                .map(sourceTask -> {
+                    sourceTask.setSourceTaskType(null);
+                    sourceTask.setUpdatedBy(appUser.get());
+                    if (!BarcoUtil.isNull(sourceTask.getSourceTaskData())) {
+                        sourceTask.getSourceTaskData().stream()
+                        .filter(sourceTaskData -> !sourceTaskData.getStatus().equals(APPLICATION_STATUS.DELETE))
+                        .map(sourceTaskData -> {
+                            sourceTaskData.setStatus(APPLICATION_STATUS.DELETE);
+                            return sourceTaskData;
+                        }).collect(Collectors.toList());
+                    }
+                    return sourceTask;
+                }).collect(Collectors.toList());
+        }
+        sourceTaskType.get().setUpdatedBy(appUser.get());
         this.sourceTaskTypeRepository.save(sourceTaskType.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId().toString()), payload);
     }
@@ -391,8 +411,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                 } else if (!BarcoUtil.isNull(sourceTaskType.getApiTaskType())) {
                     sttResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.getApiTaskType(), this.lookupDataCacheService));
                 }
-                // pending till task part implement
-                sttResponse.setTotalTask(0l);
+                sttResponse.setTotalTask(this.sourceTaskRepository.countBySourceTaskTypeAndStatusNot(sourceTaskType, APPLICATION_STATUS.DELETE));
                 sttResponse.setTotalForm(this.genFormLinkSourceTaskTypeRepository.countBySourceTaskTypeAndStatusNot(
                     sourceTaskType, APPLICATION_STATUS.DELETE));
                 return sttResponse;

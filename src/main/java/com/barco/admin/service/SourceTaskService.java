@@ -1,5 +1,6 @@
 package com.barco.admin.service;
 
+import com.barco.model.dto.request.STTRequest;
 import com.barco.model.dto.request.SourceTaskRequest;
 import com.barco.model.dto.response.AppResponse;
 
@@ -19,5 +20,7 @@ public interface SourceTaskService extends RootService {
     public AppResponse fetchAllSourceTask(SourceTaskRequest payload) throws Exception;
 
     public AppResponse fetchSourceTaskById(SourceTaskRequest payload) throws Exception;
+
+    public AppResponse fetchAllSTT(STTRequest payload) throws Exception;
 
 }
