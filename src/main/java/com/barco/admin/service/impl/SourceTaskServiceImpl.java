@@ -2,6 +2,7 @@ package com.barco.admin.service.impl;
 
 import com.barco.admin.service.SourceTaskService;
 import com.barco.common.utility.BarcoUtil;
+import com.barco.model.dto.request.STTRequest;
 import com.barco.model.dto.request.SourceTaskRequest;
 import com.barco.model.dto.response.*;
 import com.barco.model.pojo.AppUser;
@@ -12,6 +13,8 @@ import com.barco.model.repository.SourceTaskRepository;
 import com.barco.model.repository.SourceTaskTypeRepository;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
+import com.barco.model.util.lookup.GLookup;
+import com.barco.model.util.lookup.TASK_TYPE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -256,6 +259,34 @@ public class SourceTaskServiceImpl implements SourceTaskService {
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sourceTaskResponse);
     }
 
+    @Override
+    public AppResponse fetchAllSTT(STTRequest payload) throws Exception {
+        logger.info("Request fetchAllSTT :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        List<SourceTaskType> result = this.sourceTaskTypeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
+            appUser.get(), APPLICATION_STATUS.DELETE);
+        if (result.isEmpty()) {
+            return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
+        }
+        List<STTListResponse> sttListResponses = result.stream()
+            .map(sourceTaskType -> {
+                STTListResponse sttResponse = new STTListResponse();
+                sttResponse.setId(sourceTaskType.getId());
+                sttResponse.setServiceName(sourceTaskType.getServiceName());
+                sttResponse.setDescription(sourceTaskType.getDescription());
+                sttResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTaskType.getStatus().getLookupType()));
+                return sttResponse;
+            }).collect(Collectors.toList());
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sttListResponses);
+    }
+
     /**
      * Method use to convert the source task to source task response
      * @param sourceTask
@@ -275,7 +306,7 @@ public class SourceTaskServiceImpl implements SourceTaskService {
             SourceTaskTypeResponse sourceTaskTypeResponse = new SourceTaskTypeResponse();
             sourceTaskTypeResponse.setId(sourceTask.getSourceTaskType().getId());
             sourceTaskTypeResponse.setServiceName(sourceTask.getSourceTaskType().getServiceName());
-            sourceTaskResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTask.getStatus().getLookupType()));
+            sourceTaskTypeResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTask.getStatus().getLookupType()));
             sourceTaskResponse.setSourceTaskType(sourceTaskTypeResponse);
         }
         return sourceTaskResponse;

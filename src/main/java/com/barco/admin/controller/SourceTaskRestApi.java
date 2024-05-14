@@ -3,6 +3,7 @@ package com.barco.admin.controller;
 import com.barco.admin.service.SourceTaskService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
+import com.barco.model.dto.request.STTRequest;
 import com.barco.model.dto.request.SourceTaskRequest;
 import com.barco.model.dto.response.AppResponse;
 import org.slf4j.Logger;
@@ -126,6 +127,23 @@ public class SourceTaskRestApi {
             return new ResponseEntity<>(this.sourceTaskService.fetchSourceTaskById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchSourceTaskById ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- fetchAllSTT
+     * @apiNote :- Api use to fetch stt(source task type)
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value = "/fetchAllSTT", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllSTT(@RequestBody STTRequest payload) {
+        try {
+            return new ResponseEntity<>(this.sourceTaskService.fetchAllSTT(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllSTT ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
