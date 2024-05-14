@@ -105,7 +105,7 @@ public class ReportSettingRestApi {
     @RequestMapping(value="/fetchAllReportByGroup", method= RequestMethod.POST)
     public ResponseEntity<?> fetchAllReportByGroup(@RequestBody ReportSettingRequest payload) {
         try {
-            return new ResponseEntity<>(this.reportSettingService.fetchAllReportSetting(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.reportSettingService.fetchAllReportByGroup(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllReportByGroup ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);

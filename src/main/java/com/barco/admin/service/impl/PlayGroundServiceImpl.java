@@ -5,6 +5,7 @@ import com.barco.common.utility.BarcoUtil;
 import com.barco.model.dto.request.PlayGroundRequest;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.dto.dform.IDynamicForm;
+import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.GenForm;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.GenFormRepository;
@@ -40,11 +41,19 @@ public class PlayGroundServiceImpl extends DynamicFormService implements PlayGro
     @Override
     public AppResponse fetchAllFormForPlayGround(PlayGroundRequest payload) throws Exception {
         logger.info("Request fetchAllFormForPlayGround :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            throw new Exception(MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
+        }
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.genFormRepository.findAllByDateCreatedBetweenAndStatusNotOrderByDateCreatedDesc(
-               startDate, endDate, APPLICATION_STATUS.DELETE).stream()
+            this.genFormRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
+               startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE).stream()
                .map(genForm -> {
                     IDynamicForm dynamicForm = new IDynamicForm();
                     dynamicForm.setId(genForm.getId());
@@ -61,7 +70,16 @@ public class PlayGroundServiceImpl extends DynamicFormService implements PlayGro
     @Override
     public AppResponse fetchFormForPlayGroundByFormId(PlayGroundRequest payload) throws Exception {
         logger.info("Request fetchFormForPlayGroundByFormId :- " + payload);
-        Optional<GenForm> genForm = this.genFormRepository.findByIdAndStatus(payload.getId(), APPLICATION_STATUS.ACTIVE);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            throw new Exception(MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
+        }
+        Optional<GenForm> genForm = this.genFormRepository.findByIdAndCreatedByAndStatus(
+            payload.getId(), adminUser.get(), APPLICATION_STATUS.ACTIVE);
         if (!genForm.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
         }

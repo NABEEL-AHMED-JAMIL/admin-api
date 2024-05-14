@@ -166,8 +166,8 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchDashboardSettingByDashboardId(DashboardSettingRequest payload) throws Exception {
-        logger.info("Request fetchDashboardSettingByDashboardId :- " + payload);
+    public AppResponse fetchDashboardSettingById(DashboardSettingRequest payload) throws Exception {
+        logger.info("Request fetchDashboardSettingById :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -222,7 +222,7 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
                     DASHBOARD_TYPE.getName(), Long.valueOf(dashboardSetting.getBoardType().getLookupCode()))));
                 dashboardSettingResponse.setGroupType(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(dashboardSetting.getGroupType())));
                 return dashboardSettingResponse;
-            }).collect(Collectors.groupingBy(dashboardSetting -> dashboardSetting.getGroupType().getLookupType(), Collectors.toList()));
+            }).collect(Collectors.groupingBy(dashboardSetting -> (String) dashboardSetting.getGroupType().getLookupValue(), Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, dashboardSettingHashtable);
     }
 
