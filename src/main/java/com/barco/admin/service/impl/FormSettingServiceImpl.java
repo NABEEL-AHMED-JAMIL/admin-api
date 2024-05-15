@@ -440,17 +440,35 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         this.sourceTaskTypeRepository.saveAll(
             this.sourceTaskTypeRepository.findAllByIdIn(payload.getIds()).stream()
-                .map(getSourceTaskType -> {
+                .map(sourceTaskType -> {
                     // de-link all source task
-                    getSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
-                    getSourceTaskType.setUpdatedBy(appUser.get());
-                    if (!BarcoUtil.isNull(getSourceTaskType.getAppUserLinkSourceTaskTypes())) {
-                        this.actionAppUserLinkSourceTaskTypes(getSourceTaskType, appUser.get());
+                    sourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
+                    sourceTaskType.setUpdatedBy(appUser.get());
+                    if (!BarcoUtil.isNull(sourceTaskType.getAppUserLinkSourceTaskTypes())) {
+                        this.actionAppUserLinkSourceTaskTypes(sourceTaskType, appUser.get());
                     }
-                    if (!BarcoUtil.isNull(getSourceTaskType.getGenFormLinkSourceTaskTypes())) {
-                        this.actionGenFormLinkSourceTaskTypes(getSourceTaskType, appUser.get());
+                    if (!BarcoUtil.isNull(sourceTaskType.getGenFormLinkSourceTaskTypes())) {
+                        this.actionGenFormLinkSourceTaskTypes(sourceTaskType, appUser.get());
                     }
-                    return getSourceTaskType;
+                    // **-> setting null mean we are de-linkin the source task with source task type
+                    if (!BarcoUtil.isNull(sourceTaskType.getSourceTasks())) {
+                        sourceTaskType.getSourceTasks().stream()
+                            .filter(sourceTask -> !sourceTask.getStatus().equals(APPLICATION_STATUS.DELETE))
+                            .map(sourceTask -> {
+                                sourceTask.setSourceTaskType(null);
+                                sourceTask.setUpdatedBy(appUser.get());
+                                if (!BarcoUtil.isNull(sourceTask.getSourceTaskData())) {
+                                    sourceTask.getSourceTaskData().stream()
+                                    .filter(sourceTaskData -> !sourceTaskData.getStatus().equals(APPLICATION_STATUS.DELETE))
+                                    .map(sourceTaskData -> {
+                                        sourceTaskData.setStatus(APPLICATION_STATUS.DELETE);
+                                        return sourceTaskData;
+                                    }).collect(Collectors.toList());
+                                }
+                                return sourceTask;
+                            }).collect(Collectors.toList());
+                    }
+                    return sourceTaskType;
                 }).collect(Collectors.toList())
         );
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);

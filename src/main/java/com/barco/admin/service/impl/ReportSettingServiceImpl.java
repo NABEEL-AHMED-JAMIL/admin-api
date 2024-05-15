@@ -8,6 +8,7 @@ import com.barco.model.dto.response.AppResponse;
 import com.barco.model.dto.response.ReportSettingResponse;
 import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.GenForm;
+import com.barco.model.pojo.LookupData;
 import com.barco.model.pojo.ReportSetting;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.GenFormRepository;
@@ -91,6 +92,10 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         }
         ReportSetting reportSetting = new ReportSetting();
         reportSetting = getReportSetting(payload, reportSetting);
+        Optional<LookupData> groupType = this.lookupDataRepository.findByLookupType(payload.getGroupType());
+        if (groupType.isPresent()) {
+            reportSetting.setGroupType(groupType.get());
+        }
         if (genForm.isPresent()) {
             reportSetting.setGenForm(genForm.get());
         }
@@ -158,6 +163,10 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         reportSetting.get().setUpdatedBy(adminUser.get());
         if (!BarcoUtil.isNull(payload.getStatus())) {
             reportSetting.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+        }
+        Optional<LookupData> groupType = this.lookupDataRepository.findByLookupType(payload.getGroupType());
+        if (groupType.isPresent()) {
+            reportSetting.get().setGroupType(groupType.get());
         }
         this.reportSettingRepository.save(getReportSetting(payload, reportSetting.get()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()));
@@ -248,6 +257,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             reportSettings = this.reportSettingRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE);
         }
         Map<String, List<ReportSettingResponse>> reportSettingHashtable = reportSettings.stream()
+            .filter(reportSetting -> !BarcoUtil.isNull(reportSetting.getGroupType()) && reportSetting.getStatus().equals(APPLICATION_STATUS.ACTIVE))
             .map(reportSetting -> getReportSettingResponse(reportSetting))
             .collect(Collectors.groupingBy(reportSetting -> (String) reportSetting.getGroupType().getLookupValue(), Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, reportSettingHashtable);
@@ -314,7 +324,11 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         ReportSettingResponse reportSettingResponse = new ReportSettingResponse();
         reportSettingResponse.setId(reportSetting.getId());
         reportSettingResponse.setName(reportSetting.getName());
-        reportSettingResponse.setGroupType(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getGroupType())));
+        if (!BarcoUtil.isNull(reportSetting.getGroupType())) {
+            LookupData lookupData = reportSetting.getGroupType();
+            reportSettingResponse.setGroupType(new GLookup(lookupData.getLookupType(),
+                lookupData.getLookupCode().toString(), lookupData.getLookupValue()));
+        }
         reportSettingResponse.setDescription(reportSetting.getDescription());
         reportSettingResponse.setPayloadRef(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
             PAYLOAD_REF.getName(), Long.valueOf(reportSetting.getPayloadRef().getLookupCode()))));

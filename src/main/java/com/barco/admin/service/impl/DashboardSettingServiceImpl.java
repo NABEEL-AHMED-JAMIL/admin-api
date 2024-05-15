@@ -8,6 +8,7 @@ import com.barco.model.dto.response.AppResponse;
 import com.barco.model.dto.response.DashboardSettingResponse;
 import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.DashboardSetting;
+import com.barco.model.pojo.LookupData;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.DashboardSettingRepository;
 import com.barco.model.repository.LookupDataRepository;
@@ -71,7 +72,12 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         } else if (BarcoUtil.isNull(payload.getIframe())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.DASHBOARD_IFRAME_MISSING);
         }
-        DashboardSetting dashboardSetting = this.dashboardSettingRepository.save(getDashboardSetting(payload, adminUser.get()));
+        DashboardSetting dashboardSetting = getDashboardSetting(payload, adminUser.get());
+        dashboardSetting = this.dashboardSettingRepository.save(dashboardSetting);
+        Optional<LookupData> groupType = this.lookupDataRepository.findByLookupType(payload.getGroupType());
+        if (groupType.isPresent()) {
+            dashboardSetting.setGroupType(groupType.get());
+        }
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, dashboardSetting.getId().toString()));
     }
 
@@ -111,7 +117,10 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.DASHBOARD_NOT_FOUND);
         }
         dashboardSetting.get().setName(payload.getName());
-        dashboardSetting.get().setGroupType(payload.getGroupType());
+        Optional<LookupData> groupType = this.lookupDataRepository.findByLookupType(payload.getGroupType());
+        if (groupType.isPresent()) {
+            dashboardSetting.get().setGroupType(groupType.get());
+        }
         dashboardSetting.get().setDescription(payload.getDescription());
         dashboardSetting.get().setBoardType(DASHBOARD_TYPE.getByLookupCode(payload.getBoardType()));
         dashboardSetting.get().setDashboardUrl(payload.getDashboardUrl());
@@ -154,7 +163,11 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
                 DashboardSettingResponse dashboardSettingResponse = getDashboardSettingResponse(dashboardSetting);
                 dashboardSettingResponse.setBoardType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
                     DASHBOARD_TYPE.getName(), Long.valueOf(dashboardSetting.getBoardType().getLookupCode()))));
-                dashboardSettingResponse.setGroupType(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(dashboardSetting.getGroupType())));
+                if (!BarcoUtil.isNull(dashboardSetting.getGroupType())) {
+                    LookupData lookupData = dashboardSetting.getGroupType();
+                    dashboardSettingResponse.setGroupType(new GLookup(lookupData.getLookupType(),
+                        lookupData.getLookupCode().toString(), lookupData.getLookupValue()));
+                }
                 return dashboardSettingResponse;
             }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, dashboardSettingResponses);
@@ -186,7 +199,11 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         DashboardSettingResponse dashboardSettingResponse = getDashboardSettingResponse(dashboardSetting.get());
         dashboardSettingResponse.setBoardType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
             DASHBOARD_TYPE.getName(), Long.valueOf(dashboardSetting.get().getBoardType().getLookupCode()))));
-        dashboardSettingResponse.setGroupType(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(dashboardSetting.get().getGroupType())));
+        if (!BarcoUtil.isNull(dashboardSetting.get().getGroupType())) {
+            LookupData lookupData = dashboardSetting.get().getGroupType();
+            dashboardSettingResponse.setGroupType(new GLookup(lookupData.getLookupType(),
+                lookupData.getLookupCode().toString(), lookupData.getLookupValue()));
+        }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, dashboardSettingResponse);
     }
 
@@ -215,12 +232,15 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         } else {
             dashboardSettings = this.dashboardSettingRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE);
         }
-        Map<String, List<DashboardSettingResponse>> dashboardSettingHashtable = dashboardSettings
-            .stream().map(dashboardSetting -> {
+        Map<String, List<DashboardSettingResponse>> dashboardSettingHashtable = dashboardSettings.stream()
+            .filter(dashboardSetting -> !BarcoUtil.isNull(dashboardSetting.getGroupType()) && dashboardSetting.getStatus().equals(APPLICATION_STATUS.ACTIVE))
+            .map(dashboardSetting -> {
                 DashboardSettingResponse dashboardSettingResponse = getDashboardSettingResponse(dashboardSetting);
                 dashboardSettingResponse.setBoardType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
                     DASHBOARD_TYPE.getName(), Long.valueOf(dashboardSetting.getBoardType().getLookupCode()))));
-                dashboardSettingResponse.setGroupType(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(dashboardSetting.getGroupType())));
+                    LookupData lookupData = dashboardSetting.getGroupType();
+                    dashboardSettingResponse.setGroupType(new GLookup(lookupData.getLookupType(),
+                        lookupData.getLookupCode().toString(), lookupData.getLookupValue()));
                 return dashboardSettingResponse;
             }).collect(Collectors.groupingBy(dashboardSetting -> (String) dashboardSetting.getGroupType().getLookupValue(), Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, dashboardSettingHashtable);
