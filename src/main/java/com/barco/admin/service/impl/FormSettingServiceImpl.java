@@ -391,29 +391,26 @@ public class FormSettingServiceImpl implements FormSettingService {
                 sttResponse.setId(sourceTaskType.getId());
                 sttResponse.setServiceName(sourceTaskType.getServiceName());
                 sttResponse.setDescription(sourceTaskType.getDescription());
-                sttResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTaskType.getStatus().getLookupType()));
-                sttResponse.setCreatedBy(getActionUser(sourceTaskType.getCreatedBy()));
-                sttResponse.setUpdatedBy(getActionUser(sourceTaskType.getUpdatedBy()));
-                sttResponse.setDateUpdated(sourceTaskType.getDateUpdated());
-                sttResponse.setDateCreated(sourceTaskType.getDateCreated());
-                sttResponse.setTaskType(GLookup.getGLookup(this.lookupDataCacheService
-                    .getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                        TASK_TYPE.getName(), sourceTaskType.getTaskType().getLookupCode())));
+                sttResponse.setTaskType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+                    TASK_TYPE.getName(), sourceTaskType.getTaskType().getLookupCode())));
                 if (!BarcoUtil.isNull(sourceTaskType.getCredential())) {
                     CredentialResponse credentialResponse = new CredentialResponse();
                     credentialResponse.setId(sourceTaskType.getCredential().getId());
                     credentialResponse.setName(sourceTaskType.getCredential().getName());
                     sttResponse.setCredential(credentialResponse);
                 }
-                if (sourceTaskType.getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode())
-                    && !BarcoUtil.isNull(sourceTaskType.getKafkaTaskType())) {
+                if (sourceTaskType.getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode()) && !BarcoUtil.isNull(sourceTaskType.getKafkaTaskType())) {
                     sttResponse.setKafkaTaskType(getKafkaTaskTypeResponse(sourceTaskType.getKafkaTaskType()));
                 } else if (!BarcoUtil.isNull(sourceTaskType.getApiTaskType())) {
                     sttResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.getApiTaskType(), this.lookupDataCacheService));
                 }
                 sttResponse.setTotalTask(this.sourceTaskRepository.countBySourceTaskTypeAndStatusNot(sourceTaskType, APPLICATION_STATUS.DELETE));
-                sttResponse.setTotalForm(this.genFormLinkSourceTaskTypeRepository.countBySourceTaskTypeAndStatusNot(
-                    sourceTaskType, APPLICATION_STATUS.DELETE));
+                sttResponse.setTotalForm(this.genFormLinkSourceTaskTypeRepository.countBySourceTaskTypeAndStatusNot(sourceTaskType, APPLICATION_STATUS.DELETE));
+                sttResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTaskType.getStatus().getLookupType()));
+                sttResponse.setCreatedBy(getActionUser(sourceTaskType.getCreatedBy()));
+                sttResponse.setUpdatedBy(getActionUser(sourceTaskType.getUpdatedBy()));
+                sttResponse.setDateUpdated(sourceTaskType.getDateUpdated());
+                sttResponse.setDateCreated(sourceTaskType.getDateCreated());
                 return sttResponse;
             }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sttListResponses);
@@ -498,8 +495,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_FORM_LINK_STT,
-            sourceTaskType.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), APPLICATION_STATUS.DELETE.getLookupCode(),
-            FORM_TYPE.SERVICE_FORM.getLookupCode(), appUser.get().getId()));
+            sourceTaskType.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), FORM_TYPE.SERVICE_FORM.getLookupCode(), appUser.get().getId()));
         List<SourceTaskTypeLinkFormResponse> sourceTaskTypeLinkFormResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -521,7 +517,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-                payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getAction())) {
@@ -529,7 +525,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         if (payload.getAction().equals(ACTION.LINK)) {
             if (BarcoUtil.isNull(payload.getId())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_ID_MISSING);
             } else if (BarcoUtil.isNull(payload.getFormId()) && payload.getFormId().size() > 0) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
             }
@@ -547,7 +543,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                     GenFormLinkSourceTaskType genFormLinkSourceTaskType = new GenFormLinkSourceTaskType();
                     genFormLinkSourceTaskType.setGenForm(getForm);
                     genFormLinkSourceTaskType.setSourceTaskType(sourceTaskType.get());
-                    if (getForm.getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
+                    if (sourceTaskType.get().getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
                         getForm.getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
                         genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
                     } else {
@@ -563,8 +559,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_LINK_STT_MISSING);
         }
         this.genFormLinkSourceTaskTypeRepository.saveAll(
-            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(payload.getSttLinkForm(), APPLICATION_STATUS.DELETE).stream()
-                .map(genFormLinkSourceTaskType -> {
+            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(payload.getSttLinkForm(), APPLICATION_STATUS.DELETE)
+                .stream().map(genFormLinkSourceTaskType -> {
                     genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
                     genFormLinkSourceTaskType.setUpdatedBy(appUser.get());
                     return genFormLinkSourceTaskType;
@@ -596,7 +592,10 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         GenForm genForm = new GenForm();
         genForm.setFormName(payload.getFormName());
-        genForm.setHomePage(payload.getHomePage());
+        Optional<LookupData> homePage = this.lookupDataRepository.findByLookupType(payload.getHomePage());
+        if (homePage.isPresent()) {
+            genForm.setHomePage(homePage.get());
+        }
         genForm.setDescription(payload.getDescription());
         genForm.setFormType(FORM_TYPE.getByLookupCode(payload.getFormType()));
         if (!BarcoUtil.isNull(payload.getServiceId())) {
@@ -639,11 +638,14 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
         }
         genForm.get().setFormName(payload.getFormName());
-        genForm.get().setHomePage(payload.getHomePage());
         genForm.get().setDescription(payload.getDescription());
         genForm.get().setFormType(FORM_TYPE.getByLookupCode(payload.getFormType()));
         if (!BarcoUtil.isNull(payload.getServiceId())) {
             genForm.get().setServiceId(payload.getServiceId());
+        }
+        Optional<LookupData> homePage = this.lookupDataRepository.findByLookupType(payload.getHomePage());
+        if (homePage.isPresent()) {
+            genForm.get().setHomePage(homePage.get());
         }
         if (!BarcoUtil.isNull(payload.getStatus())) {
             genForm.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
@@ -749,10 +751,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         List<FormResponse> formResponses = result.stream()
             .map(genForm -> {
                 FormResponse formResponse = getFormResponse(genForm);
-                formResponse.setTotalStt(this.genFormLinkSourceTaskTypeRepository
-                    .countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
-                formResponse.setTotalSection(this.genSectionLinkGenFormRepository
-                    .countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
+                formResponse.setTotalStt(this.genFormLinkSourceTaskTypeRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
+                formResponse.setTotalSection(this.genSectionLinkGenFormRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
                 return formResponse;
             }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, formResponses);
@@ -781,7 +781,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (result.isEmpty()) {
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
         }
-    return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, result.stream()
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, result.stream()
             .map(genForm -> getFormResponse(genForm)).collect(Collectors.toList()));
     }
 
@@ -806,8 +806,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         this.genFormRepository.saveAll(
             this.genFormRepository.findAllByIdIn(payload.getIds()).stream()
                 .map(genForm -> {
-                    genForm.setStatus(APPLICATION_STATUS.DELETE);
                     genForm.setUpdatedBy(appUser.get());
+                    genForm.setStatus(APPLICATION_STATUS.DELETE);
                     if (!BarcoUtil.isNull(genForm.getGenFormLinkSourceTaskTypes())) {
                         this.actionOnGenFormLinkSourceTaskTypes(genForm, appUser.get());
                     }
@@ -842,12 +842,12 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
         }
         Optional<GenForm> getForm = this.genFormRepository.findByIdAndCreatedByAndStatusNot(
-                payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
+            payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
         if (!getForm.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_STT_LINK_FORM,
-            getForm.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
+            getForm.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
         List<FormLinkSourceTaskTypeResponse> formLinkSourceTaskTypeResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -945,7 +945,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_SECTION_LINK_FORM,
-            getForm.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
+            getForm.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
         List<FormLinkSectionResponse> formLinkSectionResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -1210,10 +1210,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         List<SectionResponse> sectionResponses = result.stream().map(genSection -> {
             SectionResponse sectionResponse = getSectionResponse(genSection);
-            sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository
-                .countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
-            sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository
-                .countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
+            sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository.countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
+            sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository.countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
             return sectionResponse;
         }).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sectionResponses);
@@ -1276,7 +1274,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_NOT_FOUND);
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_SECTION_LINK_CONTROLS,
-            genSection.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
+            genSection.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
         List<SectionLinkControlResponse> sectionLinkControlResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -1328,7 +1326,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                     genControlLinkGenSection.setControlOrder(0l); // default order set
                     genControlLinkGenSection.setFieldWidth(0l); // default order set
                     if (getSection.get().getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
-                            getControl.getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
+                        getControl.getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
                         genControlLinkGenSection.setStatus(APPLICATION_STATUS.ACTIVE);
                     } else {
                         genControlLinkGenSection.setStatus(APPLICATION_STATUS.INACTIVE);
@@ -1410,7 +1408,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_NOT_FOUND);
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_FORM_LINK_SECTION,
-            genSection.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
+            genSection.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
         List<SectionLinkFormResponse> sectionLinkFormRespons = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -1554,7 +1552,12 @@ public class FormSettingServiceImpl implements FormSettingService {
             FIELD_TYPE.CHECKBOX.getLookupCode().equals(payload.getFieldType()) ||
             FIELD_TYPE.SELECT.getLookupCode().equals(payload.getFieldType()) ||
             FIELD_TYPE.MULTI_SELECT.getLookupCode().equals(payload.getFieldType())) {
-            genControl.setFieldLkValue(payload.getFieldLkValue());
+            if (!BarcoUtil.isNull(payload.getFieldLkValue())) {
+                Optional<LookupData> fieldLkValue = this.lookupDataRepository.findByLookupType(payload.getFieldLkValue());
+                if (fieldLkValue.isPresent()) {
+                    genControl.setFieldLkValue(fieldLkValue.get());
+                }
+            }
         }
         genControl.setMandatory(IS_DEFAULT.getByLookupCode(payload.getMandatory()));
         genControl.setIsDefault(IS_DEFAULT.getByLookupCode(payload.getIsDefault()));
@@ -1625,7 +1628,10 @@ public class FormSettingServiceImpl implements FormSettingService {
             FIELD_TYPE.CHECKBOX.getLookupCode().equals(payload.getFieldType()) ||
             FIELD_TYPE.SELECT.getLookupCode().equals(payload.getFieldType()) ||
             FIELD_TYPE.MULTI_SELECT.getLookupCode().equals(payload.getFieldType())) {
-            genControl.get().setFieldLkValue(payload.getFieldLkValue());
+            Optional<LookupData> fieldLkValue = this.lookupDataRepository.findByLookupType(payload.getFieldLkValue());
+            if (fieldLkValue.isPresent()) {
+                genControl.get().setFieldLkValue(fieldLkValue.get());
+            }
         }
         if (!BarcoUtil.isNull(payload.getStatus())) {
             genControl.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
@@ -1776,7 +1782,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_NOT_FOUND);
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_CONTROLS_LINK_SECTION,
-            genControl.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
+            genControl.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
         List<ControlLinkSectionResponse> controlLinkSectionResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -1942,7 +1948,9 @@ public class FormSettingServiceImpl implements FormSettingService {
                 List<String> dataCellValue = new ArrayList<>();
                 dataCellValue.add(genForm.getFormName());
                 dataCellValue.add(genForm.getFormType().name());
-                dataCellValue.add(genForm.getHomePage());
+                if (!BarcoUtil.isNull(genForm.getHomePage())) {
+                    dataCellValue.add(genForm.getHomePage().getLookupType());
+                }
                 dataCellValue.add(genForm.getServiceId());
                 dataCellValue.add(genForm.getDescription());
                 this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
@@ -2027,8 +2035,10 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR,  MessageUtil.YOU_UPLOAD_EMPTY_FILE);
         }
         XSSFSheet sheet = null;
-        if (sttFileUReq.getUploadType().equals(this.bulkExcel.STT) || sttFileUReq.getUploadType().equals(this.bulkExcel.STT_FORM) ||
-            sttFileUReq.getUploadType().equals(this.bulkExcel.STT_SECTION) || sttFileUReq.getUploadType().equals(this.bulkExcel.STT_CONTROL)) {
+        if (sttFileUReq.getUploadType().equals(this.bulkExcel.STT) ||
+            sttFileUReq.getUploadType().equals(this.bulkExcel.STT_FORM) ||
+            sttFileUReq.getUploadType().equals(this.bulkExcel.STT_SECTION) ||
+            sttFileUReq.getUploadType().equals(this.bulkExcel.STT_CONTROL)) {
             sheet = workbook.getSheet(sttFileUReq.getUploadType());
         }
         // target sheet upload limit validation
@@ -2066,8 +2076,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             if (currentRow.getRowNum() == 0) {
                 for (int i=0; i<sheetFiled.getColTitle().size(); i++) {
                     if (!currentRow.getCell(i).getStringCellValue().equals(sheetFiled.getColTitle().get(i))) {
-                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1) + " " +
-                            sheetFiled.getColTitle().get(i) + " heading missing.");
+                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1) +
+                            " " + sheetFiled.getColTitle().get(i) + " heading missing.");
                     }
                 }
             } else if (currentRow.getRowNum() > 0) {
@@ -2091,7 +2101,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                 if (!BarcoUtil.isNull(sttfValidation.getHomePage()) &&
                     !this.lookupDataRepository.findByLookupType(sttfValidation.getHomePage()).isPresent()) {
                     // have to check home page contain in the db or not
-                    sttfValidation.setErrorMsg(String.format("Homepage should not be empty at row %s.<br>", sttfValidation.getRowCounter()));
+                    sttfValidation.setErrorMsg(String.format("Homepage not found at row %s.<br>", sttfValidation.getRowCounter()));
                 }
                 if (!BarcoUtil.isNull(sttfValidation.getErrorMsg())) {
                     errors.add(sttfValidation.getErrorMsg());
@@ -2109,7 +2119,9 @@ public class FormSettingServiceImpl implements FormSettingService {
             genForm.setDescription(sttfValidation.getDescription());
             genForm.setFormType(FORM_TYPE.findEnumByName(sttfValidation.getFormType()));
             genForm.setServiceId(sttfValidation.getServiceId());
-            genForm.setHomePage(sttfValidation.getHomePage());
+            if (!BarcoUtil.isNull(sttfValidation.getHomePage())) {
+                genForm.setHomePage(this.lookupDataRepository.findByLookupType(sttfValidation.getHomePage()).get());
+            }
             genForm.setStatus(APPLICATION_STATUS.ACTIVE);
             genForm.setCreatedBy(appUser);
             genForm.setUpdatedBy(appUser);
@@ -2134,8 +2146,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             if (currentRow.getRowNum() == 0) {
                 for (int i=0; i<sheetFiled.getColTitle().size(); i++) {
                     if (!currentRow.getCell(i).getStringCellValue().equals(sheetFiled.getColTitle().get(i))) {
-                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1) + " " +
-                            sheetFiled.getColTitle().get(i) + " heading missing.");
+                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1)
+                            + " " + sheetFiled.getColTitle().get(i) + " heading missing.");
                     }
                 }
             } else if (currentRow.getRowNum() > 0) {
@@ -2188,8 +2200,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             if (currentRow.getRowNum() == 0) {
                 for (int i=0; i<sheetFiled.getColTitle().size(); i++) {
                     if (!currentRow.getCell(i).getStringCellValue().equals(sheetFiled.getColTitle().get(i))) {
-                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1) + " " +
-                                sheetFiled.getColTitle().get(i) + " heading missing.");
+                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1)
+                            + " " + sheetFiled.getColTitle().get(i) + " heading missing.");
                     }
                 }
             } else if (currentRow.getRowNum() > 0) {
@@ -2220,6 +2232,11 @@ public class FormSettingServiceImpl implements FormSettingService {
                     }
                 }
                 sttcValidation.isValidSTTC();
+                if (!BarcoUtil.isNull(sttcValidation.getFieldLkValue()) &&
+                        !this.lookupDataRepository.findByLookupType(sttcValidation.getFieldLkValue()).isPresent()) {
+                    // have to check home page contain in the db or not
+                    sttcValidation.setErrorMsg(String.format("Filed Lookup not found at row %s.<br>", sttcValidation.getRowCounter()));
+                }
                 if (!BarcoUtil.isNull(sttcValidation.getErrorMsg())) {
                     errors.add(sttcValidation.getErrorMsg());
                     continue;
@@ -2248,7 +2265,9 @@ public class FormSettingServiceImpl implements FormSettingService {
                 FIELD_TYPE.CHECKBOX.name().equals(sttcValidation.getFieldType()) ||
                 FIELD_TYPE.SELECT.name().equals(sttcValidation.getFieldType()) ||
                 FIELD_TYPE.MULTI_SELECT.name().equals(sttcValidation.getFieldType())) {
-                genControl.setFieldLkValue(sttcValidation.getFieldLkValue());
+                if (!BarcoUtil.isNull(sttcValidation.getFieldLkValue())) {
+                    genControl.setFieldLkValue(this.lookupDataRepository.findByLookupType(sttcValidation.getFieldLkValue()).get());
+                }
             }
             genControl.setMandatory(IS_DEFAULT.findEnumByName(sttcValidation.getRequired()));
             genControl.setIsDefault(IS_DEFAULT.NO_DEFAULT);
@@ -2275,7 +2294,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         formResponse.setFormType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
             FORM_TYPE.getName(), genForm.getFormType().getLookupCode())));
         if (!BarcoUtil.isNull(genForm.getHomePage())) {
-            formResponse.setHomePage(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(genForm.getHomePage())));
+            LookupData lookupData = genForm.getHomePage();
+            formResponse.setHomePage(new GLookup(lookupData.getLookupType(), lookupData.getLookupCode(), lookupData.getLookupValue()));
         }
         formResponse.setServiceId(genForm.getServiceId());
         formResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(genForm.getStatus().getLookupType()));
@@ -2322,7 +2342,9 @@ public class FormSettingServiceImpl implements FormSettingService {
         controlResponse.setPlaceHolder(genControl.getPlaceHolder());
         controlResponse.setMinLength(genControl.getMinLength());
         controlResponse.setMaxLength(genControl.getMaxLength());
-        controlResponse.setFieldLkValue(genControl.getFieldLkValue());
+        if (!BarcoUtil.isNull(genControl.getFieldLkValue())) {
+            controlResponse.setFieldLkValue(genControl.getFieldLkValue().getLookupType());
+        }
         controlResponse.setMandatory(GLookup.getGLookup(this.lookupDataCacheService
             .getChildLookupDataByParentLookupTypeAndChildLookupCode(IS_DEFAULT.getName(),
                 genControl.getMandatory().getLookupCode())));
@@ -2407,11 +2429,11 @@ public class FormSettingServiceImpl implements FormSettingService {
      * */
     private void actionOnGenSectionsLinkGenControl(GenSection genSection, AppUser appUser) {
         genSection.getGenControlLinkGenSections().stream()
-            .filter(genGenControlLinkGenSections -> !genGenControlLinkGenSections.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(genGenControlLinkGenSections -> {
-                genGenControlLinkGenSections.setStatus(genSection.getStatus());
-                genGenControlLinkGenSections.setUpdatedBy(appUser);
-                return genGenControlLinkGenSections;
+            .filter(genControlLinkGenSections -> !genControlLinkGenSections.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(genControlLinkGenSections -> {
+                genControlLinkGenSections.setStatus(genSection.getStatus());
+                genControlLinkGenSections.setUpdatedBy(appUser);
+                return genControlLinkGenSections;
             }).collect(Collectors.toList());
     }
 
@@ -2422,11 +2444,11 @@ public class FormSettingServiceImpl implements FormSettingService {
      * */
     private void actionOnGenControlLinkGenSections(GenControl genControl, AppUser appUser) {
         genControl.getGenControlLinkGenSections().stream()
-            .filter(genGenControlLinkGenSections -> !genGenControlLinkGenSections.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(genGenControlLinkGenSections -> {
-                genGenControlLinkGenSections.setStatus(genControl.getStatus());
-                genGenControlLinkGenSections.setUpdatedBy(appUser);
-                return genGenControlLinkGenSections;
+            .filter(genControlLinkGenSections -> !genControlLinkGenSections.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(genControlLinkGenSections -> {
+                genControlLinkGenSections.setStatus(genControl.getStatus());
+                genControlLinkGenSections.setUpdatedBy(appUser);
+                return genControlLinkGenSections;
             }).collect(Collectors.toList());
     }
 

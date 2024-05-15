@@ -13,8 +13,6 @@ import com.barco.model.repository.SourceTaskRepository;
 import com.barco.model.repository.SourceTaskTypeRepository;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
-import com.barco.model.util.lookup.GLookup;
-import com.barco.model.util.lookup.TASK_TYPE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
