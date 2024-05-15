@@ -4,7 +4,6 @@ import com.barco.admin.service.SettingService;
 import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.response.QueryResponse;
 import com.barco.model.pojo.AppUser;
-import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.ByteArrayOutputStream;
-import java.security.Principal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -54,25 +52,26 @@ public class SettingServiceImpl implements SettingService {
         if (BarcoUtil.isNull(sessionUser.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(sessionUser.getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            sessionUser.getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         Map<String, Object> settingDashboard = new HashMap<>();
-        settingDashboard.put("APP_SETTING_STATISTICS", this.queryService.executeQueryResponse(String.format(QueryService.APP_SETTING_STATISTICS,
-            appUser.get().getId(), appUser.get().getId(), appUser.get().getId())));
-        settingDashboard.put("PROFILE_SETTING_STATISTICS", this.queryService.executeQueryResponse(String.format(QueryService.PROFILE_SETTING_STATISTICS,
-            appUser.get().getId(), appUser.get().getId(), appUser.get().getId(), appUser.get().getId())));
-        settingDashboard.put("FORM_SETTING_STATISTICS", this.queryService.executeQueryResponse(String.format(QueryService.FORM_SETTING_STATISTICS,
-            appUser.get().getId(), appUser.get().getId(), appUser.get().getId())));
-        settingDashboard.put("REPORT_SETTING_STATISTICS", this.queryService.executeQueryResponse(String.format(QueryService.REPORT_SETTING_STATISTICS,
-            appUser.get().getId())));
-        settingDashboard.put("DASHBOARD_SETTING_STATISTICS", this.queryService.executeQueryResponse(String.format(QueryService.DASHBOARD_SETTING_STATISTICS,
-            appUser.get().getId())));
-        settingDashboard.put("SERVICE_SETTING_STATISTICS", this.queryService.executeQueryResponse(String.format(QueryService.SERVICE_SETTING_STATISTICS,
-            appUser.get().getId(), appUser.get().getId(), appUser.get().getId())));
-        settingDashboard.put("SESSION_COUNT_STATISTICS", this.queryService.executeQueryResponse(String.format(QueryService.SESSION_COUNT_STATISTICS,
-                appUser.get().getId(), appUser.get().getId(), appUser.get().getId())));
+        settingDashboard.put("APP_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+            String.format(QueryService.APP_SETTING_STATISTICS, appUser.get().getId())));
+        settingDashboard.put("PROFILE_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+            String.format(QueryService.PROFILE_SETTING_STATISTICS, appUser.get().getId())));
+        settingDashboard.put("FORM_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+            String.format(QueryService.FORM_SETTING_STATISTICS, appUser.get().getId())));
+        settingDashboard.put("REPORT_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+            String.format(QueryService.REPORT_SETTING_STATISTICS, appUser.get().getId())));
+        settingDashboard.put("DASHBOARD_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+            String.format(QueryService.DASHBOARD_SETTING_STATISTICS, appUser.get().getId())));
+        settingDashboard.put("SERVICE_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+            String.format(QueryService.SERVICE_SETTING_STATISTICS, appUser.get().getId())));
+        settingDashboard.put("SESSION_COUNT_STATISTICS", this.queryService.executeQueryResponse(
+            String.format(QueryService.SESSION_COUNT_STATISTICS, appUser.get().getId())));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, settingDashboard);
     }
 

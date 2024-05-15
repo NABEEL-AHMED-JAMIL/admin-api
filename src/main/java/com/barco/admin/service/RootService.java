@@ -353,6 +353,7 @@ public interface RootService {
         ProfileResponse profilePermission = new ProfileResponse();
         profilePermission.setId(profile.getId());
         profilePermission.setProfileName(profile.getProfileName());
+        profilePermission.setDescription(profile.getDescription());
         profilePermission.setPermission(profile.getProfilePermissions().stream()
             .filter(permissionOption -> permissionOption.getStatus().equals(APPLICATION_STATUS.ACTIVE))
             .map(permission -> permission.getPermission().getPermissionName())
@@ -944,7 +945,6 @@ public interface RootService {
     public default DashboardSetting getDashboardSetting(DashboardSettingRequest payload, AppUser adminUser) {
         DashboardSetting dashboardSetting = new DashboardSetting();
         dashboardSetting.setName(payload.getName());
-        dashboardSetting.setGroupType(payload.getGroupType());
         dashboardSetting.setDescription(payload.getDescription());
         dashboardSetting.setBoardType(DASHBOARD_TYPE.getByLookupCode(payload.getBoardType()));
         dashboardSetting.setIframe(UI_LOOKUP.getByLookupCode(payload.getIframe()));
@@ -981,7 +981,6 @@ public interface RootService {
      * */
     public default ReportSetting getReportSetting(ReportSettingRequest payload, ReportSetting reportSetting) {
         reportSetting.setName(payload.getName());
-        reportSetting.setGroupType(payload.getGroupType());
         reportSetting.setDescription(payload.getDescription());
         reportSetting.setPayloadRef(PAYLOAD_REF.getByLookupCode(payload.getPayloadRef()));
         reportSetting.setIsPdf(UI_LOOKUP.getByLookupCode(payload.getIsPdf()));

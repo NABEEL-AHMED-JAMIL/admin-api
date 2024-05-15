@@ -117,7 +117,7 @@ public class DynamicFormService {
         dynamicControl.setPlaceHolder(genCntLinkGenSct.getGenControl().getPlaceHolder());
         if (!BarcoUtil.isNull(genCntLinkGenSct.getGenControl().getFieldLkValue())) {
             dynamicControl.setSelectMenuOptions(this.getGLookup((Map<String, Object>) this.lookupDataCacheService
-                .fetchLookupDataByLookupType(new LookupDataRequest(genCntLinkGenSct.getGenControl().getFieldLkValue())).getData()));
+                .fetchLookupDataByLookupType(new LookupDataRequest(genCntLinkGenSct.getGenControl().getFieldLkValue().getLookupType())).getData()));
         }
         dynamicControl.setApiLkValue(genCntLinkGenSct.getGenControl().getApiLkValue());
         this.addValidation(dynamicControl, genCntLinkGenSct.getGenControl());

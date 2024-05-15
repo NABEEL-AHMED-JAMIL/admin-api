@@ -1207,7 +1207,7 @@ public class RPPServiceImpl implements RPPService {
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
                 profileResponses.add(new ProfileResponse(Long.valueOf(data.get(QueryService.ID).toString()),
-                    data.get(QueryService.PROFILE_NAME).toString()));
+                data.get(QueryService.PROFILE_NAME).toString(), data.get(QueryService.DESCRIPTION).toString()));
             }
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, profileResponses);
@@ -1232,7 +1232,8 @@ public class RPPServiceImpl implements RPPService {
         List<RoleResponse> roleResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                roleResponses.add(new RoleResponse(data.get(QueryService.ROLE_NAME).toString()));
+                roleResponses.add(new RoleResponse(Long.valueOf(data.get(QueryService.ID).toString()),
+                    data.get(QueryService.ROLE_NAME).toString(), data.get(QueryService.DESCRIPTION).toString()));
             }
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, roleResponses);
