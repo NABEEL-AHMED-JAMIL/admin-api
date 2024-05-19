@@ -3,6 +3,7 @@ package com.barco.admin.controller;
 import com.barco.admin.service.ReportSettingService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
+import com.barco.model.dto.report.ReportRequest;
 import com.barco.model.dto.request.ReportSettingRequest;
 import com.barco.model.dto.response.AppResponse;
 import org.slf4j.Logger;
@@ -142,6 +143,23 @@ public class ReportSettingRestApi {
             return new ResponseEntity<>(this.reportSettingService.deleteAllReportSetting(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllReportSetting ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- deleteAllReportSetting
+     * @apiNote :- Api use to delete reports by ids
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(path="/fetchReportResult", method=RequestMethod.POST)
+    public ResponseEntity<?> fetchReportResult(@RequestBody ReportRequest payload) {
+        try {
+            return new ResponseEntity<>(this.reportSettingService.fetchReportResult(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchReportResult ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }

@@ -3,6 +3,7 @@ package com.barco.admin.service.impl;
 import com.barco.admin.service.LookupDataCacheService;
 import com.barco.admin.service.ReportSettingService;
 import com.barco.common.utility.BarcoUtil;
+import com.barco.model.dto.report.ReportRequest;
 import com.barco.model.dto.request.ReportSettingRequest;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.dto.response.ReportSettingResponse;
@@ -313,6 +314,39 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         reportSettings.forEach(reportSetting -> reportSetting.setStatus(APPLICATION_STATUS.DELETE));
         this.reportSettingRepository.saveAll(reportSettings);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
+    }
+
+    /**
+     * Method use to fetch the report response and write with the data.
+     * @param payload
+     * */
+    @Override
+    public AppResponse fetchReportResult(ReportRequest payload) throws Exception {
+        logger.info("Request fetchReportResult :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getReportId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_ID_MISSING);
+        }
+        Optional<ReportSetting> reportSetting = this.reportSettingRepository.findByIdAndUsernameAndStatusNot(
+            payload.getReportId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
+        if (!reportSetting.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_NOT_FOUND);
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_FETCH_SUCCESSFULLY, ""),
+            fetchReportData(payload, reportSetting.get()));
+    }
+
+    /**
+     * Method use to handle the report
+     * */
+    private Object fetchReportData(ReportRequest payload, ReportSetting reportSetting) {
+        return null;
     }
 
     /**
