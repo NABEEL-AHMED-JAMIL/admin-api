@@ -3,13 +3,13 @@ package com.barco.admin.service.impl;
 import com.barco.admin.service.LookupDataCacheService;
 import com.barco.admin.service.RootService;
 import com.barco.common.utility.BarcoUtil;
-import com.barco.model.dto.dform.IDynamicControl;
-import com.barco.model.dto.dform.IDynamicForm;
-import com.barco.model.dto.dform.IDynamicSection;
-import com.barco.model.dto.dform.IDynamicValidation;
+import com.barco.model.dto.dform.request.IDynamicControl;
+import com.barco.model.dto.dform.request.IDynamicForm;
+import com.barco.model.dto.dform.request.IDynamicSection;
+import com.barco.model.dto.dform.request.IDynamicValidation;
 import com.barco.model.dto.request.LookupDataRequest;
 import com.barco.model.dto.response.LookupDataResponse;
-import com.barco.model.enums.ErrorAssosiation;
+import com.barco.model.enums.ErrorAssociation;
 import com.barco.model.pojo.GenControl;
 import com.barco.model.pojo.GenControlLinkGenSection;
 import com.barco.model.pojo.GenForm;
@@ -132,21 +132,21 @@ public class DynamicFormService {
     private void addValidation(IDynamicControl dynamicControl, GenControl genControl) {
         List<IDynamicValidation> dynamicValidations = new ArrayList<>();
         if (!BarcoUtil.isNull(genControl.getMandatory()) && genControl.getMandatory().equals(IS_DEFAULT.YES_DEFAULT)) {
-            dynamicValidations.add(new IDynamicValidation(ErrorAssosiation.REQUIRED.getAssosiation(),
+            dynamicValidations.add(new IDynamicValidation(ErrorAssociation.REQUIRED.getAssosiation(),
                 String.format("%s is required.", dynamicControl.getLabel())));
         }
         if (!BarcoUtil.isNull(genControl.getMinLength())) {
-            dynamicValidations.add(new IDynamicValidation(ErrorAssosiation.MIN_LENGTH.getAssosiation(),
+            dynamicValidations.add(new IDynamicValidation(ErrorAssociation.MIN_LENGTH.getAssosiation(),
                 String.format("%s min %s length.", dynamicControl.getLabel(), genControl.getMinLength()),
                     String.valueOf(genControl.getMinLength())));
         }
         if (!BarcoUtil.isNull(genControl.getMaxLength())) {
-            dynamicValidations.add(new IDynamicValidation(ErrorAssosiation.MAX_LENGTH.getAssosiation(),
+            dynamicValidations.add(new IDynamicValidation(ErrorAssociation.MAX_LENGTH.getAssosiation(),
                 String.format("%s max %s length.", dynamicControl.getLabel(), genControl.getMaxLength()),
                     String.valueOf(genControl.getMaxLength())));
         }
         if (patternNotRequiredFiled(genControl) && !BarcoUtil.isNull(genControl.getPattern())) {
-            dynamicValidations.add(new IDynamicValidation(ErrorAssosiation.PATTERN.getAssosiation(),
+            dynamicValidations.add(new IDynamicValidation(ErrorAssociation.PATTERN.getAssosiation(),
                 String.format("%s not match with pattern.", dynamicControl.getLabel()), genControl.getPattern()));
         }
         dynamicControl.setValidators(dynamicValidations);

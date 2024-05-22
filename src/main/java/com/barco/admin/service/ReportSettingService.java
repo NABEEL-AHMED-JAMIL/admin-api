@@ -1,5 +1,6 @@
 package com.barco.admin.service;
 
+import com.barco.model.dto.report.ReportRequest;
 import com.barco.model.dto.request.ReportSettingRequest;
 import com.barco.model.dto.response.AppResponse;
 
@@ -21,5 +22,7 @@ public interface ReportSettingService extends RootService {
     public AppResponse deleteReportSettingById(ReportSettingRequest payload) throws Exception;
 
     public AppResponse deleteAllReportSetting(ReportSettingRequest payload) throws Exception;
+
+    public AppResponse fetchReportResult(ReportRequest payload) throws Exception;
 
 }
