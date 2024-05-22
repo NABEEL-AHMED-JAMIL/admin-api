@@ -4,6 +4,7 @@ import com.barco.admin.service.SettingService;
 import com.barco.common.request.ConfigurationMakerRequest;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
+import com.barco.common.utility.JsonOutTagInfoUtil;
 import com.barco.common.utility.XmlOutTagInfoUtil;
 import com.barco.model.dto.request.QueryRequest;
 import com.barco.model.dto.request.SessionUser;
@@ -38,6 +39,9 @@ public class SettingRestApi {
     private SettingService settingService;
     @Autowired
     private XmlOutTagInfoUtil xmlOutTagInfoUtil;
+    @Autowired
+    private JsonOutTagInfoUtil jsonOutTagInfoUtil;
+
 
     /**
      * @apiName :- fetchSettingDashboard
@@ -111,6 +115,27 @@ public class SettingRestApi {
             }
         } catch (Exception ex) {
             logger.error("An error occurred while xmlCreateChecker ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- jsonCreateChecker
+     * @apiName :- Api use to create the json setting for source task
+     * @param payload
+     * @return ResponseEntity<?> jsonCreateChecker
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(path="/jsonCreateChecker", method=RequestMethod.POST)
+    public ResponseEntity<?> jsonCreateChecker(@RequestBody ConfigurationMakerRequest payload) {
+        try {
+            if (!BarcoUtil.isNull(payload.getJsonTagsInfo())) {
+                return new ResponseEntity<>(new AppResponse(BarcoUtil.SUCCESS, this.jsonOutTagInfoUtil.makeJson(payload)), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.WRONG_INPUT), HttpStatus.OK);
+            }
+        } catch (Exception ex) {
+            logger.error("An error occurred while jsonCreateChecker ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }
