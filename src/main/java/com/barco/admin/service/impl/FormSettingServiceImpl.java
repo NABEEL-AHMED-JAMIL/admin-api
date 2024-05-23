@@ -397,6 +397,7 @@ public class FormSettingServiceImpl implements FormSettingService {
                     CredentialResponse credentialResponse = new CredentialResponse();
                     credentialResponse.setId(sourceTaskType.getCredential().getId());
                     credentialResponse.setName(sourceTaskType.getCredential().getName());
+                    credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTaskType.getCredential().getStatus().getLookupType()));
                     sttResponse.setCredential(credentialResponse);
                 }
                 if (sourceTaskType.getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode()) && !BarcoUtil.isNull(sourceTaskType.getKafkaTaskType())) {
