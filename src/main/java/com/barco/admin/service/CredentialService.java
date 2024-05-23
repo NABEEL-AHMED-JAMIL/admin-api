@@ -14,6 +14,8 @@ public interface CredentialService extends RootService {
 
     public AppResponse fetchAllCredential(CredentialRequest payload) throws Exception;
 
+    public AppResponse fetchAllCredentialByType(CredentialRequest payload) throws Exception;
+
     public AppResponse fetchCredentialById(CredentialRequest payload) throws Exception;
 
     public AppResponse deleteCredential(CredentialRequest payload) throws Exception;

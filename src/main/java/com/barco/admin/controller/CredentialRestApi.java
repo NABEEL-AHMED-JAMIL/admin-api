@@ -78,6 +78,23 @@ public class CredentialRestApi {
     }
 
     /**
+     * @apiName :- fetchAllCredentialByType
+     * @apiNote :- Api use to fetch the Credential by Credential Type
+     * @param payload
+     * @return ResponseEntity<?> fetchAllCredentialByType
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value = "/fetchAllCredentialByType", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllCredentialByType(@RequestBody CredentialRequest payload) {
+        try {
+            return new ResponseEntity<>(this.credentialService.fetchAllCredentialByType(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllCredentialByType ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- fetchCredentialByCredentialId
      * @apiNote :- Api use to fetch the Credential by Credential id
      * @param payload
