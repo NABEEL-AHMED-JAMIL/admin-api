@@ -79,8 +79,17 @@ public interface RootService {
         if (data.containsKey(QueryService.ENV_VALUE) && !BarcoUtil.isNull(data.get(QueryService.ENV_VALUE))) {
             linkRPUResponse.setEnvValue(data.get(QueryService.ENV_VALUE).toString());
         }
+        if (data.containsKey(QueryService.TOKEN_ID) && !BarcoUtil.isNull(data.get(QueryService.TOKEN_ID))) {
+            linkRPUResponse.setTokenId(data.get(QueryService.TOKEN_ID).toString());
+        }
+        if (data.containsKey(QueryService.ACCESS_TOKEN) && !BarcoUtil.isNull(data.get(QueryService.ACCESS_TOKEN))) {
+            linkRPUResponse.setAccessToken(data.get(QueryService.ACCESS_TOKEN).toString());
+        }
+        if (data.containsKey(QueryService.EXPIRE_TIME) && !BarcoUtil.isNull(data.get(QueryService.EXPIRE_TIME))) {
+            linkRPUResponse.setExpireTime(data.get(QueryService.EXPIRE_TIME).toString());
+        }
         linkRPUResponse.setProfile(new ProfileResponse(Long.valueOf(data.get(QueryService.PROFILE_ID).toString()),
-                data.get(QueryService.PROFILE_NAME).toString()));
+            data.get(QueryService.PROFILE_NAME).toString()));
         return linkRPUResponse;
     }
 
@@ -900,6 +909,27 @@ public interface RootService {
     }
 
     /**
+     * Method use to get app ser env
+     * @param superAdmin
+     * @param appUser
+     * @param webHook
+     * */
+    public default AppUserWebHook getAppUserWebHook(AppUser superAdmin, AppUser appUser, WebHook webHook) {
+        AppUserWebHook appUserWebHook = new AppUserWebHook();
+        appUserWebHook.setCreatedBy(superAdmin);
+        appUserWebHook.setUpdatedBy(superAdmin);
+        appUserWebHook.setAppUser(appUser);
+        appUserWebHook.setWebhook(webHook);
+        appUserWebHook.setTokenId(UUID.randomUUID().toString());
+        appUserWebHook.setStatus(APPLICATION_STATUS.ACTIVE);
+        if (webHook.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
+            appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
+            appUserWebHook.setStatus(APPLICATION_STATUS.INACTIVE);
+        }
+        return appUserWebHook;
+    }
+
+    /**
      * Method use to fetch the refresh token resposne
      * @param refreshToken
      * @return RefreshTokenResponse
@@ -930,6 +960,19 @@ public interface RootService {
         enVariables.setEnvValue(appUserEnv.getEnvValue());
         enVariables.setDescription(appUserEnv.getEnvVariables().getDescription());
         return enVariables;
+    }
+
+    public default WebHookResponse getWebHookResponse(AppUserWebHook appUserWebHook) {
+        WebHookResponse webHookResponse = new WebHookResponse();
+        webHookResponse.setTokenId(appUserWebHook.getTokenId());
+        webHookResponse.setAccessToken(appUserWebHook.getAccessToken());
+        webHookResponse.setExpireTime(appUserWebHook.getExpireTime());
+        // web-hook
+        WebHook webHook = appUserWebHook.getWebhook();
+        webHookResponse.setName(webHook.getName());
+        webHookResponse.setHookUrl(webHook.getHookUrl());
+        webHookResponse.setDescription(webHook.getDescription());
+        return webHookResponse;
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.barco.admin.service;
 
+import com.barco.model.dto.request.LinkWHURequest;
 import com.barco.model.dto.request.WebHookRequest;
 import com.barco.model.dto.response.AppResponse;
 
@@ -22,6 +23,8 @@ public interface WebHookService extends RootService {
 
     public AppResponse fetchLinkWebHookWitUser(WebHookRequest payload) throws Exception;
 
-    public AppResponse linkWebHookWithUser(WebHookRequest payload) throws Exception;
+    public AppResponse linkWebHookWithUser(LinkWHURequest payload) throws Exception;
+
+    public AppResponse genWebHookToken(LinkWHURequest payload) throws Exception;
 
 }

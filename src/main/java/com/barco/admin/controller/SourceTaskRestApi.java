@@ -62,7 +62,6 @@ public class SourceTaskRestApi {
         }
     }
 
-    // delete source task
     /**
      * @apiName :- deleteSourceTask
      * @apiNote :- Api use to delete the source task
