@@ -90,8 +90,7 @@ public class EVariableServiceImpl implements EVariableService {
         envVariables.setUpdatedBy(adminUser.get());
         envVariables.setStatus(APPLICATION_STATUS.ACTIVE);
         envVariables = this.envVariablesRepository.save(envVariables);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(
-            MessageUtil.DATA_SAVED, envVariables.getId().toString()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, envVariables.getId().toString()), payload);
     }
 
     /**
@@ -129,9 +128,9 @@ public class EVariableServiceImpl implements EVariableService {
             // if status is in-active & delete then we have filter the role and show only those role in user detail
             envVariables.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
             envVariables.get().getAppUserEnvs().stream()
-                .map(appUserRoleAccess -> {
-                    appUserRoleAccess.setStatus(envVariables.get().getStatus());
-                    return appUserRoleAccess;
+                .map(appUserEnv -> {
+                    appUserEnv.setStatus(envVariables.get().getStatus());
+                    return appUserEnv;
                 }).collect(Collectors.toList());
         }
         this.envVariablesRepository.save(envVariables.get());
@@ -146,10 +145,8 @@ public class EVariableServiceImpl implements EVariableService {
     @Override
     public AppResponse fetchAllEnVariable(EnVariablesRequest payload) throws Exception {
         logger.info("Request fetchAllEnVariable :- " + payload);
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.envVariablesRepository.findAllByDateCreatedBetweenAndStatusNotOrderByDateCreatedDesc(startDate, endDate, APPLICATION_STATUS.DELETE)
+            this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE)
                 .stream().map(envVariables -> getEnVariablesResponse(envVariables)).collect(Collectors.toList()));
     }
 

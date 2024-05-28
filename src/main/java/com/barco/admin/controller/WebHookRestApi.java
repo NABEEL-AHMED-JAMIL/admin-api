@@ -3,14 +3,18 @@ package com.barco.admin.controller;
 import com.barco.admin.service.WebHookService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
+import com.barco.model.dto.request.LinkWHURequest;
+import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.request.WebHookRequest;
 import com.barco.model.dto.response.AppResponse;
+import com.barco.model.security.UserSessionDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -33,7 +37,7 @@ public class WebHookRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(path="/addWebHook", method= RequestMethod.POST)
     public ResponseEntity<?> addWebHook(@RequestBody WebHookRequest payload) {
         try {
@@ -50,7 +54,7 @@ public class WebHookRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(path="/updateWebHook", method=RequestMethod.POST)
     public ResponseEntity<?> updateWebHook(@RequestBody WebHookRequest payload) {
         try {
@@ -67,7 +71,7 @@ public class WebHookRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(path="/fetchAllWebHook", method=RequestMethod.POST)
     public ResponseEntity<?> fetchAllWebHook(@RequestBody WebHookRequest payload) {
         try {
@@ -84,7 +88,7 @@ public class WebHookRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(path="/fetchWebHookById", method=RequestMethod.POST)
     public ResponseEntity<?> fetchWebHookById(@RequestBody WebHookRequest payload) {
         try {
@@ -101,7 +105,7 @@ public class WebHookRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(path="/deleteWebHookById", method=RequestMethod.POST)
     public ResponseEntity<?> deleteWebHookById(@RequestBody WebHookRequest payload) {
         try {
@@ -118,7 +122,7 @@ public class WebHookRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
     @RequestMapping(path="/deleteAllWebHook", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllWebHook(@RequestBody WebHookRequest payload) {
         try {
@@ -135,10 +139,12 @@ public class WebHookRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN')")
     @RequestMapping(path="/fetchLinkWebHookWitUser", method=RequestMethod.POST)
     public ResponseEntity<?> fetchLinkWebHookWitUser(@RequestBody WebHookRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.webHookService.fetchLinkWebHookWitUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchLinkWebHookWitUser ", ExceptionUtil.getRootCause(ex));
@@ -152,11 +158,32 @@ public class WebHookRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN')")
     @RequestMapping(path="/linkWebHookWithUser", method=RequestMethod.POST)
-    public ResponseEntity<?> linkWebHookWithUser(@RequestBody WebHookRequest payload) {
+    public ResponseEntity<?> linkWebHookWithUser(@RequestBody LinkWHURequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.webHookService.linkWebHookWithUser(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while linkWebHookWithUser ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- genWebHookToken
+     * @apiName :- Api use to link web hook he can gernate the token and event the admin
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(path="/genWebHookToken", method=RequestMethod.POST)
+    public ResponseEntity<?> genWebHookToken(@RequestBody LinkWHURequest payload) {
+        try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            return new ResponseEntity<>(this.webHookService.genWebHookToken(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkWebHookWithUser ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
