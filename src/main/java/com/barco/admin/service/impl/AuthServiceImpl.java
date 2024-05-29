@@ -1,8 +1,6 @@
 package com.barco.admin.service.impl;
 
-import com.barco.admin.service.LookupDataCacheService;
-import com.barco.admin.service.NotificationService;
-import com.barco.admin.service.RefreshTokenService;
+import com.barco.admin.service.*;
 import com.barco.common.emailer.EmailMessagesFactory;
 import com.barco.common.security.JwtUtils;
 import com.barco.common.utility.BarcoUtil;
@@ -13,10 +11,10 @@ import com.barco.model.repository.*;
 import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
+import com.barco.model.util.lookup.EVENT_BRIDGE_TYPE;
 import com.barco.model.util.lookup.LookupUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.barco.admin.service.AuthService;
 import com.barco.model.dto.response.AppResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -58,6 +56,8 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private EnvVariablesRepository envVariablesRepository;
     @Autowired
+    private EventBridgeRepository eventBridgeRepository;
+    @Autowired
     private AppUserEnvRepository appUserEnvRepository;
     @Autowired
     private SubAppUserRepository subAppUserRepository;
@@ -67,6 +67,8 @@ public class AuthServiceImpl implements AuthService {
     private EmailMessagesFactory emailMessagesFactory;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private EventBridgeService eventBridgeService;
 
 
     public AuthServiceImpl() {}
@@ -154,9 +156,21 @@ public class AuthServiceImpl implements AuthService {
         subAppUser.setUpdatedBy(superAdmin.get());
         subAppUser.setStatus(APPLICATION_STATUS.ACTIVE);
         this.subAppUserRepository.save(subAppUser);
+        // env-variable adding
         List<EnvVariables> envVariablesList = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE);
         for (EnvVariables envVariables : envVariablesList) {
             this.appUserEnvRepository.save(getAppUserEnv(superAdmin.get(), appUser, envVariables));
+        }
+        // event bridge only receiver event bridge if exist and create by the main user
+        List<EventBridge> eventBridges = this.eventBridgeRepository.findAllByBridgeTypeAndCreatedByAndStatusNotOrderByDateCreatedDesc(
+            EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVER, superAdmin.get(), APPLICATION_STATUS.DELETE);
+        for (EventBridge eventBridge : eventBridges) {
+            LinkEBURequest linkEBURequest = new LinkEBURequest();
+            linkEBURequest.setId(eventBridge.getId());
+            linkEBURequest.setAppUserId(appUser.getId());
+            linkEBURequest.setLinked(Boolean.TRUE);
+            linkEBURequest.setSessionUser(new SessionUser(appUser.getUsername()));
+            this.eventBridgeService.linkEventBridgeWithUser(linkEBURequest);
         }
         this.sendRegisterUser(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         this.sendNotification(superAdmin.get().getUsername(), MessageUtil.REQUESTED_FOR_NEW_ACCOUNT,

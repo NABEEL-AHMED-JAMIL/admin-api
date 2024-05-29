@@ -11,7 +11,7 @@ import com.barco.model.pojo.Credential;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.CredentialRepository;
 import com.barco.model.repository.SourceTaskTypeRepository;
-import com.barco.model.repository.WebHookRepository;
+import com.barco.model.repository.EventBridgeRepository;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.CREDENTIAL_TYPE;
@@ -38,7 +38,7 @@ public class CredentialServiceImpl implements CredentialService {
     @Autowired
     private AppUserRepository appUserRepository;
     @Autowired
-    private WebHookRepository webHookRepository;
+    private EventBridgeRepository eventBridgeRepository;
     @Autowired
     private SourceTaskTypeRepository sourceTaskTypeRepository;
     @Autowired
@@ -231,8 +231,8 @@ public class CredentialServiceImpl implements CredentialService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
         credential.get().setStatus(APPLICATION_STATUS.DELETE);
-        // de-link the source and webhook
-        this.deleteWebHookCredential(credential.get());
+        // de-link the source and event bridge
+        this.deleteEventBridgesCredential(credential.get());
         this.deleteSourceTaskCredential(credential.get());
         this.credentialRepository.save(credential.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId().toString()));
@@ -259,8 +259,8 @@ public class CredentialServiceImpl implements CredentialService {
         List<Credential> credentials = this.credentialRepository.findAllByIdIn(payload.getIds());
         credentials.forEach(credential -> {
             credential.setStatus(APPLICATION_STATUS.DELETE);
-            // de-link the source and webhook
-            this.deleteWebHookCredential(credential);
+            // de-link the source and event bridge
+            this.deleteEventBridgesCredential(credential);
             this.deleteSourceTaskCredential(credential);
         });
         this.credentialRepository.saveAll(credentials);
@@ -268,17 +268,17 @@ public class CredentialServiceImpl implements CredentialService {
     }
 
     /**
-     * Method using to delete the hook credential
+     * Method using to delete the event bridge credential
      * @param credential
      * @return void
      * */
-    private void deleteWebHookCredential(Credential credential) {
-        if (!BarcoUtil.isNull(credential.getWebHooks())) {
-            credential.getWebHooks().stream()
-            .filter(webHook -> !webHook.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(webHook -> {
-                webHook.setCredential(null);
-                return webHook;
+    private void deleteEventBridgesCredential(Credential credential) {
+        if (!BarcoUtil.isNull(credential.getEventBridges())) {
+            credential.getEventBridges().stream()
+            .filter(eventBridge -> !eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(eventBridge -> {
+                eventBridge.setCredential(null);
+                return eventBridge;
             }).collect(Collectors.toList());
         }
     }
@@ -315,7 +315,7 @@ public class CredentialServiceImpl implements CredentialService {
                 this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
                     CREDENTIAL_TYPE.getName(),credential.getType().getLookupCode())));
             credentialResponse.setTotalCount(
-                this.webHookRepository.countByCredentialAndStatusNot(credential, APPLICATION_STATUS.DELETE) +
+                this.eventBridgeRepository.countByCredentialAndStatusNot(credential, APPLICATION_STATUS.DELETE) +
                 this.sourceTaskTypeRepository.countByCredentialAndStatusNot(credential, APPLICATION_STATUS.DELETE));
             credentialResponse.setCreatedBy(getActionUser(credential.getCreatedBy()));
             credentialResponse.setUpdatedBy(getActionUser(credential.getCreatedBy()));

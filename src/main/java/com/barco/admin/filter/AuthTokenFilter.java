@@ -25,6 +25,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
     private String Authorization = "Authorization";
+    private String XRHKAuthorization = "XRHK-Authorization";
     private String BEARER = "Bearer ";
 
     @Autowired
