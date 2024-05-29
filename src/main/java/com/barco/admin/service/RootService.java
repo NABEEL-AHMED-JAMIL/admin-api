@@ -912,21 +912,21 @@ public interface RootService {
      * Method use to get app ser env
      * @param superAdmin
      * @param appUser
-     * @param webHook
+     * @param eventBridge
      * */
-    public default AppUserWebHook getAppUserWebHook(AppUser superAdmin, AppUser appUser, WebHook webHook) {
-        AppUserWebHook appUserWebHook = new AppUserWebHook();
-        appUserWebHook.setCreatedBy(superAdmin);
-        appUserWebHook.setUpdatedBy(superAdmin);
-        appUserWebHook.setAppUser(appUser);
-        appUserWebHook.setWebhook(webHook);
-        appUserWebHook.setTokenId(UUID.randomUUID().toString());
-        appUserWebHook.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (webHook.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
+    public default AppUserEventBridge getAppUserEventBridge(AppUser superAdmin, AppUser appUser, EventBridge eventBridge) {
+        AppUserEventBridge appUserEventBridge = new AppUserEventBridge();
+        appUserEventBridge.setCreatedBy(superAdmin);
+        appUserEventBridge.setUpdatedBy(superAdmin);
+        appUserEventBridge.setAppUser(appUser);
+        appUserEventBridge.setEventBridge(eventBridge);
+        appUserEventBridge.setTokenId(UUID.randomUUID().toString());
+        appUserEventBridge.setStatus(APPLICATION_STATUS.ACTIVE);
+        if (eventBridge.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
             appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
-            appUserWebHook.setStatus(APPLICATION_STATUS.INACTIVE);
+            appUserEventBridge.setStatus(APPLICATION_STATUS.INACTIVE);
         }
-        return appUserWebHook;
+        return appUserEventBridge;
     }
 
     /**
@@ -962,17 +962,17 @@ public interface RootService {
         return enVariables;
     }
 
-    public default WebHookResponse getWebHookResponse(AppUserWebHook appUserWebHook) {
-        WebHookResponse webHookResponse = new WebHookResponse();
-        webHookResponse.setTokenId(appUserWebHook.getTokenId());
-        webHookResponse.setAccessToken(appUserWebHook.getAccessToken());
-        webHookResponse.setExpireTime(appUserWebHook.getExpireTime());
-        // web-hook
-        WebHook webHook = appUserWebHook.getWebhook();
-        webHookResponse.setName(webHook.getName());
-        webHookResponse.setHookUrl(webHook.getHookUrl());
-        webHookResponse.setDescription(webHook.getDescription());
-        return webHookResponse;
+    public default EventBridgeResponse getEventBridgeResponse(AppUserEventBridge appUserEventBridge) {
+        EventBridgeResponse eventBridgeResponse = new EventBridgeResponse();
+        eventBridgeResponse.setTokenId(appUserEventBridge.getTokenId());
+        eventBridgeResponse.setAccessToken(appUserEventBridge.getAccessToken());
+        eventBridgeResponse.setExpireTime(appUserEventBridge.getExpireTime());
+        // Event Bridge
+        EventBridge eventBridge = appUserEventBridge.getEventBridge();
+        eventBridgeResponse.setName(eventBridge.getName());
+        eventBridgeResponse.setBridgeUrl(eventBridge.getBridgeUrl());
+        eventBridgeResponse.setDescription(eventBridge.getDescription());
+        return eventBridgeResponse;
     }
 
     /**
@@ -1011,39 +1011,6 @@ public interface RootService {
         dashboardSettingResponse.setDateUpdated(dashboardSetting.getDateUpdated());
         dashboardSettingResponse.setDateCreated(dashboardSetting.getDateCreated());
         return dashboardSettingResponse;
-    }
-
-    /**
-     * Method use to get dashboard setting
-     * @param payload
-     * */
-    public default ReportSetting getReportSetting(ReportSettingRequest payload, ReportSetting reportSetting) {
-        reportSetting.setName(payload.getName());
-        reportSetting.setDescription(payload.getDescription());
-        reportSetting.setPayloadRef(PAYLOAD_REF.getByLookupCode(payload.getPayloadRef()));
-        reportSetting.setIsPdf(UI_LOOKUP.getByLookupCode(payload.getIsPdf()));
-        reportSetting.setPdfUrl(payload.getPdfUrl());
-        reportSetting.setPdfApiToken(payload.getPdfApiToken());
-        reportSetting.setIsXlsx(UI_LOOKUP.getByLookupCode(payload.getIsXlsx()));
-        reportSetting.setXlsxUrl(payload.getXlsxUrl());
-        reportSetting.setXlsxApiToken(payload.getXlsxApiToken());
-        reportSetting.setIsCsv(UI_LOOKUP.getByLookupCode(payload.getIsCsv()));
-        reportSetting.setCsvUrl(payload.getCsvUrl());
-        reportSetting.setCsvApiToken(payload.getCsvApiToken());
-        reportSetting.setIsData(UI_LOOKUP.getByLookupCode(payload.getIsData()));
-        reportSetting.setDataUrl(payload.getDataUrl());
-        reportSetting.setDataApiToken(payload.getDataApiToken());
-        reportSetting.setIsFirstDimension(UI_LOOKUP.getByLookupCode(payload.getIsFirstDimension()));
-        reportSetting.setFirstDimensionUrl(payload.getFirstDimensionUrl());
-        reportSetting.setFirstDimensionLKValue(payload.getFirstDimensionLKValue());
-        reportSetting.setFirstDimensionApiToken(payload.getFirstDimensionApiToken());
-        reportSetting.setIsSecondDimension(UI_LOOKUP.getByLookupCode(payload.getIsSecondDimension()));
-        reportSetting.setSecondDimensionUrl(payload.getSecondDimensionUrl());
-        reportSetting.setSecondDimensionLKValue(payload.getSecondDimensionLKValue());
-        reportSetting.setSecondDimensionApiToken(payload.getSecondDimensionApiToken());
-        reportSetting.setDistinctLKValue(payload.getDistinctLKValue());
-        reportSetting.setAggLKValue(payload.getAggLKValue());
-        return reportSetting;
     }
 
 }

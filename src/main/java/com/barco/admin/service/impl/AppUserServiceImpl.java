@@ -10,13 +10,13 @@ import com.barco.common.utility.excel.SheetFiled;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.dto.response.AppUserResponse;
-import com.barco.model.dto.response.WebHookResponse;
+import com.barco.model.dto.response.EventBridgeResponse;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.*;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.GLookup;
-import com.barco.model.util.lookup.HOOK_TYPE;
+import com.barco.model.util.lookup.EVENT_BRIDGE_TYPE;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
@@ -89,19 +89,19 @@ public class AppUserServiceImpl implements AppUserService {
                 .map(appUserEnv -> getEnVariablesResponse(appUserEnv))
                 .collect(Collectors.toList()));
         }
-        if (!BarcoUtil.isNull(appUser.get().getAppUserWebHooks())) {
-            appUserResponse.setWebHooks(appUser.get().getAppUserWebHooks()
+        if (!BarcoUtil.isNull(appUser.get().getAppUserEventBridges())) {
+            appUserResponse.setEventBridge(appUser.get().getAppUserEventBridges()
                 .stream()
-                .filter(appUserWebHook -> appUserWebHook.getStatus().equals(APPLICATION_STATUS.ACTIVE))
-                .map(appUserWebHook -> {
-                    WebHookResponse webHookResponse = getWebHookResponse(appUserWebHook);
-                    if (!BarcoUtil.isNull(appUserWebHook.getWebhook().getHookType())) {
-                        GLookup hookType = GLookup.getGLookup(this.lookupDataCacheService
-                            .getChildLookupDataByParentLookupTypeAndChildLookupCode(HOOK_TYPE.getName(),
-                                appUserWebHook.getWebhook().getHookType().getLookupCode()));
-                        webHookResponse.setHookType(hookType);
+                .filter(appUserEventBridge -> appUserEventBridge.getStatus().equals(APPLICATION_STATUS.ACTIVE))
+                .map(appUserEventBridge -> {
+                    EventBridgeResponse eventBridgeResponse = getEventBridgeResponse(appUserEventBridge);
+                    if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getBridgeType())) {
+                        GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService
+                            .getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
+                                appUserEventBridge.getEventBridge().getBridgeType().getLookupCode()));
+                        eventBridgeResponse.setBridgeType(bridgeType);
                     }
-                    return webHookResponse;
+                    return eventBridgeResponse;
                 })
                 .collect(Collectors.toList()));
         }

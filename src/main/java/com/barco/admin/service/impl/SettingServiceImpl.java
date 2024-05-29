@@ -42,7 +42,7 @@ public class SettingServiceImpl implements SettingService {
     public SettingServiceImpl() {}
 
     /**
-     * Method use to fetch the detail for dashbaord
+     * Method use to fetch the detail for dashboard
      * @param sessionUser
      * @return AppResponse
      * */

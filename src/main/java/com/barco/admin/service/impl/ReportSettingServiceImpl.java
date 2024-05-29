@@ -6,26 +6,24 @@ import com.barco.common.utility.BarcoUtil;
 import com.barco.model.dto.report.ReportRequest;
 import com.barco.model.dto.request.ReportSettingRequest;
 import com.barco.model.dto.response.AppResponse;
+import com.barco.model.dto.response.EventBridgeResponse;
+import com.barco.model.dto.response.FormResponse;
 import com.barco.model.dto.response.ReportSettingResponse;
-import com.barco.model.pojo.AppUser;
-import com.barco.model.pojo.GenForm;
-import com.barco.model.pojo.LookupData;
-import com.barco.model.pojo.ReportSetting;
-import com.barco.model.repository.AppUserRepository;
-import com.barco.model.repository.GenFormRepository;
-import com.barco.model.repository.LookupDataRepository;
-import com.barco.model.repository.ReportSettingRepository;
+import com.barco.model.pojo.*;
+import com.barco.model.repository.*;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +44,8 @@ public class ReportSettingServiceImpl implements ReportSettingService {
     private LookupDataRepository lookupDataRepository;
     @Autowired
     private LookupDataCacheService lookupDataCacheService;
+    @Autowired
+    private EventBridgeRepository eventBridgeRepository;
 
     /**
      * Method use to add report setting
@@ -270,6 +270,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
      * @return AppResponse
      * */
     @Override
+    @Transactional
     public AppResponse deleteReportSettingById(ReportSettingRequest payload) throws Exception {
         logger.info("Request deleteReportSettingById :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
@@ -366,34 +367,44 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         reportSettingResponse.setDescription(reportSetting.getDescription());
         reportSettingResponse.setPayloadRef(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
             PAYLOAD_REF.getName(), Long.valueOf(reportSetting.getPayloadRef().getLookupCode()))));
+        // pdf
         reportSettingResponse.setIsPdf(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsPdf().getLookupType()));
-        reportSettingResponse.setPdfUrl(reportSetting.getPdfUrl());
-        reportSettingResponse.setPdfApiToken(reportSetting.getPdfApiToken());
+        if (!BarcoUtil.isNull(reportSetting.getPdfBridge())) {
+            reportSettingResponse.setPdfBridge(getEventBridgeResponse(reportSetting.getPdfBridge()));
+        }
+        // xlsx
         reportSettingResponse.setIsXlsx(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsXlsx().getLookupType()));
-        reportSettingResponse.setXlsxUrl(reportSetting.getXlsxUrl());
-        reportSettingResponse.setXlsxApiToken(reportSetting.getXlsxApiToken());
+        if (!BarcoUtil.isNull(reportSetting.getXlsxBridge())) {
+            reportSettingResponse.setXlsxBridge(getEventBridgeResponse(reportSetting.getXlsxBridge()));
+        }
+        // csv
         reportSettingResponse.setIsCsv(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsCsv().getLookupType()));
-        reportSettingResponse.setCsvUrl(reportSetting.getCsvUrl());
-        reportSettingResponse.setCsvApiToken(reportSetting.getCsvApiToken());
+        if (!BarcoUtil.isNull(reportSetting.getCsvBridge())) {
+            reportSettingResponse.setCsvBridge(getEventBridgeResponse(reportSetting.getCsvBridge()));
+        }
+        // data
         reportSettingResponse.setIsData(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsData().getLookupType()));
-        reportSettingResponse.setDataUrl(reportSetting.getDataUrl());
-        reportSettingResponse.setDataApiToken(reportSetting.getDataApiToken());
+        if (!BarcoUtil.isNull(reportSetting.getDataBridge())) {
+            reportSettingResponse.setDataBridge(getEventBridgeResponse(reportSetting.getDataBridge()));
+        }
         // first dimension
         reportSettingResponse.setIsFirstDimension(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsFirstDimension().getLookupType()));
-        reportSettingResponse.setFirstDimensionUrl(reportSetting.getFirstDimensionUrl());
         reportSettingResponse.setFirstDimensionLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getFirstDimensionLKValue())));
-        reportSettingResponse.setFirstDimensionApiToken(reportSetting.getFirstDimensionApiToken());
+        if (!BarcoUtil.isNull(reportSetting.getFirstDimensionBridge())) {
+            reportSettingResponse.setFirstDimensionBridge(getEventBridgeResponse(reportSetting.getFirstDimensionBridge()));
+        }
         // second dimension
         reportSettingResponse.setIsSecondDimension(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsSecondDimension().getLookupType()));
-        reportSettingResponse.setSecondDimensionUrl(reportSetting.getSecondDimensionUrl());
         reportSettingResponse.setSecondDimensionLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getSecondDimensionLKValue())));
-        reportSettingResponse.setSecondDimensionApiToken(reportSetting.getSecondDimensionApiToken());
+        if (!BarcoUtil.isNull(reportSetting.getSecondDimensionBridge())) {
+            reportSettingResponse.setSecondDimensionBridge(getEventBridgeResponse(reportSetting.getSecondDimensionBridge()));
+        }
         // lk value
         reportSettingResponse.setDistinctLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getDistinctLKValue())));
         reportSettingResponse.setAggLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getAggLKValue())));
         reportSettingResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(reportSetting.getStatus().getLookupType()));
         if (!BarcoUtil.isNull(reportSetting.getGenForm())) {
-            reportSettingResponse.setFormRequestId(reportSetting.getGenForm().getId());
+            reportSettingResponse.setFormResponse(getFormResponse(reportSetting.getGenForm()));
         }
         reportSettingResponse.setCreatedBy(getActionUser(reportSetting.getCreatedBy()));
         reportSettingResponse.setUpdatedBy(getActionUser(reportSetting.getUpdatedBy()));
@@ -401,4 +412,80 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         reportSettingResponse.setDateCreated(reportSetting.getDateCreated());
         return reportSettingResponse;
     }
+
+    /**
+     * Method use to get dashboard setting
+     * @param payload
+     * @param reportSetting
+     * @return ReportSetting
+     * */
+    private ReportSetting getReportSetting(ReportSettingRequest payload, ReportSetting reportSetting) {
+        reportSetting.setName(payload.getName());
+        reportSetting.setDescription(payload.getDescription());
+        reportSetting.setPayloadRef(PAYLOAD_REF.getByLookupCode(payload.getPayloadRef()));
+        reportSetting.setIsPdf(UI_LOOKUP.getByLookupCode(payload.getIsPdf()));
+        // pdf bridge
+        setEventBridge(reportSetting::setPdfBridge, payload.getPdfBridgeId());
+        // xlsx bridge
+        reportSetting.setIsXlsx(UI_LOOKUP.getByLookupCode(payload.getIsXlsx()));
+        setEventBridge(reportSetting::setXlsxBridge, payload.getXlsxBridgeId());
+        // csv
+        reportSetting.setIsCsv(UI_LOOKUP.getByLookupCode(payload.getIsCsv()));
+        setEventBridge(reportSetting::setCsvBridge, payload.getCsvBridgeId());
+        // data
+        reportSetting.setIsData(UI_LOOKUP.getByLookupCode(payload.getIsData()));
+        setEventBridge(reportSetting::setDataBridge, payload.getDataBridgeId());
+        // first dimension
+        reportSetting.setIsFirstDimension(UI_LOOKUP.getByLookupCode(payload.getIsFirstDimension()));
+        reportSetting.setFirstDimensionLKValue(payload.getFirstDimensionLKValue());
+        setEventBridge(reportSetting::setFirstDimensionBridge, payload.getFirstDimensionBridgeId());
+        // second dimension
+        reportSetting.setIsSecondDimension(UI_LOOKUP.getByLookupCode(payload.getIsSecondDimension()));
+        reportSetting.setSecondDimensionLKValue(payload.getSecondDimensionLKValue());
+        setEventBridge(reportSetting::setSecondDimensionBridge, payload.getSecondDimensionBridgeId());
+        // other detail
+        reportSetting.setDistinctLKValue(payload.getDistinctLKValue());
+        reportSetting.setAggLKValue(payload.getAggLKValue());
+        return reportSetting;
+    }
+
+    /**
+     * Method use to set the value to the target setter
+     * @param setter
+     * @param bridgeId
+     * */
+    private void setEventBridge(Consumer<EventBridge> setter, Long bridgeId) {
+        if (!BarcoUtil.isNull(bridgeId)) {
+            Optional<EventBridge> eventBridge = this.eventBridgeRepository.findByIdAndStatusNot(
+                bridgeId, APPLICATION_STATUS.DELETE);
+            eventBridge.ifPresent(setter);
+        } else {
+            setter.accept(null);
+        }
+    }
+
+    /**
+     * Method use to convert the event bridge to reponse
+     * @param eventBridge
+     * @return EventBridgeResponse
+     * */
+    private EventBridgeResponse getEventBridgeResponse(EventBridge eventBridge) {
+        EventBridgeResponse eventBridgeResponse = new EventBridgeResponse();
+        eventBridgeResponse.setId(eventBridge.getId());
+        eventBridgeResponse.setName(eventBridge.getName());
+        return eventBridgeResponse;
+    }
+
+    /**
+     * Method use to convert the gen form to form response
+     * @param genForm
+     * @return FormResponse
+     * */
+    private FormResponse getFormResponse(GenForm genForm) {
+        FormResponse formResponse = new FormResponse();
+        formResponse.setId(genForm.getId());
+        formResponse.setFormName(genForm.getFormName());
+        return formResponse;
+    }
+
 }
