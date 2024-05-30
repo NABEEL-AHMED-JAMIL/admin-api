@@ -314,7 +314,7 @@ public class RPPServiceImpl implements RPPService {
                         rppValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
                     }
                 }
-                rppValidation.isValidLookup();
+                rppValidation.isValidBatch();
                 Optional<Role> isAlreadyExistRole = this.roleRepository.findRoleByName(rppValidation.getName());
                 if (isAlreadyExistRole.isPresent()) {
                     rppValidation.setErrorMsg(String.format(MessageUtil.ROLE_TYPE_ALREADY_USE_AT_ROW,
@@ -603,7 +603,7 @@ public class RPPServiceImpl implements RPPService {
                         rppValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
                     }
                 }
-                rppValidation.isValidLookup();
+                rppValidation.isValidBatch();
                 Optional<Profile> isAlreadyExistProfile = this.profileRepository.findProfileByProfileName(rppValidation.getName());
                 if (isAlreadyExistProfile.isPresent()) {
                     rppValidation.setErrorMsg(String.format(MessageUtil.PROFILE_TYPE_ALREADY_USE_AT_ROW,
@@ -882,7 +882,7 @@ public class RPPServiceImpl implements RPPService {
                         rppValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
                     }
                 }
-                rppValidation.isValidLookup();
+                rppValidation.isValidBatch();
                 Optional<Permission> isAlreadyExistPermission = this.permissionRepository.findPermissionByPermissionName(rppValidation.getName());
                 if (isAlreadyExistPermission.isPresent()) {
                     rppValidation.setErrorMsg(String.format(MessageUtil.PERMISSION_TYPE_ALREADY_USE_AT_ROW,

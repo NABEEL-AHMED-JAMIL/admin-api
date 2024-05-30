@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -290,16 +289,13 @@ public class EVariableServiceImpl implements EVariableService {
         this.bulkExcel.setSheet(xssfSheet);
         AtomicInteger rowCount = new AtomicInteger();
         this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
-        // change to start date and end date filter and if ids include then only download that ids
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         Iterator<EnvVariables> envVariables;
         if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
-            envVariables = this.envVariablesRepository.findAllByDateCreatedBetweenAndIdInAndStatusNotOrderByDateCreatedDesc(
-                startDate, endDate, payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
+            envVariables = this.envVariablesRepository.findAllByIdInAndStatusNotOrderByDateCreatedDesc(
+                payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
         } else {
-            envVariables = this.envVariablesRepository.findAllByDateCreatedBetweenAndStatusNotOrderByDateCreatedDesc(
-                startDate, endDate, APPLICATION_STATUS.DELETE).iterator();
+            envVariables = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(
+                APPLICATION_STATUS.DELETE).iterator();
         }
         while (envVariables.hasNext()) {
             EnvVariables envVariable = envVariables.next();
@@ -372,7 +368,7 @@ public class EVariableServiceImpl implements EVariableService {
                         rppValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
                     }
                 }
-                rppValidation.isValidLookup();
+                rppValidation.isValidBatch();
                 if (this.envVariablesRepository.findByEnvKeyAndStatusNot(rppValidation.getName(),
                     APPLICATION_STATUS.DELETE).isPresent()) {
                     rppValidation.setErrorMsg(String.format(MessageUtil.EVARIABLE_TYPE_ALREADY_USE_AT_ROW,

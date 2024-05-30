@@ -134,7 +134,8 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         if (!templateReg.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getTemplateRegResponse(templateReg.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+            getTemplateRegResponse(templateReg.get()));
     }
 
     /**

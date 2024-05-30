@@ -447,7 +447,7 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
                     }
                 }
                 lookupDataValidation.setParentLookupId(lookupDataRequest.getParentLookupId());
-                lookupDataValidation.isValidLookup();
+                lookupDataValidation.isValidBatch();
                 Optional<LookupData> isAlreadyExistLookup = this.lookupDataRepository.findByLookupType(lookupDataValidation.getLookupType());
                 if (isAlreadyExistLookup.isPresent()) {
                     lookupDataValidation.setErrorMsg(String.format(MessageUtil.LOOKUP_TYPE_ALREADY_USE_AT_ROW,
