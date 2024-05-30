@@ -4,8 +4,13 @@ import com.barco.admin.service.LookupDataCacheService;
 import com.barco.admin.service.EventBridgeService;
 import com.barco.common.security.JwtUtils;
 import com.barco.common.utility.BarcoUtil;
+import com.barco.common.utility.excel.BulkExcel;
+import com.barco.common.utility.excel.SheetFiled;
+import com.barco.common.utility.validation.EventBridgeValidation;
+import com.barco.model.dto.request.FileUploadRequest;
 import com.barco.model.dto.request.LinkEBURequest;
 import com.barco.model.dto.request.EventBridgeRequest;
+import com.barco.model.dto.request.LookupDataRequest;
 import com.barco.model.dto.response.*;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.AppUserRepository;
@@ -16,15 +21,23 @@ import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.GLookup;
 import com.barco.model.util.lookup.EVENT_BRIDGE_TYPE;
+import java.io.ByteArrayOutputStream;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import com.barco.model.util.lookup.LookupUtil;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +51,10 @@ public class EventBridgeServiceImpl implements EventBridgeService {
     private final String XRHK = "XRHK-Authorization";
     private final String XSHK = "XSHK-Authorization";
 
+    @Value("${storage.efsFileDire}")
+    private String tempStoreDirectory;
+    @Autowired
+    private BulkExcel bulkExcel;
     @Autowired
     private JwtUtils jwtUtils;
     @Autowired
@@ -258,44 +275,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
     }
 
     /**
-     * Method use to null the report setting reference
-     * @param eventBridge
-     * */
-    private void nullifyReportSettingReferences(EventBridge eventBridge) {
-        // null all event id for pdf
-        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings())
-            && eventBridge.getReportPdfBridgeSettings().size() > 0) {
-            eventBridge.setReportPdfBridgeSettings(null);
-        }
-        // null all event id for xlsx
-        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings())
-            && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
-            eventBridge.setReportXlsxBridgeSettings(null);
-        }
-        // null all event id for csv
-        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings())
-            && eventBridge.getReportCsvBridgeSettings().size() > 0) {
-            eventBridge.setReportCsvBridgeSettings(null);
-        }
-        // null all event id for data
-        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings())
-            && eventBridge.getReportDataBridgeSettings().size() > 0) {
-            eventBridge.setReportDataBridgeSettings(null);
-        }
-        // null all event id for fist dim
-        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings())
-            && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
-            eventBridge.setReportFistDimBridgeSettings(null);
-        }
-        // null all event id for sec dim
-        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings())
-            && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
-            eventBridge.setReportSecDimBridgeSettings(null);
-        }
-    }
-
-    /**
-     * Method use to delete all EventBridgeevent bridge
+     * Method use to delete all Event Bridge
      * @param payload
      * @return AppResponse
      * */
@@ -367,19 +347,23 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
         }
-        Optional<EventBridge> EventBridge = this.eventBridgeRepository.findById(payload.getId());
-        if (!EventBridge.isPresent()) {
+        Optional<EventBridge> eventBridge = this.eventBridgeRepository.findById(payload.getId());
+        if (!eventBridge.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_ID, payload.getId()), payload);
+        }
+        if (BarcoUtil.isNull(eventBridge.get().getCredential())) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID,
+                payload.getId()), payload);
         }
         Optional<AppUser> appUser = this.appUserRepository.findById(payload.getAppUserId());
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.APPUSER_NOT_FOUND, payload.getAppUserId()), payload);
         }
         if (payload.getLinked()) {
-            return linkEventBridge(superAdmin.get(), appUser.get(), EventBridge.get(), payload);
+            return linkEventBridge(superAdmin.get(), appUser.get(), eventBridge.get(), payload);
         } else {
             this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_EVENT_BRIDGE_BY_EVENT_BRIDGE_ID_AND_APP_USER_ID,
-                    EventBridge.get().getId(), appUser.get().getId()));
+                eventBridge.get().getId(), appUser.get().getId()));
         }
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, ""), payload);
     }
@@ -405,7 +389,162 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_GEN_TOKEN);
         }
         EventBridge eventBridge = linkEventBridge.get().getEventBridge();
+        if (BarcoUtil.isNull(eventBridge.getCredential())) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID,
+                payload.getId()), payload);
+        }
         return generateTokenForEventBridge(linkEventBridge.get(), eventBridge, payload);
+    }
+
+    /**
+     * Method use to download the event bridge template file
+     * @return ByteArrayOutputStream
+     * */
+    @Override
+    public ByteArrayOutputStream downloadEventBridgeTemplateFile() throws Exception {
+        logger.info("Request downloadEventBridgeTemplateFile ");
+        return downloadTemplateFile(this.tempStoreDirectory, this.bulkExcel,
+            this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.EVENT_BRIDGE));
+    }
+
+    /**
+     * Method use to download the event bridge
+     * @param payload
+     * @return ByteArrayOutputStream
+     * */
+    @Override
+    public ByteArrayOutputStream downloadEventBridge(EventBridgeRequest payload) throws Exception {
+        logger.info("Request downloadEventBridge " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            throw new Exception(MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
+        }
+        SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.EVENT_BRIDGE);
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        this.bulkExcel.setWb(workbook);
+        XSSFSheet xssfSheet = workbook.createSheet(sheetFiled.getSheetName());
+        this.bulkExcel.setSheet(xssfSheet);
+        AtomicInteger rowCount = new AtomicInteger();
+        this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
+        List<EventBridge> eventBridges;
+        if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+            eventBridges = this.eventBridgeRepository.findAllByIdInAndCreatedByAndStatusNotOrderByDateCreatedDesc(
+                payload.getIds(), appUser.get(), APPLICATION_STATUS.DELETE);
+        } else {
+            eventBridges = this.eventBridgeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
+                appUser.get(), APPLICATION_STATUS.DELETE);
+        }
+        eventBridges.forEach(eventBridge -> {
+            if (!eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE)) {
+                rowCount.getAndIncrement();
+                List<String> dataCellValue = new ArrayList<>();
+                dataCellValue.add(eventBridge.getName());
+                dataCellValue.add(eventBridge.getBridgeUrl());
+                dataCellValue.add(eventBridge.getDescription());
+                dataCellValue.add(eventBridge.getBridgeType().name());
+                this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
+            }
+        });
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        return outputStream;
+    }
+
+    /**
+     * Method se the upload the event bridge
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse uploadEventBridge(FileUploadRequest payload) throws Exception {
+        logger.info("Request uploadEventBridge :- " + payload);
+        LookupDataRequest lookupDataRequest = new Gson().fromJson((String) payload.getData(), LookupDataRequest.class);
+        if (BarcoUtil.isNull(lookupDataRequest.getSessionUser().getUsername())) {
+            throw new Exception(MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            lookupDataRequest.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
+        } else if (!payload.getFile().getContentType().equalsIgnoreCase(this.bulkExcel.SHEET_TYPE)) {
+            logger.info("File Type " + payload.getFile().getContentType());
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.XLSX_FILE_ONLY);
+        }
+        // fill the stream with file into work-book
+        LookupDataResponse uploadLimit = this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.UPLOAD_LIMIT);
+        XSSFWorkbook workbook = new XSSFWorkbook(payload.getFile().getInputStream());
+        if (BarcoUtil.isNull(workbook) || workbook.getNumberOfSheets() == 0) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.YOU_UPLOAD_EMPTY_FILE);
+        }
+        SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.EVENT_BRIDGE);
+        XSSFSheet sheet = workbook.getSheet(sheetFiled.getSheetName());
+        if (BarcoUtil.isNull(sheet)) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.SHEET_NOT_FOUND, sheetFiled.getSheetName()));
+        } else if (sheet.getLastRowNum() < 1) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.YOU_CANT_UPLOAD_EMPTY_FILE);
+        } else if (sheet.getLastRowNum() > Long.valueOf(uploadLimit.getLookupValue())) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.FILE_SUPPORT_ROW_AT_TIME, uploadLimit.getLookupValue()));
+        }
+        List<EventBridgeValidation> eventBridgeValidations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        Iterator<Row> rows = sheet.iterator();
+        while (rows.hasNext()) {
+            Row currentRow = rows.next();
+            if (currentRow.getRowNum() == 0) {
+                for (int i=0; i < sheetFiled.getColTitle().size(); i++) {
+                    if (!currentRow.getCell(i).getStringCellValue().equals(sheetFiled.getColTitle().get(i))) {
+                        return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1)
+                            + " " + sheetFiled.getColTitle().get(i) + " heading missing.");
+                    }
+                }
+            } else if (currentRow.getRowNum() > 0) {
+                EventBridgeValidation eventBridgeValidation = new EventBridgeValidation();
+                eventBridgeValidation.setRowCounter(currentRow.getRowNum()+1);
+                for (int i=0; i < sheetFiled.getColTitle().size(); i++) {
+                    int index = 0;
+                    if (i == index) {
+                        eventBridgeValidation.setName(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        eventBridgeValidation.setBridgeUrl(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        eventBridgeValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
+                    } else if (i == ++index) {
+                        eventBridgeValidation.setBridgeType(this.bulkExcel.getCellDetail(currentRow, i));
+                    }
+                }
+                try {
+                    eventBridgeValidation.isValidBatch();
+                    EVENT_BRIDGE_TYPE.getByLookupCode(eventBridgeValidation.getBridgeType());
+                } catch (RuntimeException ex) {
+                    eventBridgeValidation.setErrorMsg(String.format("%s at row %s.<br>", ex.getMessage(),
+                        eventBridgeValidation.getRowCounter()));
+                }
+                if (!BarcoUtil.isNull(eventBridgeValidation.getErrorMsg())) {
+                    errors.add(eventBridgeValidation.getErrorMsg());
+                    continue;
+                }
+                eventBridgeValidations.add(eventBridgeValidation);
+            }
+        }
+        if (errors.size() > 0) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.TOTAL_INVALID, errors.size()), errors);
+        }
+        eventBridgeValidations.forEach(eventBridgeValidation -> {
+            EventBridge eventBridge = new EventBridge();
+            eventBridge.setName(eventBridgeValidation.getName());
+            eventBridge.setBridgeUrl(eventBridgeValidation.getBridgeUrl());
+            eventBridge.setBridgeType(EVENT_BRIDGE_TYPE.getByLookupCode(eventBridgeValidation.getBridgeType()));
+            eventBridge.setDescription(eventBridgeValidation.getDescription());
+            eventBridge.setCreatedBy(appUser.get());
+            eventBridge.setUpdatedBy(appUser.get());
+            eventBridge.setStatus(APPLICATION_STATUS.ACTIVE);
+            this.eventBridgeRepository.save(eventBridge);
+        });
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, ""));
     }
 
     /**
@@ -542,6 +681,43 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         credentialResponse.setName(credential.getName());
         credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(credential.getStatus().getLookupType()));
         return credentialResponse;
+    }
+
+    /**
+     * Method use to null the report setting reference
+     * @param eventBridge
+     * */
+    private void nullifyReportSettingReferences(EventBridge eventBridge) {
+        // null all event id for pdf
+        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings())
+                && eventBridge.getReportPdfBridgeSettings().size() > 0) {
+            eventBridge.setReportPdfBridgeSettings(null);
+        }
+        // null all event id for xlsx
+        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings())
+                && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
+            eventBridge.setReportXlsxBridgeSettings(null);
+        }
+        // null all event id for csv
+        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings())
+                && eventBridge.getReportCsvBridgeSettings().size() > 0) {
+            eventBridge.setReportCsvBridgeSettings(null);
+        }
+        // null all event id for data
+        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings())
+                && eventBridge.getReportDataBridgeSettings().size() > 0) {
+            eventBridge.setReportDataBridgeSettings(null);
+        }
+        // null all event id for fist dim
+        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings())
+                && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
+            eventBridge.setReportFistDimBridgeSettings(null);
+        }
+        // null all event id for sec dim
+        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings())
+                && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
+            eventBridge.setReportSecDimBridgeSettings(null);
+        }
     }
 
 }

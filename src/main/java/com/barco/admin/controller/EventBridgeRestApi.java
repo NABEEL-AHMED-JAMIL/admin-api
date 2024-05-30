@@ -3,19 +3,25 @@ package com.barco.admin.controller;
 import com.barco.admin.service.EventBridgeService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
-import com.barco.model.dto.request.LinkEBURequest;
-import com.barco.model.dto.request.SessionUser;
-import com.barco.model.dto.request.EventBridgeRequest;
+import com.barco.common.utility.excel.ExcelUtil;
+import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.security.UserSessionDetail;
+import com.barco.model.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
 
 /**
  * Api use to perform crud operation
@@ -209,6 +215,65 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.genEventBridgeToken(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while genEventBridgeToken ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- downloadEventBridgeTemplateFile
+     * @apiNote :- Api use to download event bridge template
+     * @return ResponseEntity<?> downloadEventBridgeTemplateFile
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value = "/downloadEventBridgeTemplateFile", method = RequestMethod.GET)
+    public ResponseEntity<?> downloadEventBridgeTemplateFile() {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
+            String fileName = "BatchEventBridgeDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
+            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
+            return ResponseEntity.ok().headers(headers).body(this.eventBridgeService.downloadEventBridgeTemplateFile().toByteArray());
+        } catch (Exception ex) {
+            logger.error("An error occurred while downloadEventBridgeTemplateFile xlsx file", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- downloadEventBridge
+     * @apiNote :- Api use to download the event bridge
+     * @return ResponseEntity<?> downloadEventBridge
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value = "/downloadEventBridge", method = RequestMethod.POST)
+    public ResponseEntity<?> downloadEventBridge(@RequestBody EventBridgeRequest payload) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
+            String fileName = "BatchEventBridgeDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
+            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
+            return ResponseEntity.ok().headers(headers).body(this.eventBridgeService.downloadEventBridge(payload).toByteArray());
+        } catch (Exception ex) {
+            logger.error("An error occurred while downloadEventBridge ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- uploadEventBridge
+     * @apiNote :- Api use to upload the lookup data
+     * @return ResponseEntity<?> uploadEventBridge
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value = "/uploadEventBridge", method = RequestMethod.POST)
+    public ResponseEntity<?> uploadEventBridge(FileUploadRequest payload) {
+        try {
+            if (!BarcoUtil.isNull(payload.getFile())) {
+                return new ResponseEntity<>(this.eventBridgeService.uploadEventBridge(payload), HttpStatus.OK);
+            }
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.DATA_NOT_FOUND), HttpStatus.BAD_REQUEST);
+        } catch (Exception ex) {
+            logger.error("An error occurred while uploadEventBridge ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
         }
     }

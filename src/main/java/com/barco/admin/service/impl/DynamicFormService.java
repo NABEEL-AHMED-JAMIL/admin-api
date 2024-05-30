@@ -169,6 +169,8 @@ public class DynamicFormService {
 
     /**
      * Method use to convert lookup date to g-lookup
+     * @param selectMenuOptions
+     * @return List<GLookup>
      * */
     private List<GLookup> getGLookup(Map<String, Object> selectMenuOptions) {
         List<LookupDataResponse> lookupDataResponses = (List<LookupDataResponse>) selectMenuOptions.get(RootService.SUB_LOOKUP_DATA);
