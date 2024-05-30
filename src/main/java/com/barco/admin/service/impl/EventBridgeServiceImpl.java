@@ -197,8 +197,13 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.eventBridgeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(adminUser.get(), APPLICATION_STATUS.DELETE)
-                .stream().map(eventBridge -> getEventBridgeResponse(eventBridge)).collect(Collectors.toList()));
+            this.eventBridgeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
+            adminUser.get(), APPLICATION_STATUS.DELETE).stream()
+            .map(eventBridge -> {
+                EventBridgeResponse eventBridgeResponse = getEventBridgeResponse(eventBridge);
+                eventBridgeResponse.setTotalLinkCount(getLinkEventBridgeCount(eventBridge));
+                return eventBridgeResponse;
+            }).collect(Collectors.toList()));
     }
 
     /**
@@ -292,7 +297,11 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         } else if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
-        this.eventBridgeRepository.deleteAll(this.eventBridgeRepository.findAllByIdIn(payload.getIds()));
+        this.eventBridgeRepository.deleteAll(this.eventBridgeRepository.findAllByIdIn(payload.getIds())
+        .stream().map(eventBridge -> {
+            this.nullifyReportSettingReferences(eventBridge);
+            return eventBridge;
+        }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
     }
 
@@ -670,6 +679,40 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         return eventBridgeResponse;
     }
 
+    /**
+     * Method use to get the link event bridge count
+     * @param eventBridge
+     * @return Integer
+     * */
+    private Integer getLinkEventBridgeCount(EventBridge eventBridge) {
+        Integer totalCount = 0;
+        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings())
+            && eventBridge.getReportPdfBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportPdfBridgeSettings().size();
+        }
+        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings())
+            && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportXlsxBridgeSettings().size();
+        }
+        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings())
+            && eventBridge.getReportCsvBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportCsvBridgeSettings().size();
+        }
+        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings())
+            && eventBridge.getReportDataBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportDataBridgeSettings().size();
+        }
+        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings())
+            && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportFistDimBridgeSettings().size();
+        }
+        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings())
+            && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportSecDimBridgeSettings().size();
+        }
+        return totalCount;
+    }
+
     /***
      * Method use to get the credential detail
      * @param credential
@@ -689,34 +732,46 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     private void nullifyReportSettingReferences(EventBridge eventBridge) {
         // null all event id for pdf
-        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings())
-                && eventBridge.getReportPdfBridgeSettings().size() > 0) {
-            eventBridge.setReportPdfBridgeSettings(null);
+        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings()) && eventBridge.getReportPdfBridgeSettings().size() > 0) {
+            eventBridge.getReportPdfBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setPdfBridge(null);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
         // null all event id for xlsx
-        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings())
-                && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
-            eventBridge.setReportXlsxBridgeSettings(null);
+        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings()) && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
+            eventBridge.getReportXlsxBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setXlsxBridge(null);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
         // null all event id for csv
-        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings())
-                && eventBridge.getReportCsvBridgeSettings().size() > 0) {
-            eventBridge.setReportCsvBridgeSettings(null);
+        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings()) && eventBridge.getReportCsvBridgeSettings().size() > 0) {
+            eventBridge.getReportCsvBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setCsvBridge(null);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
         // null all event id for data
-        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings())
-                && eventBridge.getReportDataBridgeSettings().size() > 0) {
-            eventBridge.setReportDataBridgeSettings(null);
+        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings()) && eventBridge.getReportDataBridgeSettings().size() > 0) {
+            eventBridge.getReportDataBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setDataBridge(null);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
         // null all event id for fist dim
-        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings())
-                && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
-            eventBridge.setReportFistDimBridgeSettings(null);
+        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings()) && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
+            eventBridge.getReportFistDimBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setFirstDimensionBridge(null);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
         // null all event id for sec dim
-        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings())
-                && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
-            eventBridge.setReportSecDimBridgeSettings(null);
+        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings()) && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
+            eventBridge.getReportSecDimBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setSecondDimensionBridge(null);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
     }
 
