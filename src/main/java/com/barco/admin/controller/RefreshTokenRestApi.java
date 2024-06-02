@@ -40,7 +40,7 @@ public class RefreshTokenRestApi {
             return new ResponseEntity<>(this.refreshTokenService.fetchByAllRefreshToken(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchByAllRefreshToken ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -57,7 +57,7 @@ public class RefreshTokenRestApi {
             return new ResponseEntity<>(this.refreshTokenService.deleteRefreshToken(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteRefreshToken ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -74,7 +74,7 @@ public class RefreshTokenRestApi {
             return new ResponseEntity<>(this.refreshTokenService.deleteAllRefreshToken(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllRefreshToken ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 }

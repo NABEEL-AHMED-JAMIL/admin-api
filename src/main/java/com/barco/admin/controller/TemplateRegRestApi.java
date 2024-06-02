@@ -40,7 +40,7 @@ public class TemplateRegRestApi {
             return new ResponseEntity<>(this.templateRegService.addTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addTemplateReg ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -57,7 +57,7 @@ public class TemplateRegRestApi {
             return new ResponseEntity<>(this.templateRegService.editTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while editTemplateReg ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -74,7 +74,7 @@ public class TemplateRegRestApi {
             return new ResponseEntity<>(this.templateRegService.findTemplateRegByTemplateId(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while findTemplateRegByTemplateId ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -91,7 +91,7 @@ public class TemplateRegRestApi {
             return new ResponseEntity<>(this.templateRegService.fetchTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchTemplateReg ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -108,7 +108,7 @@ public class TemplateRegRestApi {
             return new ResponseEntity<>(this.templateRegService.deleteTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteTemplateReg ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -125,7 +125,7 @@ public class TemplateRegRestApi {
             return new ResponseEntity<>(this.templateRegService.deleteAllTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllCredential ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 }

@@ -49,7 +49,7 @@ public class EVariableRestApi {
             return new ResponseEntity<>(this.eVariableService.addEnVariable(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addEnVariable ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -66,7 +66,7 @@ public class EVariableRestApi {
             return new ResponseEntity<>(this.eVariableService.updateEnVariable(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateEnVariable ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -83,7 +83,7 @@ public class EVariableRestApi {
             return new ResponseEntity<>(this.eVariableService.fetchAllEnVariable(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllEnVariable ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -100,7 +100,7 @@ public class EVariableRestApi {
             return new ResponseEntity<>(this.eVariableService.fetchEnVariableById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchEnVariableById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -116,7 +116,7 @@ public class EVariableRestApi {
             return new ResponseEntity<>(this.eVariableService.fetchUserEnvByEnvKey(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchUserEnvByEnvKey ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -133,7 +133,7 @@ public class EVariableRestApi {
             return new ResponseEntity<>(this.eVariableService.deleteEnVariableById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteEnVariableById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -150,7 +150,7 @@ public class EVariableRestApi {
             return new ResponseEntity<>(this.eVariableService.deleteAllEnVariable(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllEnVariable ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -170,7 +170,7 @@ public class EVariableRestApi {
                 return ResponseEntity.ok().headers(headers).body(this.eVariableService.downloadEnVariableTemplateFile().toByteArray());
         } catch (Exception ex) {
             logger.error("An error occurred while downloadEnVariableTemplateFile xlsx file", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -190,7 +190,7 @@ public class EVariableRestApi {
             return ResponseEntity.ok().headers(headers).body(this.eVariableService.downloadEnVariable(payload).toByteArray());
         } catch (Exception ex) {
             logger.error("An error occurred while downloadEnVariable ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -209,7 +209,7 @@ public class EVariableRestApi {
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.DATA_NOT_FOUND), HttpStatus.BAD_REQUEST);
         } catch (Exception ex) {
             logger.error("An error occurred while uploadEnVariable ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -225,7 +225,7 @@ public class EVariableRestApi {
             return new ResponseEntity<>(this.eVariableService.fetchLinkEVariableWitUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchLinkEVariableWitUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -243,7 +243,7 @@ public class EVariableRestApi {
             return new ResponseEntity<>(this.eVariableService.linkEVariableWithUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkEVariableWithUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 

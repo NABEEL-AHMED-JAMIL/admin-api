@@ -40,7 +40,7 @@ public class DashboardSettingRestApi {
             return new ResponseEntity<>(this.dashboardSettingService.addDashboardSetting(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addDashboardSetting ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -57,7 +57,7 @@ public class DashboardSettingRestApi {
             return new ResponseEntity<>(this.dashboardSettingService.updateDashboardSetting(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateDashboardSetting ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -74,7 +74,7 @@ public class DashboardSettingRestApi {
             return new ResponseEntity<>(this.dashboardSettingService.fetchAllDashboardSetting(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllDashboardSetting ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -91,7 +91,7 @@ public class DashboardSettingRestApi {
             return new ResponseEntity<>(this.dashboardSettingService.fetchDashboardSettingById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchDashboardSettingById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -108,7 +108,7 @@ public class DashboardSettingRestApi {
             return new ResponseEntity<>(this.dashboardSettingService.fetchAllDashboardSettingByGroup(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllDashboardSettingByGroup ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -125,7 +125,7 @@ public class DashboardSettingRestApi {
             return new ResponseEntity<>(this.dashboardSettingService.deleteDashboardSettingById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteDashboardSettingById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -142,7 +142,7 @@ public class DashboardSettingRestApi {
             return new ResponseEntity<>(this.dashboardSettingService.deleteAllDashboardSetting(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllDashboardSetting ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 }

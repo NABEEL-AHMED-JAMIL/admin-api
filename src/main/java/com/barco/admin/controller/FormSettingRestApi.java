@@ -49,7 +49,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.addSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addSTT ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -66,7 +66,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.editSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while editSTT ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -83,7 +83,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.deleteSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteSTT ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -100,7 +100,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchSTTBySttId(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchSTTBySttId ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -117,7 +117,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchAllSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllSTT ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -134,7 +134,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.deleteAllSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllSTT ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -151,7 +151,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchAllSTTLinkForm(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllSTTLinkForm ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -168,7 +168,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkSTTForm(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkSTTForm ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -185,7 +185,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.addForm(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addForm ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -202,7 +202,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.editForm(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while editForm ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -219,7 +219,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.deleteFormById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteFormById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -236,7 +236,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchFormByFormId(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchFormByFormId ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -253,7 +253,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchForms(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchForms ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -270,7 +270,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchFormsByFormType(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchFormsByFormType ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -287,7 +287,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.deleteAllForms(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllForms ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -304,7 +304,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchAllFormLinkSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllFormLinkSTT ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -321,7 +321,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkFormSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkFormSTT ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -338,7 +338,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchAllFormLinkSection(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllFormLinkSection ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -355,7 +355,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkFormSection(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkFormSection ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -372,7 +372,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkFormSectionOrder(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkFormSectionOrder ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -389,7 +389,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.addSection(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addSection ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -406,7 +406,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.editSection(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while editSection ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -423,7 +423,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.deleteSectionById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteSectionById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -440,7 +440,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchSectionBySectionId(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchSectionBySectionId ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -457,7 +457,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchSections(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchSections ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -474,7 +474,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.deleteAllSections(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllSections ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -491,7 +491,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchAllSectionLinkControl(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllSectionLinkControl ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -508,7 +508,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkSectionControl(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkSectionControl ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -525,7 +525,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkSectionControlOrder(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkSectionControlOrder ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -542,7 +542,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchAllSectionLinkForm(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllSectionLinkForm ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -559,7 +559,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkSectionForm(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkSectionForm ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -576,7 +576,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkSectionFormOrder(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkSectionFormOrder ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -593,7 +593,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.addControl(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addControl ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -610,7 +610,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.editControl(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while editControl ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -627,7 +627,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.deleteControlById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteControlById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -644,7 +644,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchControlByControlId(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchControlByControlId ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -661,7 +661,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchControls(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchControls ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -678,7 +678,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.deleteAllControls(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllControls ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -695,7 +695,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.fetchAllControlLinkSection(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllControlLinkSection ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -712,7 +712,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkControlSection(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkControlSection ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -729,7 +729,7 @@ public class FormSettingRestApi {
             return new ResponseEntity<>(this.formSettingService.linkControlSectionOrder(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkControlSectionOrder ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -750,7 +750,7 @@ public class FormSettingRestApi {
             return ResponseEntity.ok().headers(headers).body(this.formSettingService.downloadSTTCommonTemplateFile(payload).toByteArray());
         } catch (Exception ex) {
             logger.error("An error occurred while downloadSTTCommonTemplateFile xlsx file", ExceptionUtil.getRootCauseMessage(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 

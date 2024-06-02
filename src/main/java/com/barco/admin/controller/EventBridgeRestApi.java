@@ -50,7 +50,7 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.addEventBridge(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addEventBridge ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -67,7 +67,7 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.updateEventBridge(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateEventBridge ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -86,7 +86,7 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.fetchAllEventBridge(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllEventBridge ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -105,7 +105,7 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.fetchEventBridgeById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchEventBridgeById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -124,7 +124,7 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.fetchEventBridgeByBridgeType(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchEventBridgeByBridgeType ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -141,7 +141,7 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.deleteEventBridgeById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteEventBridgeById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -158,7 +158,7 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.deleteAllEventBridge(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllEventBridge ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -177,7 +177,7 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.fetchLinkEventBridgeWitUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchLinkEventBridgeWitUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -196,7 +196,7 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.linkEventBridgeWithUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkEventBridgeWithUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -215,7 +215,7 @@ public class EventBridgeRestApi {
             return new ResponseEntity<>(this.eventBridgeService.genEventBridgeToken(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while genEventBridgeToken ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 

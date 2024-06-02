@@ -45,10 +45,10 @@ public class AuthRestApi {
             return new ResponseEntity<>(this.authService.signInAppUser(requestPayload), HttpStatus.OK);
         } catch (BadCredentialsException ex) {
             logger.error("An error occurred while signInAppUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.OK);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         } catch (Exception ex) {
             logger.error("An error occurred while signInAppUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -66,7 +66,7 @@ public class AuthRestApi {
             return new ResponseEntity<>(this.authService.signupAppUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while signupAppUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -82,7 +82,7 @@ public class AuthRestApi {
             return new ResponseEntity<>(this.authService.forgotPassword(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while forgotPassword ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -98,7 +98,7 @@ public class AuthRestApi {
             return new ResponseEntity<>(this.authService.resetPassword(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while resetPassword ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -114,7 +114,7 @@ public class AuthRestApi {
             return new ResponseEntity<>(this.authService.authClamByRefreshToken(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while authClamByRefreshToken ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -130,7 +130,7 @@ public class AuthRestApi {
             return new ResponseEntity<>(this.authService.logoutAppUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while logoutAppUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 

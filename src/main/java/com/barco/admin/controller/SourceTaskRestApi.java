@@ -41,7 +41,7 @@ public class SourceTaskRestApi {
             return new ResponseEntity<>(this.sourceTaskService.addSourceTask(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addSourceTask ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -58,7 +58,7 @@ public class SourceTaskRestApi {
             return new ResponseEntity<>(this.sourceTaskService.editSourceTask(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while editSourceTask ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -75,7 +75,7 @@ public class SourceTaskRestApi {
             return new ResponseEntity<>(this.sourceTaskService.deleteSourceTask(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteSourceTask ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -92,7 +92,7 @@ public class SourceTaskRestApi {
             return new ResponseEntity<>(this.sourceTaskService.deleteAllSourceTask(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllSourceTask ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -109,7 +109,7 @@ public class SourceTaskRestApi {
             return new ResponseEntity<>(this.sourceTaskService.fetchAllSourceTask(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllSourceTask ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -126,7 +126,7 @@ public class SourceTaskRestApi {
             return new ResponseEntity<>(this.sourceTaskService.fetchSourceTaskById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchSourceTaskById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -143,7 +143,7 @@ public class SourceTaskRestApi {
             return new ResponseEntity<>(this.sourceTaskService.fetchAllSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllSTT ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
