@@ -41,7 +41,7 @@ public class ReportSettingRestApi {
             return new ResponseEntity<>(this.reportSettingService.addReportSetting(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addReportSetting ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -58,7 +58,7 @@ public class ReportSettingRestApi {
             return new ResponseEntity<>(this.reportSettingService.updateReportSetting(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateReportSetting ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -75,7 +75,7 @@ public class ReportSettingRestApi {
             return new ResponseEntity<>(this.reportSettingService.fetchAllReportSetting(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllReportSetting ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -92,7 +92,7 @@ public class ReportSettingRestApi {
             return new ResponseEntity<>(this.reportSettingService.fetchReportSettingByReportId(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchReportSettingByReportId ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -109,7 +109,7 @@ public class ReportSettingRestApi {
             return new ResponseEntity<>(this.reportSettingService.fetchAllReportByGroup(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllReportByGroup ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -126,7 +126,7 @@ public class ReportSettingRestApi {
             return new ResponseEntity<>(this.reportSettingService.deleteReportSettingById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteReportSettingById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -143,7 +143,7 @@ public class ReportSettingRestApi {
             return new ResponseEntity<>(this.reportSettingService.deleteAllReportSetting(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllReportSetting ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -160,7 +160,7 @@ public class ReportSettingRestApi {
             return new ResponseEntity<>(this.reportSettingService.fetchReportResult(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchReportResult ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 

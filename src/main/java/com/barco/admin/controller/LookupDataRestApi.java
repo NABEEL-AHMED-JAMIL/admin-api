@@ -54,7 +54,7 @@ public class LookupDataRestApi {
             return new ResponseEntity<>(this.lookupDataCacheService.addLookupData(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addLookupData ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -71,7 +71,7 @@ public class LookupDataRestApi {
             return new ResponseEntity<>(this.lookupDataCacheService.updateLookupData(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateLookupData ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -87,7 +87,7 @@ public class LookupDataRestApi {
             return new ResponseEntity<>(this.lookupDataCacheService.findAllParentLookupByUsername(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while findAllParentLookupByUsername ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -104,7 +104,7 @@ public class LookupDataRestApi {
             return new ResponseEntity<>(this.lookupDataCacheService.fetchSubLookupDataByParentLookupDataId(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchSubLookupDataByParentLookupDataId ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -120,7 +120,7 @@ public class LookupDataRestApi {
             return new ResponseEntity<>(this.lookupDataCacheService.fetchLookupDataByLookupType(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchLookupByLookupType ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -137,7 +137,7 @@ public class LookupDataRestApi {
             return new ResponseEntity<>(this.lookupDataCacheService.deleteLookupData(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteLookupData ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -157,7 +157,7 @@ public class LookupDataRestApi {
             return ResponseEntity.ok().headers(headers).body(this.lookupDataCacheService.downloadLookupDataTemplateFile().toByteArray());
         } catch (Exception ex) {
             logger.error("An error occurred while downloadLookupDataTemplateFile xlsx file", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -177,7 +177,7 @@ public class LookupDataRestApi {
             return ResponseEntity.ok().headers(headers).body(this.lookupDataCacheService.downloadLookupData(payload).toByteArray());
         } catch (Exception ex) {
             logger.error("An error occurred while downloadLookupData ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -196,7 +196,7 @@ public class LookupDataRestApi {
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.DATA_NOT_FOUND), HttpStatus.BAD_REQUEST);
         } catch (Exception ex) {
             logger.error("An error occurred while uploadLookup ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 

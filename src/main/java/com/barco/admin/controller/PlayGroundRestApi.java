@@ -39,7 +39,7 @@ public class PlayGroundRestApi {
             return new ResponseEntity<>(this.playGroundService.fetchAllFormForPlayGround(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllFormForPlayGround ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -55,7 +55,7 @@ public class PlayGroundRestApi {
             return new ResponseEntity<>(this.playGroundService.fetchFormForPlayGroundByFormId(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchFormForPlayGroundByFormId ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 

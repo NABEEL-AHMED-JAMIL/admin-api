@@ -37,7 +37,7 @@ public class NotificationRestApi {
             return new ResponseEntity<>(this.notificationService.updateNotification(requestPayload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateNotification ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -53,7 +53,7 @@ public class NotificationRestApi {
             return new ResponseEntity<>(this.notificationService.fetchAllNotification(username), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllNotification ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ExceptionUtil.getRootCauseMessage(ex)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
