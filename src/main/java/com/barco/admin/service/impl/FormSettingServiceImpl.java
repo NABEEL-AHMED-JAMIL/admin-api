@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.sql.Timestamp;
 import java.util.*;
@@ -1357,6 +1359,7 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @return AppResponse
      * */
     @Override
+    @Transactional
     public AppResponse linkSectionControlOrder(SectionRequest payload) throws Exception {
         logger.info("Request linkSectionControlOrder :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
@@ -1373,15 +1376,15 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_LINK_SECTION_ORDER_MISSING);
         }
         this.genControlLinkGenSectionRepository.saveAll(
-            this.genControlLinkGenSectionRepository.findAllByIdInAndStatusNot(payload.getSectionLinkControl(),
-            APPLICATION_STATUS.DELETE).stream().map(genControlLinkGenSection -> {
-                genControlLinkGenSection.setControlOrder(payload.getControlOrder());
-                genControlLinkGenSection.setVisiblePattern(payload.getVisiblePattern());
-                genControlLinkGenSection.setDisabledPattern(payload.getDisabledPattern());
-                genControlLinkGenSection.setFieldWidth(payload.getFieldWidth());
-                genControlLinkGenSection.setUpdatedBy(appUser.get());
-                return genControlLinkGenSection;
-            }).collect(Collectors.toList()));
+            this.genControlLinkGenSectionRepository.findAllByIdInAndStatusNot(payload.getSectionLinkControl(), APPLICATION_STATUS.DELETE)
+                 .stream().map(genControlLinkGenSection -> {
+                    genControlLinkGenSection.setControlOrder(payload.getControlOrder());
+                    genControlLinkGenSection.setVisiblePattern(payload.getVisiblePattern());
+                    genControlLinkGenSection.setDisabledPattern(payload.getDisabledPattern());
+                    genControlLinkGenSection.setFieldWidth(payload.getFieldWidth());
+                    genControlLinkGenSection.setUpdatedBy(appUser.get());
+                    return genControlLinkGenSection;
+                }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getSectionLinkControl()), payload);
     }
 
