@@ -67,6 +67,10 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_GROUP_MISSING);
         } else if (BarcoUtil.isNull(payload.getDescription())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_DESCRIPTION_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDateFilter())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_DATA_FILTER_MISSING);
+        }  else if (BarcoUtil.isNull(payload.getFetchRate())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_FETCH_RATE_MISSING);
         } else if (BarcoUtil.isNull(payload.getPayloadRef())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_PAYLOAD_REF_MISSING);
         } else if (BarcoUtil.isNull(payload.getIsPdf())) {
@@ -131,6 +135,10 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_GROUP_MISSING);
         } else if (BarcoUtil.isNull(payload.getDescription())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_DESCRIPTION_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDateFilter())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_DATA_FILTER_MISSING);
+        } else if (BarcoUtil.isNull(payload.getFetchRate())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_FETCH_RATE_MISSING);
         } else if (BarcoUtil.isNull(payload.getPayloadRef())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_PAYLOAD_REF_MISSING);
         } else if (BarcoUtil.isNull(payload.getIsPdf())) {
@@ -358,6 +366,9 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         ReportSettingResponse reportSettingResponse = new ReportSettingResponse();
         reportSettingResponse.setId(reportSetting.getId());
         reportSettingResponse.setName(reportSetting.getName());
+        reportSettingResponse.setDateFilter(UI_LOOKUP.getStatusByLookupType(reportSetting.getDateFilter().getLookupType()));
+        reportSettingResponse.setFetchRate(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+            FETCH_LIMIT.getName(), Long.valueOf(reportSetting.getFetchRate().getLookupCode()))));
         if (!BarcoUtil.isNull(reportSetting.getGroupType())) {
             LookupData lookupData = reportSetting.getGroupType();
             reportSettingResponse.setGroupType(new GLookup(lookupData.getLookupType(),
@@ -420,6 +431,8 @@ public class ReportSettingServiceImpl implements ReportSettingService {
      * */
     private ReportSetting getReportSetting(ReportSettingRequest payload, ReportSetting reportSetting) {
         reportSetting.setName(payload.getName());
+        reportSetting.setDateFilter(UI_LOOKUP.getByLookupCode(payload.getDateFilter()));
+        reportSetting.setFetchRate(FETCH_LIMIT.getByLookupCode(payload.getFetchRate()));
         reportSetting.setDescription(payload.getDescription());
         reportSetting.setPayloadRef(PAYLOAD_REF.getByLookupCode(payload.getPayloadRef()));
         reportSetting.setIsPdf(UI_LOOKUP.getByLookupCode(payload.getIsPdf()));
