@@ -1204,20 +1204,31 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
-        List<GenSection> result = this.genSectionRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
-            startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE);
+        List<GenSection> result;
+        if (BarcoUtil.isNull(payload.getStartDate()) && BarcoUtil.isNull(payload.getEndDate())) {
+            Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
+            Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+            result = this.genSectionRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
+                startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE);
+        } else {
+            result = this.genSectionRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
+                adminUser.get(), APPLICATION_STATUS.DELETE);
+        }
         if (result.isEmpty()) {
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
         }
-        List<SectionResponse> sectionResponses = result.stream().map(genSection -> {
-            SectionResponse sectionResponse = getSectionResponse(genSection);
-            sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository.countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
-            sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository.countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
-            return sectionResponse;
-        }).collect(Collectors.toList());
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sectionResponses);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+            result.stream().map(genSection -> {
+                SectionResponse sectionResponse = getSectionResponse(genSection);
+                // no need to give the count if start date and end date not there
+                if (BarcoUtil.isNull(payload.getStartDate()) && BarcoUtil.isNull(payload.getEndDate())) {
+                    sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository
+                        .countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
+                    sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository
+                        .countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
+                }
+                return sectionResponse;
+            }).collect(Collectors.toList()));
     }
 
     /**
@@ -1379,8 +1390,6 @@ public class FormSettingServiceImpl implements FormSettingService {
             this.genControlLinkGenSectionRepository.findAllByIdInAndStatusNot(payload.getSectionLinkControl(), APPLICATION_STATUS.DELETE)
                  .stream().map(genControlLinkGenSection -> {
                     genControlLinkGenSection.setControlOrder(payload.getControlOrder());
-                    genControlLinkGenSection.setVisiblePattern(payload.getVisiblePattern());
-                    genControlLinkGenSection.setDisabledPattern(payload.getDisabledPattern());
                     genControlLinkGenSection.setFieldWidth(payload.getFieldWidth());
                     genControlLinkGenSection.setUpdatedBy(appUser.get());
                     return genControlLinkGenSection;
@@ -1888,8 +1897,6 @@ public class FormSettingServiceImpl implements FormSettingService {
                 payload.getControlLinkSection(), APPLICATION_STATUS.DELETE).stream()
                 .map(genControlLinkGenSection -> {
                     genControlLinkGenSection.setControlOrder(payload.getControlOrder());
-                    genControlLinkGenSection.setVisiblePattern(payload.getVisiblePattern());
-                    genControlLinkGenSection.setDisabledPattern(payload.getDisabledPattern());
                     genControlLinkGenSection.setFieldWidth(payload.getFieldWidth());
                     genControlLinkGenSection.setUpdatedBy(appUser.get());
                     return genControlLinkGenSection;
