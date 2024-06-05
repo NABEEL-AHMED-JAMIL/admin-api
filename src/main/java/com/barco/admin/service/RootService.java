@@ -267,28 +267,31 @@ public interface RootService {
      * */
     public default SourceTaskTypeLinkFormResponse getSourceTaskTypeLinkFormResponse(
         HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
-        SourceTaskTypeLinkFormResponse seSourceTaskTypeLinkFormResponse = new SourceTaskTypeLinkFormResponse();
+        SourceTaskTypeLinkFormResponse sourceTaskTypeLinkFormResponse = new SourceTaskTypeLinkFormResponse();
         if (data.containsKey(QueryService.ID)) {
-            seSourceTaskTypeLinkFormResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
+            sourceTaskTypeLinkFormResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
         }
         if (data.containsKey(QueryService.FORM_NAME) && !BarcoUtil.isNull(data.get(QueryService.FORM_NAME))) {
-            seSourceTaskTypeLinkFormResponse.setFormName(data.get(QueryService.FORM_NAME).toString());
+            sourceTaskTypeLinkFormResponse.setFormName(data.get(QueryService.FORM_NAME).toString());
+        }
+        if (data.containsKey(QueryService.SERVICE_ID) && !BarcoUtil.isNull(data.get(QueryService.SERVICE_ID))) {
+            sourceTaskTypeLinkFormResponse.setServiceId(data.get(QueryService.SERVICE_ID).toString());
         }
         if (data.containsKey(QueryService.FORM_TYPE) && !BarcoUtil.isNull(data.get(QueryService.FORM_TYPE))) {
             GLookup formType = GLookup.getGLookup(lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
                     FORM_TYPE.getName(), Long.valueOf(data.get(QueryService.FORM_TYPE).toString())));
-            seSourceTaskTypeLinkFormResponse.setFormType(formType);
+            sourceTaskTypeLinkFormResponse.setFormType(formType);
         }
         if (data.containsKey(QueryService.STATUS) && !BarcoUtil.isNull(data.get(QueryService.STATUS))) {
-            seSourceTaskTypeLinkFormResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(Long.valueOf(data.get(QueryService.STATUS).toString())));
+            sourceTaskTypeLinkFormResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(Long.valueOf(data.get(QueryService.STATUS).toString())));
         }
         if (data.containsKey(QueryService.LINK_STATUS) && !BarcoUtil.isNull(data.get(QueryService.LINK_STATUS))) {
-            seSourceTaskTypeLinkFormResponse.setLinkStatus(Boolean.valueOf(data.get(QueryService.LINK_STATUS).toString()));
+            sourceTaskTypeLinkFormResponse.setLinkStatus(Boolean.valueOf(data.get(QueryService.LINK_STATUS).toString()));
         }
         if (data.containsKey(QueryService.LINK_FORM_ID) && !BarcoUtil.isNull(data.get(QueryService.LINK_FORM_ID))) {
-            seSourceTaskTypeLinkFormResponse.setSttLinkForm(Long.valueOf(data.get(QueryService.LINK_FORM_ID).toString()));
+            sourceTaskTypeLinkFormResponse.setSttLinkForm(Long.valueOf(data.get(QueryService.LINK_FORM_ID).toString()));
         }
-        return seSourceTaskTypeLinkFormResponse;
+        return sourceTaskTypeLinkFormResponse;
     }
 
 

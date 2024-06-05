@@ -1221,7 +1221,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             result.stream().map(genSection -> {
                 SectionResponse sectionResponse = getSectionResponse(genSection);
                 // no need to give the count if start date and end date not there
-                if (BarcoUtil.isNull(payload.getStartDate()) && BarcoUtil.isNull(payload.getEndDate())) {
+                if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
                     sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository
                         .countByGenSectionAndStatusNot(genSection, APPLICATION_STATUS.DELETE));
                     sectionResponse.setTotalControl(this.genControlLinkGenSectionRepository

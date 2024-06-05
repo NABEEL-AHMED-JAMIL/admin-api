@@ -236,6 +236,10 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
                 lookupDataResponse.add(this.fillLookupDataResponse(lookupData, new LookupDataResponse(), true));
             }
         }
+        if (!BarcoUtil.isNull(payload.getUiLookup())) {
+            lookupDataResponse = lookupDataResponse.stream().filter(lkupDataRes -> lkupDataRes.getUiLookup()
+                .getLookupCode().equals(UI_LOOKUP.TRUE.getLookupCode())).collect(Collectors.toList());
+        }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, lookupDataResponse);
     }
 

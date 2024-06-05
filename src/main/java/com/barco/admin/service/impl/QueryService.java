@@ -53,6 +53,7 @@ public class QueryService {
     public static String PROFILE_IMG = "profile_img";
     public static String LINK_DATA = "link_data";
     public static String LINKED = "linked";
+    public static String SERVICE_ID = "service_id";
     public static String LINK_STATUS = "link_status";
     public static String PROFILE_ID = "profile_id";
     public static String ENV_VALUE = "env_value";
@@ -144,7 +145,7 @@ public class QueryService {
         "LEFT JOIN STTF_LINK_STT SLS ON SLS.STT_ID = STT.ID AND SLS.FORM_ID = %d  AND SLS.STATUS != %2$d " +
         "WHERE STT.STATUS != %2$d AND STT.CREATED_BY_ID = %3$d " +
         "ORDER BY STT.DATE_CREATED DESC";
-    public static String FETCH_ALL_FORM_LINK_STT = "SELECT GF.ID, GF.FORM_NAME, GF.FORM_TYPE, GF.STATUS, " +
+    public static String FETCH_ALL_FORM_LINK_STT = "SELECT GF.ID, GF.FORM_NAME, GF.SERVICE_ID, GF.FORM_TYPE, GF.STATUS, " +
         "CASE WHEN SLS.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
         "SLS.ID AS LINK_FORM_ID " +
         "FROM GEN_FORM GF " +
