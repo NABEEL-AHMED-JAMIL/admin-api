@@ -114,12 +114,6 @@ public class DynamicFormService {
         } else {
             dynamicControl.setValue(genCntLinkGenSct.getGenControl().getDefaultValue());
         }
-        if(!BarcoUtil.isNull(genCntLinkGenSct.getVisiblePattern())) {
-            dynamicControl.setVisiblePattern(new Gson().fromJson(genCntLinkGenSct.getVisiblePattern(), Object.class));
-        }
-        if(!BarcoUtil.isNull(genCntLinkGenSct.getDisabledPattern())) {
-            dynamicControl.setDisabledPattern(new Gson().fromJson(genCntLinkGenSct.getDisabledPattern(), Object.class));
-        }
         dynamicControl.setPlaceHolder(genCntLinkGenSct.getGenControl().getPlaceHolder());
         if (!BarcoUtil.isNull(genCntLinkGenSct.getGenControl().getFieldLkValue())) {
             dynamicControl.setSelectMenuOptions(this.getGLookup((Map<String, Object>) this.lookupDataCacheService
