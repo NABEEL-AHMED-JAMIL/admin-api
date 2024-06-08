@@ -305,7 +305,15 @@ public class SourceTaskServiceImpl implements SourceTaskService {
             sourceTaskTypeResponse.setId(sourceTask.getSourceTaskType().getId());
             sourceTaskTypeResponse.setServiceName(sourceTask.getSourceTaskType().getServiceName());
             sourceTaskTypeResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTask.getStatus().getLookupType()));
-            sourceTaskResponse.setSourceTaskType(sourceTaskTypeResponse);
+            sourceTaskResponse.setLinkStt(sourceTaskTypeResponse);
+        }
+        if (!BarcoUtil.isNull(sourceTask.getGenForm())) {
+            FormResponse formResponse = new FormResponse();
+            formResponse.setId(sourceTask.getGenForm().getId());
+            formResponse.setFormName(sourceTask.getGenForm().getFormName());
+            formResponse.setServiceId(sourceTask.getGenForm().getServiceId());
+            formResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTask.getStatus().getLookupType()));
+            sourceTaskResponse.setLinkForm(formResponse);
         }
         return sourceTaskResponse;
     }
