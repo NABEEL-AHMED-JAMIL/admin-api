@@ -69,7 +69,7 @@ public class EnableAbilityAndVisibilityRestApi {
      * @return ResponseEntity
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/editEnableAbility", method= RequestMethod.POST)
+    @RequestMapping(value="/fetchAllEnableAbility", method= RequestMethod.POST)
     public ResponseEntity<?> fetchAllEnableAbility(@RequestBody EnableAbilityRequest payload) {
         try {
             return new ResponseEntity<>(this.enableAbilityAndVisibilityService.fetchAllEnableAbility(payload), HttpStatus.OK);

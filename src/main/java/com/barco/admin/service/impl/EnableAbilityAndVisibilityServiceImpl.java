@@ -4,8 +4,10 @@ import com.barco.admin.service.EnableAbilityAndVisibilityService;
 import com.barco.model.dto.request.EnableAbilityRequest;
 import com.barco.model.dto.request.VisibilityRequest;
 import com.barco.model.dto.response.AppResponse;
+import com.barco.model.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +17,17 @@ import org.springframework.stereotype.Service;
 public class EnableAbilityAndVisibilityServiceImpl implements EnableAbilityAndVisibilityService {
 
     private Logger logger = LoggerFactory.getLogger(DynamicFormService.class);
+
+    @Autowired
+    private VisibilityConfigRepository visibilityConfigRepository;
+    @Autowired
+    private EnableAbilityConfigRepository enableAbilityConfigRepository;
+    @Autowired
+    private ConditionalLogicRepository conditionalLogicRepository;
+    @Autowired
+    private CaseConditionRepository caseConditionRepository;
+    @Autowired
+    private ThenConditionRepository thenConditionRepository;
 
     /**
      * Method use to add enable ability
