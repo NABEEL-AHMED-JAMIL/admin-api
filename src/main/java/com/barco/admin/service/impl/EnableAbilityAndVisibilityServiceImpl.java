@@ -1,8 +1,7 @@
 package com.barco.admin.service.impl;
 
 import com.barco.admin.service.EnableAbilityAndVisibilityService;
-import com.barco.model.dto.request.EnableAbilityRequest;
-import com.barco.model.dto.request.VisibilityRequest;
+import com.barco.model.dto.request.EnableAndVisibilityConfigRequest;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.repository.*;
 import org.slf4j.Logger;
@@ -19,9 +18,7 @@ public class EnableAbilityAndVisibilityServiceImpl implements EnableAbilityAndVi
     private Logger logger = LoggerFactory.getLogger(DynamicFormService.class);
 
     @Autowired
-    private VisibilityConfigRepository visibilityConfigRepository;
-    @Autowired
-    private EnableAbilityConfigRepository enableAbilityConfigRepository;
+    private EnableAndVisibilityConfigRepository enableAndVisibilityConfigRepository;
     @Autowired
     private ConditionalLogicRepository conditionalLogicRepository;
     @Autowired
@@ -35,8 +32,8 @@ public class EnableAbilityAndVisibilityServiceImpl implements EnableAbilityAndVi
      * @return AppResponse
      * */
     @Override
-    public AppResponse addEnableAbility(EnableAbilityRequest payload) throws Exception {
-        logger.info("Request addEnableAbility :- " + payload);
+    public AppResponse addEnableAndVisibilityConfig(EnableAndVisibilityConfigRequest payload) throws Exception {
+        logger.info("Request addEnableAndVisibilityConfig :- " + payload);
         return null;
     }
 
@@ -46,8 +43,8 @@ public class EnableAbilityAndVisibilityServiceImpl implements EnableAbilityAndVi
      * @return AppResponse
      * */
     @Override
-    public AppResponse editEnableAbility(EnableAbilityRequest payload) throws Exception {
-        logger.info("Request editEnableAbility :- " + payload);
+    public AppResponse editEnableAndVisibilityConfig(EnableAndVisibilityConfigRequest payload) throws Exception {
+        logger.info("Request editEnableAndVisibilityConfig :- " + payload);
         return null;
     }
 
@@ -57,8 +54,8 @@ public class EnableAbilityAndVisibilityServiceImpl implements EnableAbilityAndVi
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchAllEnableAbility(EnableAbilityRequest payload) throws Exception {
-        logger.info("Request fetchAllEnableAbility :- " + payload);
+    public AppResponse fetchAllEnableAndVisibilityConfig(EnableAndVisibilityConfigRequest payload) throws Exception {
+        logger.info("Request fetchAllEnableAndVisibilityConfig :- " + payload);
         return null;
     }
 
@@ -68,8 +65,8 @@ public class EnableAbilityAndVisibilityServiceImpl implements EnableAbilityAndVi
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchEnableAbilityById(EnableAbilityRequest payload) throws Exception {
-        logger.info("Request fetchEnableAbilityById :- " + payload);
+    public AppResponse fetchEnableAndVisibilityConfigById(EnableAndVisibilityConfigRequest payload) throws Exception {
+        logger.info("Request fetchEnableAndVisibilityConfigById :- " + payload);
         return null;
     }
 
@@ -79,8 +76,8 @@ public class EnableAbilityAndVisibilityServiceImpl implements EnableAbilityAndVi
      * @return AppResponse
      * */
     @Override
-    public AppResponse deleteEnableAbilityById(EnableAbilityRequest payload) throws Exception {
-        logger.info("Request deleteEnableAbilityById :- " + payload);
+    public AppResponse deleteEnableAndVisibilityConfigById(EnableAndVisibilityConfigRequest payload) throws Exception {
+        logger.info("Request deleteEnableAndVisibilityConfigById :- " + payload);
         return null;
     }
 
@@ -90,74 +87,9 @@ public class EnableAbilityAndVisibilityServiceImpl implements EnableAbilityAndVi
      * @return AppResponse
      * */
     @Override
-    public AppResponse deleteAllEnableAbility(EnableAbilityRequest payload) throws Exception {
-        logger.info("Request deleteAllEnableAbility :- " + payload);
+    public AppResponse deleteAllEnableAndVisibilityConfig(EnableAndVisibilityConfigRequest payload) throws Exception {
+        logger.info("Request deleteAllEnableAndVisibilityConfig :- " + payload);
         return null;
     }
 
-    /**
-     * Method use to add visibility
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse addVisibility(VisibilityRequest payload) throws Exception {
-        logger.info("Request addVisibility :- " + payload);
-        return null;
-    }
-
-    /**
-     * Method use to edit visibility
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse editVisibility(VisibilityRequest payload) throws Exception {
-        logger.info("Request editVisibility :- " + payload);
-        return null;
-    }
-
-    /**
-     * Method use to fetch visibility
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse fetchAllVisibility(VisibilityRequest payload) throws Exception {
-        logger.info("Request fetchAllVisibility :- " + payload);
-        return null;
-    }
-
-    /**
-     * Method use to fetch visibility by id
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse fetchVisibilityById(VisibilityRequest payload) throws Exception {
-        logger.info("Request fetchVisibilityById :- " + payload);
-        return null;
-    }
-
-    /**
-     * Method use to delete visibility by id
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse deleteVisibilityById(VisibilityRequest payload) throws Exception {
-        logger.info("Request deleteVisibilityById :- " + payload);
-        return null;
-    }
-
-    /**
-     * Method use to delete all visibility
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse deleteAllVisibility(VisibilityRequest payload) throws Exception {
-        logger.info("Request deleteAllVisibility :- " + payload);
-        return null;
-    }
 }

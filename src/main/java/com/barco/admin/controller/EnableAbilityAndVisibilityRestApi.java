@@ -3,8 +3,7 @@ package com.barco.admin.controller;
 import com.barco.admin.service.EnableAbilityAndVisibilityService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
-import com.barco.model.dto.request.EnableAbilityRequest;
-import com.barco.model.dto.request.VisibilityRequest;
+import com.barco.model.dto.request.EnableAndVisibilityConfigRequest;
 import com.barco.model.dto.response.AppResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,201 +34,100 @@ public class EnableAbilityAndVisibilityRestApi {
      * @return ResponseEntity
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/addEnableAbility", method= RequestMethod.POST)
-    public ResponseEntity<?> addEnableAbility(@RequestBody EnableAbilityRequest payload) {
+    @RequestMapping(value="/addEnableAndVisibilityConfig", method= RequestMethod.POST)
+    public ResponseEntity<?> addEnableAndVisibilityConfig(@RequestBody EnableAndVisibilityConfigRequest payload) {
         try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.addEnableAbility(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.addEnableAndVisibilityConfig(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while addEnableAbility ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while addEnableAndVisibilityConfig ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- editEnableAbility
+     * @apiName :- editEnableAndVisibilityConfig
      * @apiNote :- Method use edit the enableAbility setting
      * @param payload
      * @return ResponseEntity
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/editEnableAbility", method= RequestMethod.POST)
-    public ResponseEntity<?> editEnableAbility(@RequestBody EnableAbilityRequest payload) {
+    @RequestMapping(value="/editEnableAndVisibilityConfig", method= RequestMethod.POST)
+    public ResponseEntity<?> editEnableAndVisibilityConfig(@RequestBody EnableAndVisibilityConfigRequest payload) {
         try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.editEnableAbility(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.editEnableAndVisibilityConfig(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while editEnableAbility ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while editEnableAndVisibilityConfig ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- fetchAllEnableAbility
+     * @apiName :- fetchAllEnableAndVisibilityConfig
      * @apiNote :- Method use fetch all the enableAbility setting
      * @param payload
      * @return ResponseEntity
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/fetchAllEnableAbility", method= RequestMethod.POST)
-    public ResponseEntity<?> fetchAllEnableAbility(@RequestBody EnableAbilityRequest payload) {
+    @RequestMapping(value="/fetchAllEnableAndVisibilityConfig", method= RequestMethod.POST)
+    public ResponseEntity<?> fetchAllEnableAndVisibilityConfig(@RequestBody EnableAndVisibilityConfigRequest payload) {
         try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.fetchAllEnableAbility(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.fetchAllEnableAndVisibilityConfig(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while fetchAllEnableAbility ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while fetchAllEnableAndVisibilityConfig ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- fetchEnableAbilityById
+     * @apiName :- fetchEnableAndVisibilityConfigById
      * @apiNote :- Method use fetch the enableAbility setting by id
      * @param payload
      * @return ResponseEntity
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/fetchEnableAbilityById", method= RequestMethod.POST)
-    public ResponseEntity<?> fetchEnableAbilityById(@RequestBody EnableAbilityRequest payload) {
+    @RequestMapping(value="/fetchEnableAndVisibilityConfigById", method= RequestMethod.POST)
+    public ResponseEntity<?> fetchEnableAndVisibilityConfigById(@RequestBody EnableAndVisibilityConfigRequest payload) {
         try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.fetchEnableAbilityById(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.fetchEnableAndVisibilityConfigById(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while fetchEnableAbilityById ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while fetchEnableAndVisibilityConfigById ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- deleteEnableAbilityById
+     * @apiName :- deleteEnableAndVisibilityConfigById
      * @apiNote :- Method use delete the enableAbility setting by id
      * @param payload
      * @return ResponseEntity
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/deleteEnableAbilityById", method= RequestMethod.POST)
-    public ResponseEntity<?> deleteEnableAbilityById(@RequestBody EnableAbilityRequest payload) {
+    @RequestMapping(value="/deleteEnableAndVisibilityConfigById", method= RequestMethod.POST)
+    public ResponseEntity<?> deleteEnableAndVisibilityConfigById(@RequestBody EnableAndVisibilityConfigRequest payload) {
         try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.deleteEnableAbilityById(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.deleteEnableAndVisibilityConfigById(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while deleteEnableAbilityById ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while deleteEnableAndVisibilityConfigById ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- deleteAllEnableAbility
+     * @apiName :- deleteAllEnableAndVisibilityConfig
      * @apiNote :- Method use delete all the enableAbility setting
      * @param payload
      * @return ResponseEntity
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/deleteAllEnableAbility", method= RequestMethod.POST)
-    public ResponseEntity<?> deleteAllEnableAbility(@RequestBody EnableAbilityRequest payload) {
+    @RequestMapping(value="/deleteAllEnableAndVisibilityConfig", method= RequestMethod.POST)
+    public ResponseEntity<?> deleteAllEnableAndVisibilityConfig(@RequestBody EnableAndVisibilityConfigRequest payload) {
         try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.deleteAllEnableAbility(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.deleteAllEnableAndVisibilityConfig(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while deleteAllEnableAbility ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while deleteAllEnableAndVisibilityConfig ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
-    /**
-     * @apiName :- addVisibility
-     * @apiNote :- Method use add visibility setting
-     * @param payload
-     * @return ResponseEntity
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/addVisibility", method= RequestMethod.POST)
-    public ResponseEntity<?> addVisibility(@RequestBody VisibilityRequest payload) {
-        try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.addVisibility(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while addVisibility ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- editVisibility
-     * @apiNote :- Method use edit visibility setting
-     * @param payload
-     * @return ResponseEntity
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/editVisibility", method= RequestMethod.POST)
-    public ResponseEntity<?> editVisibility(@RequestBody VisibilityRequest payload) {
-        try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.editVisibility(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while editVisibility ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- fetchAllVisibility
-     * @apiNote :- Method use fetch all visibility setting
-     * @param payload
-     * @return ResponseEntity
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/fetchAllVisibility", method= RequestMethod.POST)
-    public ResponseEntity<?> fetchAllVisibility(@RequestBody VisibilityRequest payload) {
-        try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.fetchAllVisibility(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while fetchAllVisibility ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- fetchVisibilityById
-     * @apiNote :- Method use fetch visibility setting by id
-     * @param payload
-     * @return ResponseEntity
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/fetchVisibilityById", method= RequestMethod.POST)
-    public ResponseEntity<?> fetchVisibilityById(@RequestBody VisibilityRequest payload) {
-        try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.fetchVisibilityById(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while fetchVisibilityById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- deleteVisibilityById
-     * @apiNote :- Method use delete visibility setting by id
-     * @param payload
-     * @return ResponseEntity
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/deleteVisibilityById", method= RequestMethod.POST)
-    public ResponseEntity<?> deleteVisibilityById(@RequestBody VisibilityRequest payload) {
-        try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.deleteVisibilityById(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while deleteVisibilityById ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- deleteAllVisibility
-     * @apiNote :- Method use delete all visibility setting
-     * @param payload
-     * @return ResponseEntity
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value="/deleteAllVisibility", method= RequestMethod.POST)
-    public ResponseEntity<?> deleteAllVisibility(@RequestBody VisibilityRequest payload) {
-        try {
-            return new ResponseEntity<>(this.enableAbilityAndVisibilityService.deleteAllVisibility(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while deleteAllVisibility ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
 
 }
