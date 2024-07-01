@@ -1,5 +1,7 @@
 package com.barco.admin.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import com.barco.admin.service.CredentialService;
 import com.barco.admin.service.LookupDataCacheService;
 import com.barco.common.utility.BarcoUtil;
@@ -19,8 +21,6 @@ import com.barco.model.util.lookup.GLookup;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -278,6 +278,10 @@ public class CredentialServiceImpl implements CredentialService {
             .filter(eventBridge -> !eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
             .map(eventBridge -> {
                 eventBridge.setCredential(null);
+                // if Credential is delete from the event bridge the delete teh all app user event bridge
+                if (!BarcoUtil.isNull(eventBridge.getAppUserEventBridges())) {
+                    eventBridge.getAppUserEventBridges().clear();
+                }
                 return eventBridge;
             }).collect(Collectors.toList());
         }

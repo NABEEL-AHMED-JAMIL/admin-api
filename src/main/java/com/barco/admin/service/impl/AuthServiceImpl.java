@@ -160,9 +160,9 @@ public class AuthServiceImpl implements AuthService {
         for (EnvVariables envVariables : envVariablesList) {
             this.appUserEnvRepository.save(getAppUserEnv(superAdmin.get(), appUser, envVariables));
         }
-        // event bridge only receiver event bridge if exist and create by the main user
+        // event bridge only receive event bridge if exist and create by the main user
         List<EventBridge> eventBridges = this.eventBridgeRepository.findAllByBridgeTypeAndCreatedByAndStatusNotOrderByDateCreatedDesc(
-            EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVER, superAdmin.get(), APPLICATION_STATUS.DELETE);
+            EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVE, superAdmin.get(), APPLICATION_STATUS.DELETE);
         for (EventBridge eventBridge : eventBridges) {
             LinkEBURequest linkEBURequest = new LinkEBURequest();
             linkEBURequest.setId(eventBridge.getId());

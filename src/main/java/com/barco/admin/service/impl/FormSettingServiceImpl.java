@@ -7,7 +7,7 @@ import com.barco.common.utility.excel.BulkExcel;
 import com.barco.common.utility.excel.SheetFiled;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.*;
-import com.barco.model.enums.ACTION;
+import com.barco.model.enums.Action;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.*;
 import com.barco.model.util.MessageUtil;
@@ -526,7 +526,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getAction())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACTION_MISSING);
         }
-        if (payload.getAction().equals(ACTION.LINK)) {
+        if (payload.getAction().equals(Action.LINK)) {
             if (BarcoUtil.isNull(payload.getId())) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_ID_MISSING);
             } else if (BarcoUtil.isNull(payload.getFormId()) && payload.getFormId().size() > 0) {
@@ -878,7 +878,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getAction())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACTION_MISSING);
         }
-        if (payload.getAction().equals(ACTION.LINK)) {
+        if (payload.getAction().equals(Action.LINK)) {
             if (BarcoUtil.isNull(payload.getId())) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
             } else if (BarcoUtil.isNull(payload.getSttId()) && payload.getSttId().size() > 0) {
@@ -976,7 +976,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getAction())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACTION_MISSING);
         }
-        if (payload.getAction().equals(ACTION.LINK)) {
+        if (payload.getAction().equals(Action.LINK)) {
             if (BarcoUtil.isNull(payload.getId())) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
             } else if (BarcoUtil.isNull(payload.getSectionId()) && payload.getSectionId().size() > 0) {
@@ -1316,7 +1316,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getAction())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACTION_MISSING);
         }
-        if (payload.getAction().equals(ACTION.LINK)) {
+        if (payload.getAction().equals(Action.LINK)) {
             if (BarcoUtil.isNull(payload.getId())) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_ID_MISSING);
             } else if (BarcoUtil.isNull(payload.getControlId()) && payload.getControlId().size() > 0) {
@@ -1449,7 +1449,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getAction())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACTION_MISSING);
         }
-        if (payload.getAction().equals(ACTION.LINK)) {
+        if (payload.getAction().equals(Action.LINK)) {
             if (BarcoUtil.isNull(payload.getId())) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_ID_MISSING);
             } else if (BarcoUtil.isNull(payload.getFormId()) && payload.getFormId().size() > 0) {
@@ -1823,7 +1823,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getAction())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACTION_MISSING);
         }
-        if (payload.getAction().equals(ACTION.LINK)) {
+        if (payload.getAction().equals(Action.LINK)) {
              if (BarcoUtil.isNull(payload.getId())) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_ID_MISSING);
             } else if (BarcoUtil.isNull(payload.getSectionId()) && payload.getSectionId().size() > 0) {
