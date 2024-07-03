@@ -11,7 +11,6 @@ import com.barco.model.repository.*;
 import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
-import com.barco.model.util.lookup.EVENT_BRIDGE_TYPE;
 import com.barco.model.util.lookup.LookupUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -155,22 +153,6 @@ public class AuthServiceImpl implements AuthService {
         subAppUser.setUpdatedBy(superAdmin.get());
         subAppUser.setStatus(APPLICATION_STATUS.ACTIVE);
         this.subAppUserRepository.save(subAppUser);
-        // env-variable adding
-        List<EnvVariables> envVariablesList = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE);
-        for (EnvVariables envVariables : envVariablesList) {
-            this.appUserEnvRepository.save(getAppUserEnv(superAdmin.get(), appUser, envVariables));
-        }
-        // event bridge only receive event bridge if exist and create by the main user
-        List<EventBridge> eventBridges = this.eventBridgeRepository.findAllByBridgeTypeAndCreatedByAndStatusNotOrderByDateCreatedDesc(
-            EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVE, superAdmin.get(), APPLICATION_STATUS.DELETE);
-        for (EventBridge eventBridge : eventBridges) {
-            LinkEBURequest linkEBURequest = new LinkEBURequest();
-            linkEBURequest.setId(eventBridge.getId());
-            linkEBURequest.setAppUserId(appUser.getId());
-            linkEBURequest.setLinked(Boolean.TRUE);
-            linkEBURequest.setSessionUser(new SessionUser(appUser.getUsername()));
-            this.eventBridgeService.linkEventBridgeWithUser(linkEBURequest);
-        }
         this.sendRegisterUser(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         this.sendNotification(superAdmin.get().getUsername(), MessageUtil.REQUESTED_FOR_NEW_ACCOUNT,
             String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()), superAdmin.get(), this.lookupDataCacheService, this.notificationService);
