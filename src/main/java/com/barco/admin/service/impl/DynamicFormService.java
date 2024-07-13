@@ -7,7 +7,6 @@ import com.barco.model.dto.dform.request.IDynamicControl;
 import com.barco.model.dto.dform.request.IDynamicForm;
 import com.barco.model.dto.dform.request.IDynamicSection;
 import com.barco.model.dto.dform.request.IDynamicValidation;
-import com.barco.model.dto.request.LoginRequest;
 import com.barco.model.dto.request.LookupDataRequest;
 import com.barco.model.dto.response.LookupDataResponse;
 import com.barco.model.enums.ErrorAssociation;
@@ -21,7 +20,6 @@ import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.FIELD_TYPE;
 import com.barco.model.util.lookup.GLookup;
 import com.barco.model.util.lookup.IS_DEFAULT;
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +59,7 @@ public class DynamicFormService {
                 .findAllByGenFormAndStatus(genForm, APPLICATION_STATUS.ACTIVE)
                 .stream().map(sectionLinkForm -> {
                     try {
-                        return getDynamicSection(sectionLinkForm);
+                        return this.getDynamicSection(sectionLinkForm);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -98,29 +96,29 @@ public class DynamicFormService {
      * @return IDynamicControl
      * */
     public IDynamicControl getIDynamicControl(GenControlLinkGenSection genCntLinkGenSct) throws Exception {
+        GenControl genControl = genCntLinkGenSct.getGenControl();
         IDynamicControl dynamicControl = new IDynamicControl();
-        dynamicControl.setId(genCntLinkGenSct.getGenControl().getId());
-        dynamicControl.setName(genCntLinkGenSct.getGenControl().getFieldName());
+        dynamicControl.setId(genControl.getId());
+        dynamicControl.setName(genControl.getFieldName());
         dynamicControl.setOrder(genCntLinkGenSct.getControlOrder());
         dynamicControl.setWidth(genCntLinkGenSct.getFieldWidth());
         dynamicControl.setType(GLookup.getGLookup(this.lookupDataCacheService
-            .getChildLookupDataByParentLookupTypeAndChildLookupCode(FIELD_TYPE.getName(),
-                genCntLinkGenSct.getGenControl().getFieldType().getLookupCode())));
-        dynamicControl.setLabel(genCntLinkGenSct.getGenControl().getFieldTitle());
-        dynamicControl.setPattern(genCntLinkGenSct.getGenControl().getPattern());
+            .getChildLookupDataByParentLookupTypeAndChildLookupCode(FIELD_TYPE.getName(), genControl.getFieldType().getLookupCode())));
+        dynamicControl.setLabel(genControl.getFieldTitle());
+        dynamicControl.setPattern(genControl.getPattern());
         if (dynamicControl.getType().getLookupCode().equals(FIELD_TYPE.MULTI_SELECT.getLookupCode())) {
-            dynamicControl.setValue(!BarcoUtil.isBlank(genCntLinkGenSct.getGenControl().getDefaultValue())
-                ? genCntLinkGenSct.getGenControl().getDefaultValue().split(","): new Object[]{});
+            dynamicControl.setValue(!BarcoUtil.isBlank(genControl.getDefaultValue())
+                ? genControl.getDefaultValue().split(","): new Object[]{});
         } else {
-            dynamicControl.setValue(genCntLinkGenSct.getGenControl().getDefaultValue());
+            dynamicControl.setValue(genControl.getDefaultValue());
         }
-        dynamicControl.setPlaceHolder(genCntLinkGenSct.getGenControl().getPlaceHolder());
-        if (!BarcoUtil.isNull(genCntLinkGenSct.getGenControl().getFieldLkValue())) {
+        dynamicControl.setPlaceHolder(genControl.getPlaceHolder());
+        if (!BarcoUtil.isNull(genControl.getFieldLkValue())) {
             dynamicControl.setSelectMenuOptions(this.getGLookup((Map<String, Object>) this.lookupDataCacheService
-                .fetchLookupDataByLookupType(new LookupDataRequest(genCntLinkGenSct.getGenControl().getFieldLkValue().getLookupType())).getData()));
+                .fetchLookupDataByLookupType(new LookupDataRequest(genControl.getFieldLkValue().getLookupType())).getData()));
         }
-        dynamicControl.setApiLkValue(genCntLinkGenSct.getGenControl().getApiLkValue());
-        this.addValidation(dynamicControl, genCntLinkGenSct.getGenControl());
+        dynamicControl.setApiLkValue(genControl.getApiLkValue());
+        this.addValidation(dynamicControl, genControl);
         return dynamicControl;
     }
 
@@ -174,6 +172,8 @@ public class DynamicFormService {
      * */
     private List<GLookup> getGLookup(Map<String, Object> selectMenuOptions) {
         List<LookupDataResponse> lookupDataResponses = (List<LookupDataResponse>) selectMenuOptions.get(RootService.SUB_LOOKUP_DATA);
-        return lookupDataResponses.stream().map(lookupDataResponse -> GLookup.getGLookupV2(lookupDataResponse)).collect(Collectors.toList());
+        return lookupDataResponses.stream()
+         .map(lookupDataResponse -> GLookup.getGLookupV2(lookupDataResponse))
+         .collect(Collectors.toList());
     }
 }

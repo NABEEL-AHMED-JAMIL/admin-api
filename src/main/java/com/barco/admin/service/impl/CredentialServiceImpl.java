@@ -1,5 +1,7 @@
 package com.barco.admin.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import com.barco.admin.service.CredentialService;
 import com.barco.admin.service.LookupDataCacheService;
 import com.barco.common.utility.BarcoUtil;
@@ -19,8 +21,6 @@ import com.barco.model.util.lookup.GLookup;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -142,11 +142,11 @@ public class CredentialServiceImpl implements CredentialService {
             credentials = this.credentialRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(
                 startDate, endDate, payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
         } else {
-            readFull = false;
+            readFull = true;
             credentials = this.credentialRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE);
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, credentials.stream()
-            .map(credential -> getCredentialResponse(credential, readFull)).collect(Collectors.toList()));
+            .map(credential -> this.getCredentialResponse(credential, readFull)).collect(Collectors.toList()));
     }
 
     /**
@@ -170,7 +170,7 @@ public class CredentialServiceImpl implements CredentialService {
         Set<CREDENTIAL_TYPE> types =  payload.getTypes().stream().map(type -> CREDENTIAL_TYPE.getByLookupCode(type)).collect(Collectors.toSet());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             this.credentialRepository.findAllByCreatedByAndTypeInAndStatusNot(adminUser.get(), types, APPLICATION_STATUS.DELETE).stream()
-                .map(credential -> getCredentialResponse(credential, false)).collect(Collectors.toList()));
+                .map(credential -> this.getCredentialResponse(credential, true)).collect(Collectors.toList()));
     }
 
     /**
@@ -278,6 +278,10 @@ public class CredentialServiceImpl implements CredentialService {
             .filter(eventBridge -> !eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
             .map(eventBridge -> {
                 eventBridge.setCredential(null);
+                // if Credential is delete from the event bridge the delete teh all app user event bridge
+                if (!BarcoUtil.isNull(eventBridge.getAppUserEventBridges())) {
+                    eventBridge.getAppUserEventBridges().clear();
+                }
                 return eventBridge;
             }).collect(Collectors.toList());
         }

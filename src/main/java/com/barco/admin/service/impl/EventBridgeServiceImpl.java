@@ -22,12 +22,8 @@ import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.GLookup;
 import com.barco.model.util.lookup.EVENT_BRIDGE_TYPE;
 import java.io.ByteArrayOutputStream;
-import java.sql.Timestamp;
-import java.util.Calendar;
 import com.barco.model.util.lookup.LookupUtil;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -47,9 +43,6 @@ import java.util.stream.Collectors;
 public class EventBridgeServiceImpl implements EventBridgeService {
 
     private Logger logger = LoggerFactory.getLogger(EventBridgeServiceImpl.class);
-
-    private final String XRHK = "XRHK-Authorization";
-    private final String XSHK = "XSHK-Authorization";
 
     @Value("${storage.efsFileDire}")
     private String tempStoreDirectory;
@@ -111,15 +104,6 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         eventBridge.setUpdatedBy(adminUser.get());
         eventBridge.setStatus(APPLICATION_STATUS.ACTIVE);
         this.eventBridgeRepository.save(eventBridge);
-        // link event bridge to user
-        AppUserEventBridge appUserEventBridge = new AppUserEventBridge();
-        appUserEventBridge.setTokenId(UUID.randomUUID().toString());
-        appUserEventBridge.setEventBridge(eventBridge);
-        appUserEventBridge.setAppUser(adminUser.get());
-        appUserEventBridge.setCreatedBy(adminUser.get());
-        appUserEventBridge.setUpdatedBy(adminUser.get());
-        appUserEventBridge.setStatus(APPLICATION_STATUS.ACTIVE);
-        this.appUserEventBridgeRepository.save(appUserEventBridge);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, eventBridge.getId().toString()), payload);
     }
 
@@ -200,8 +184,8 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             this.eventBridgeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
             adminUser.get(), APPLICATION_STATUS.DELETE).stream()
             .map(eventBridge -> {
-                EventBridgeResponse eventBridgeResponse = getEventBridgeResponse(eventBridge);
-                eventBridgeResponse.setTotalLinkCount(getLinkEventBridgeCount(eventBridge));
+                EventBridgeResponse eventBridgeResponse = this.getEventBridgeResponse(eventBridge);
+                eventBridgeResponse.setTotalLinkCount(this.getLinkEventBridgeCount(eventBridge));
                 return eventBridgeResponse;
             }).collect(Collectors.toList()));
     }
@@ -218,15 +202,15 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        if (BarcoUtil.isNull(payload.getId())) {
+        } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_ID_MISSING);
         }
-        Optional<EventBridge> eventBridge = this.eventBridgeRepository.findByIdAndCreatedByAndStatusNot(payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
+        Optional<EventBridge> eventBridge = this.eventBridgeRepository.findByIdAndCreatedByAndStatusNot(
+            payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
         if (!eventBridge.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_ID, payload.getId().toString()));
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getEventBridgeResponse(eventBridge.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getEventBridgeResponse(eventBridge.get()));
     }
 
     /**
@@ -237,18 +221,20 @@ public class EventBridgeServiceImpl implements EventBridgeService {
     @Override
     public AppResponse fetchEventBridgeByBridgeType(EventBridgeRequest payload) throws Exception {
         logger.info("Request fetchEventBridgeByBridgeType :- " + payload);
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-                payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        if (BarcoUtil.isNull(payload.getBridgeType())) {
+        } else if (BarcoUtil.isNull(payload.getBridgeType())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_TYPE_MISSING);
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.eventBridgeRepository.findAllByBridgeTypeAndCreatedByAndStatusNotOrderByDateCreatedDesc(
-                EVENT_BRIDGE_TYPE.getByLookupCode(payload.getBridgeType()), adminUser.get(), APPLICATION_STATUS.DELETE)
-            .stream().map(eventBridge -> getEventBridgeResponse(eventBridge)).collect(Collectors.toList()));
+            appUser.get().getAppUserEventBridges().stream()
+            .filter(appUserEventBridge -> !appUserEventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(appUserEventBridge -> appUserEventBridge.getEventBridge())
+            .filter(eventBridge -> eventBridge.getBridgeType().getLookupCode().equals(payload.getBridgeType()))
+            .map(eventBridge -> this.getEventBridgeResponse(eventBridge))
+            .collect(Collectors.toList()));
     }
 
     /**
@@ -273,9 +259,8 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         if (!eventBridge.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND, payload.getId().toString()));
         }
-        EventBridge eventBridgeEntity = eventBridge.get();
-        this.nullifyReportSettingReferences(eventBridgeEntity);
-        this.eventBridgeRepository.delete(eventBridgeEntity);
+        this.nullifyReportSettingReferences(eventBridge.get());
+        this.eventBridgeRepository.delete(eventBridge.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId().toString()), payload);
     }
 
@@ -333,7 +318,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                linkRPUResponses.add(getLinkRPUResponse(data, eventBridge.get().getStatus()));
+                linkRPUResponses.add(this.getLinkRPUResponse(data, eventBridge.get().getStatus()));
             }
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, linkRPUResponses);
@@ -348,27 +333,25 @@ public class EventBridgeServiceImpl implements EventBridgeService {
     @Override
     public AppResponse linkEventBridgeWithUser(LinkEBURequest payload) throws Exception {
         logger.info("Request linkEventBridgeWithUser :- " + payload);
-        Optional<AppUser> superAdmin = getAppUser(payload.getSessionUser().getUsername());
+        Optional<AppUser> superAdmin = this.getAppUser(payload.getSessionUser().getUsername());
         if (!superAdmin.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        AppResponse validationResponse = validateLinkEventBridgePayload(payload);
+        AppResponse validationResponse = this.validateLinkEventBridgePayload(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
         }
         Optional<EventBridge> eventBridge = this.eventBridgeRepository.findById(payload.getId());
         if (!eventBridge.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_ID, payload.getId()), payload);
-        }
-        if (BarcoUtil.isNull(eventBridge.get().getCredential())) {
+        } else if (BarcoUtil.isNull(eventBridge.get().getCredential())) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID,
                 payload.getId()), payload);
         }
         Optional<AppUser> appUser = this.appUserRepository.findById(payload.getAppUserId());
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.APPUSER_NOT_FOUND, payload.getAppUserId()), payload);
-        }
-        if (payload.getLinked()) {
+        } else if (payload.getLinked()) {
             return linkEventBridge(superAdmin.get(), appUser.get(), eventBridge.get(), payload);
         } else {
             this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_EVENT_BRIDGE_BY_EVENT_BRIDGE_ID_AND_APP_USER_ID,
@@ -389,11 +372,10 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         Optional<AppUser> appUser = getAppUser(payload.getSessionUser().getUsername());
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        if (BarcoUtil.isNull(payload.getTokenId())) {
+        } else if (BarcoUtil.isNull(payload.getTokenId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_GEN_TOKEN_MISSING);
         }
-        Optional<AppUserEventBridge> linkEventBridge = appUserEventBridgeRepository.findByTokenId(payload.getTokenId());
+        Optional<AppUserEventBridge> linkEventBridge = this.appUserEventBridgeRepository.findByTokenId(payload.getTokenId());
         if (!linkEventBridge.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_GEN_TOKEN);
         }
@@ -402,7 +384,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID,
                 payload.getId()), payload);
         }
-        return generateTokenForEventBridge(linkEventBridge.get(), eventBridge, payload);
+        return this.generateTokenForEventBridge(linkEventBridge.get(), eventBridge, payload);
     }
 
     /**
@@ -412,7 +394,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
     @Override
     public ByteArrayOutputStream downloadEventBridgeTemplateFile() throws Exception {
         logger.info("Request downloadEventBridgeTemplateFile ");
-        return downloadTemplateFile(this.tempStoreDirectory, this.bulkExcel,
+        return this.downloadTemplateFile(this.tempStoreDirectory, this.bulkExcel,
             this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.EVENT_BRIDGE));
     }
 
@@ -512,20 +494,20 @@ public class EventBridgeServiceImpl implements EventBridgeService {
                 }
             } else if (currentRow.getRowNum() > 0) {
                 EventBridgeValidation eventBridgeValidation = new EventBridgeValidation();
-                eventBridgeValidation.setRowCounter(currentRow.getRowNum()+1);
-                for (int i=0; i < sheetFiled.getColTitle().size(); i++) {
-                    int index = 0;
-                    if (i == index) {
-                        eventBridgeValidation.setName(this.bulkExcel.getCellDetail(currentRow, i));
-                    } else if (i == ++index) {
-                        eventBridgeValidation.setBridgeUrl(this.bulkExcel.getCellDetail(currentRow, i));
-                    } else if (i == ++index) {
-                        eventBridgeValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
-                    } else if (i == ++index) {
-                        eventBridgeValidation.setBridgeType(this.bulkExcel.getCellDetail(currentRow, i));
-                    }
-                }
                 try {
+                    eventBridgeValidation.setRowCounter(currentRow.getRowNum()+1);
+                    for (int i=0; i < sheetFiled.getColTitle().size(); i++) {
+                        int index = 0;
+                        if (i == index) {
+                            eventBridgeValidation.setName(this.bulkExcel.getCellDetail(currentRow, i));
+                        } else if (i == ++index) {
+                            eventBridgeValidation.setBridgeUrl(this.bulkExcel.getCellDetail(currentRow, i));
+                        } else if (i == ++index) {
+                            eventBridgeValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
+                        } else if (i == ++index) {
+                            eventBridgeValidation.setBridgeType(this.bulkExcel.getCellDetail(currentRow, i));
+                        }
+                    }
                     eventBridgeValidation.isValidBatch();
                     EVENT_BRIDGE_TYPE.getByLookupCode(eventBridgeValidation.getBridgeType());
                 } catch (RuntimeException ex) {
@@ -570,7 +552,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         } else if (!eventBridge.getCredential().getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_ACTIVE);
         }
-        String priKey = getCredentialPrivateKey(eventBridge.getCredential());
+        String priKey = this.getCredentialPrivateKey(eventBridge.getCredential());
         linkEventBridge.setAccessToken(this.jwtUtils.generateToken(priKey, linkEventBridge.getTokenId()));
         linkEventBridge.setExpireTime(getOneYearFromNow());
         this.appUserEventBridgeRepository.save(linkEventBridge);
@@ -585,23 +567,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * @return AppUser
      * */
     private Optional<AppUser> getAppUser(String username) {
-        return appUserRepository.findByUsernameAndStatus(username, APPLICATION_STATUS.ACTIVE);
-    }
-
-    /**
-     * Method use to validate the link EventBridge payload
-     * @param payload
-     * @return AppResponse
-     * */
-    private AppResponse validateLinkEventBridgePayload(LinkEBURequest payload) {
-        if (BarcoUtil.isNull(payload.getId())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_ID_MISSING);
-        } else if (BarcoUtil.isNull(payload.getAppUserId())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APP_USER_ID_MISSING);
-        } else if (BarcoUtil.isNull(payload.getLinked())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.LINKED_MISSING);
-        }
-        return null;
+        return this.appUserRepository.findByUsernameAndStatus(username, APPLICATION_STATUS.ACTIVE);
     }
 
     /**
@@ -619,36 +585,15 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         if (BarcoUtil.isNull(credential.getContent())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_CONTENT_MISSING);
         }
-        String priKey = getCredentialPrivateKey(credential);
-        AppUserEventBridge linkEventBridge = getAppUserEventBridge(superAdmin, appUser, eventBridge);
+        String priKey = this.getCredentialPrivateKey(credential);
+        AppUserEventBridge linkEventBridge = this.getAppUserEventBridge(superAdmin, appUser, eventBridge);
         linkEventBridge.setAccessToken(this.jwtUtils.generateToken(priKey, linkEventBridge.getTokenId()));
-        linkEventBridge.setExpireTime(getOneYearFromNow());
+        linkEventBridge.setExpireTime(this.getOneYearFromNow());
         this.appUserEventBridgeRepository.save(linkEventBridge);
         payload.setAccessToken(linkEventBridge.getAccessToken());
         payload.setExpireTime(linkEventBridge.getExpireTime());
         payload.setTokenId(linkEventBridge.getTokenId());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, ""), payload);
-    }
-
-    /**
-     * Method use to create the credential from private key
-     * @param credential
-     * @return String
-     * */
-    private String getCredentialPrivateKey(Credential credential) {
-        String credJsonStr = new String(Base64.getDecoder().decode(credential.getContent().getBytes()));
-        JsonObject jsonObject = JsonParser.parseString(credJsonStr).getAsJsonObject();
-        return jsonObject.get("priKey").getAsString();
-    }
-
-    /**
-     * Method give one year from today
-     * @return Timestamp
-     * */
-    private Timestamp getOneYearFromNow() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.YEAR, 1);
-        return new Timestamp(calendar.getTimeInMillis());
     }
 
     /***
@@ -665,7 +610,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         if (!BarcoUtil.isNull(eventBridge.getBridgeType())) {
             GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService
                 .getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
-                   eventBridge.getBridgeType().getLookupCode()));
+                    eventBridge.getBridgeType().getLookupCode()));
             eventBridgeResponse.setBridgeType(bridgeType);
         }
         if (!BarcoUtil.isNull(eventBridge.getCredential())) {
@@ -677,102 +622,6 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         eventBridgeResponse.setUpdatedBy(getActionUser(eventBridge.getUpdatedBy()));
         eventBridgeResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(eventBridge.getStatus().getLookupType()));
         return eventBridgeResponse;
-    }
-
-    /**
-     * Method use to get the link event bridge count
-     * @param eventBridge
-     * @return Integer
-     * */
-    private Integer getLinkEventBridgeCount(EventBridge eventBridge) {
-        Integer totalCount = 0;
-        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings())
-            && eventBridge.getReportPdfBridgeSettings().size() > 0) {
-            totalCount += eventBridge.getReportPdfBridgeSettings().size();
-        }
-        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings())
-            && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
-            totalCount += eventBridge.getReportXlsxBridgeSettings().size();
-        }
-        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings())
-            && eventBridge.getReportCsvBridgeSettings().size() > 0) {
-            totalCount += eventBridge.getReportCsvBridgeSettings().size();
-        }
-        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings())
-            && eventBridge.getReportDataBridgeSettings().size() > 0) {
-            totalCount += eventBridge.getReportDataBridgeSettings().size();
-        }
-        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings())
-            && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
-            totalCount += eventBridge.getReportFistDimBridgeSettings().size();
-        }
-        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings())
-            && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
-            totalCount += eventBridge.getReportSecDimBridgeSettings().size();
-        }
-        return totalCount;
-    }
-
-    /***
-     * Method use to get the credential detail
-     * @param credential
-     * @return CredentialResponse
-     * */
-    private CredentialResponse getCredentialResponse(Credential credential) {
-        CredentialResponse credentialResponse = new CredentialResponse();
-        credentialResponse.setId(credential.getId());
-        credentialResponse.setName(credential.getName());
-        credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(credential.getStatus().getLookupType()));
-        return credentialResponse;
-    }
-
-    /**
-     * Method use to null the report setting reference
-     * @param eventBridge
-     * */
-    private void nullifyReportSettingReferences(EventBridge eventBridge) {
-        // null all event id for pdf
-        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings()) && eventBridge.getReportPdfBridgeSettings().size() > 0) {
-            eventBridge.getReportPdfBridgeSettings().stream().map(reportSetting -> {
-                reportSetting.setPdfBridge(null);
-                return reportSetting;
-            }).collect(Collectors.toList());
-        }
-        // null all event id for xlsx
-        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings()) && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
-            eventBridge.getReportXlsxBridgeSettings().stream().map(reportSetting -> {
-                reportSetting.setXlsxBridge(null);
-                return reportSetting;
-            }).collect(Collectors.toList());
-        }
-        // null all event id for csv
-        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings()) && eventBridge.getReportCsvBridgeSettings().size() > 0) {
-            eventBridge.getReportCsvBridgeSettings().stream().map(reportSetting -> {
-                reportSetting.setCsvBridge(null);
-                return reportSetting;
-            }).collect(Collectors.toList());
-        }
-        // null all event id for data
-        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings()) && eventBridge.getReportDataBridgeSettings().size() > 0) {
-            eventBridge.getReportDataBridgeSettings().stream().map(reportSetting -> {
-                reportSetting.setDataBridge(null);
-                return reportSetting;
-            }).collect(Collectors.toList());
-        }
-        // null all event id for fist dim
-        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings()) && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
-            eventBridge.getReportFistDimBridgeSettings().stream().map(reportSetting -> {
-                reportSetting.setFirstDimensionBridge(null);
-                return reportSetting;
-            }).collect(Collectors.toList());
-        }
-        // null all event id for sec dim
-        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings()) && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
-            eventBridge.getReportSecDimBridgeSettings().stream().map(reportSetting -> {
-                reportSetting.setSecondDimensionBridge(null);
-                return reportSetting;
-            }).collect(Collectors.toList());
-        }
     }
 
 }

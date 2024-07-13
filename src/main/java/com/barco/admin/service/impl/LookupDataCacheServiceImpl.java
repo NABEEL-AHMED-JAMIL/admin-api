@@ -1,6 +1,7 @@
 package com.barco.admin.service.impl;
 
 import com.barco.common.utility.validation.LookupDataValidation;
+import com.barco.model.pojo.*;
 import com.barco.model.util.lookup.*;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -17,8 +18,6 @@ import com.barco.model.dto.request.FileUploadRequest;
 import com.barco.model.dto.request.LookupDataRequest;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.dto.response.LookupDataResponse;
-import com.barco.model.pojo.AppUser;
-import com.barco.model.pojo.LookupData;
 import com.barco.model.repository.AppUserRepository;
 import com.barco.model.repository.LookupDataRepository;
 import com.barco.model.util.MessageUtil;
@@ -320,7 +319,40 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         }
-        this.lookupDataRepository.deleteById(payload.getId());
+        Optional<LookupData> lookupData = this.lookupDataRepository.findById(payload.getId());
+        if (!lookupData.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.LOOKUP_NOT_FOUND);
+        }
+        // if value link then clear it
+        if (!BarcoUtil.isNull(lookupData.get().getDashboardSettings())) {
+            lookupData.get().getDashboardSettings()
+                .stream().map(dashboardSetting -> {
+                    dashboardSetting.setGroupType(null);
+                    return dashboardSetting;
+            }).collect(Collectors.toList());
+        }
+        if (!BarcoUtil.isNull(lookupData.get().getReportSettings())) {
+            lookupData.get().getReportSettings()
+                .stream().map(reportSetting -> {
+                    reportSetting.setGroupType(null);
+                    return reportSetting;
+            }).collect(Collectors.toList());
+        }
+        if (!BarcoUtil.isNull(lookupData.get().getGenForms())) {
+            lookupData.get().getGenForms()
+                .stream().map(genForm -> {
+                    genForm.setHomePage(null);
+                    return genForm;
+                }).collect(Collectors.toList());
+        }
+        if (!BarcoUtil.isNull(lookupData.get().getGenControls())) {
+            lookupData.get().getGenControls()
+                .stream().map(genControl -> {
+                    genControl.setFieldLkValue(null);
+                    return genControl;
+                }).collect(Collectors.toList());
+        }
+        this.lookupDataRepository.delete(lookupData.get());
         this.initialize();
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()));
     }
@@ -358,7 +390,7 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
             Optional<LookupData> parentLookupData = this.lookupDataRepository.findOneByParentLookupIdAndUsername(
                 payload.getParentLookupId(), appUser.get().getUsername());
             if (!parentLookupData.isPresent()) {
-                throw new Exception(MessageUtil.PARENT_LOOKUP_NOT_FOUND);
+                throw new Exception(MessageUtil.LOOKUP_NOT_FOUND);
             }
             lookupDataList = parentLookupData.get().getLookupChildren().stream().collect(Collectors.toList());
         }

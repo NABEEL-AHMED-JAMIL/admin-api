@@ -14,8 +14,11 @@ import com.barco.model.dto.response.*;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.TemplateRegRepository;
 import com.barco.model.security.UserSessionDetail;
+import com.barco.model.util.MessageUtil;
 import com.barco.model.util.ModelUtil;
 import com.barco.model.util.lookup.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -279,7 +282,7 @@ public interface RootService {
         }
         if (data.containsKey(QueryService.FORM_TYPE) && !BarcoUtil.isNull(data.get(QueryService.FORM_TYPE))) {
             GLookup formType = GLookup.getGLookup(lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                    FORM_TYPE.getName(), Long.valueOf(data.get(QueryService.FORM_TYPE).toString())));
+                FORM_TYPE.getName(), Long.valueOf(data.get(QueryService.FORM_TYPE).toString())));
             sourceTaskTypeLinkFormResponse.setFormType(formType);
         }
         if (data.containsKey(QueryService.STATUS) && !BarcoUtil.isNull(data.get(QueryService.STATUS))) {
@@ -303,11 +306,10 @@ public interface RootService {
      * */
     public default AuthResponse getAuthResponseDetail(AuthResponse authResponse, UserSessionDetail userDetails) {
         authResponse.setId(userDetails.getId());
-        authResponse.setUsername(userDetails.getUsername());
         authResponse.setFirstName(userDetails.getFirstName());
         authResponse.setLastName(userDetails.getLastName());
-        authResponse.setUsername(userDetails.getUsername());
         authResponse.setEmail(userDetails.getEmail());
+        authResponse.setUsername(userDetails.getUsername());
         authResponse.setProfileImage(userDetails.getProfileImage());
         authResponse.setIpAddress(userDetails.getIpAddress());
         authResponse.setRoles(userDetails.getAuthorities().stream()
@@ -467,7 +469,8 @@ public interface RootService {
             Map<String, Object> metaData = new HashMap<>();
             metaData.put(EmailUtil.USERNAME, appUser.getUsername());
             metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream().map(role -> role.getName()).collect(Collectors.joining(",")));
+            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream()
+                .map(role -> role.getName()).collect(Collectors.joining(",")));
             metaData.put(EmailUtil.PROFILE, appUser.getProfile().getProfileName());
             // email send request
             EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
@@ -752,7 +755,8 @@ public interface RootService {
         ApiTaskTypeResponse apiTaskTypeResponse = new ApiTaskTypeResponse();
         apiTaskTypeResponse.setApiTaskTypeId(apiTaskType.getId());
         apiTaskTypeResponse.setApiUrl(apiTaskType.getApiUrl());
-        apiTaskTypeResponse.setHttpMethod(GLookup.getGLookup(lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+        apiTaskTypeResponse.setHttpMethod(GLookup.getGLookup(
+            lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
             REQUEST_METHOD.getName(), Long.valueOf(apiTaskType.getHttpMethod().ordinal()))));
         return apiTaskTypeResponse;
     }
@@ -837,7 +841,8 @@ public interface RootService {
      * @param adminUser
      * */
     public default void enabledDisabledProfilePermissionsAccesses(AppUser appUser, AppUser adminUser) {
-        if (!BarcoUtil.isNull(appUser.getProfilePermissionsAccesses()) && appUser.getProfilePermissionsAccesses().size() > 0) {
+        if (!BarcoUtil.isNull(appUser.getProfilePermissionsAccesses())
+                && appUser.getProfilePermissionsAccesses().size() > 0) {
             appUser.getProfilePermissionsAccesses().stream()
                 .map(profileAccess -> {
                     profileAccess.setStatus(appUser.getStatus());
@@ -877,6 +882,19 @@ public interface RootService {
                     return appUserEnv;
                 }).collect(Collectors.toList());
         }
+    }
+
+    /***
+     * Method use to get the credential detail
+     * @param credential
+     * @return CredentialResponse
+     * */
+    public default CredentialResponse getCredentialResponse(Credential credential) {
+        CredentialResponse credentialResponse = new CredentialResponse();
+        credentialResponse.setId(credential.getId());
+        credentialResponse.setName(credential.getName());
+        credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(credential.getStatus().getLookupType()));
+        return credentialResponse;
     }
 
     /**
@@ -1002,6 +1020,171 @@ public interface RootService {
         dashboardSettingResponse.setDateUpdated(dashboardSetting.getDateUpdated());
         dashboardSettingResponse.setDateCreated(dashboardSetting.getDateCreated());
         return dashboardSettingResponse;
+    }
+
+    /**
+     * Method use to validate the link EventBridge payload
+     * @param payload
+     * @return AppResponse
+     * */
+    public default AppResponse validateLinkEventBridgePayload(LinkEBURequest payload) {
+        if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_ID_MISSING);
+        } else if (BarcoUtil.isNull(payload.getAppUserId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APP_USER_ID_MISSING);
+        } else if (BarcoUtil.isNull(payload.getLinked())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.LINKED_MISSING);
+        }
+        return null;
+    }
+
+    /**
+     * Method use to create the credential from private key
+     * @param credential
+     * @return String
+     * */
+    public default String getCredentialPrivateKey(Credential credential) {
+        String credJsonStr = new String(Base64.getDecoder().decode(credential.getContent().getBytes()));
+        JsonObject jsonObject = JsonParser.parseString(credJsonStr).getAsJsonObject();
+        return jsonObject.get("priKey").getAsString();
+    }
+
+    /**
+     * Method give one year from today
+     * @return Timestamp
+     * */
+    public default Timestamp getOneYearFromNow() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, 1);
+        return new Timestamp(calendar.getTimeInMillis());
+    }
+
+    /**
+     * Method use to get the link event bridge count
+     * @param eventBridge
+     * @return Integer
+     * */
+    public default Integer getLinkEventBridgeCount(EventBridge eventBridge) {
+        Integer totalCount = 0;
+        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings())
+            && eventBridge.getReportPdfBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportPdfBridgeSettings().size();
+        }
+        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings())
+            && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportXlsxBridgeSettings().size();
+        }
+        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings())
+            && eventBridge.getReportCsvBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportCsvBridgeSettings().size();
+        }
+        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings())
+            && eventBridge.getReportDataBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportDataBridgeSettings().size();
+        }
+        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings())
+            && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportFistDimBridgeSettings().size();
+        }
+        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings())
+            && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
+            totalCount += eventBridge.getReportSecDimBridgeSettings().size();
+        }
+        return totalCount;
+    }
+
+    /**
+     * Method use to null the report setting reference
+     * @param eventBridge
+     * */
+    public default void nullifyReportSettingReferences(EventBridge eventBridge) {
+        // null all event id for pdf
+        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings())
+            && eventBridge.getReportPdfBridgeSettings().size() > 0) {
+            eventBridge.getReportPdfBridgeSettings()
+                .stream().map(reportSetting -> {
+                    reportSetting.setPdfBridge(null);
+                    return reportSetting;
+                }).collect(Collectors.toList());
+        }
+        // null all event id for xlsx
+        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings()) &&
+            eventBridge.getReportXlsxBridgeSettings().size() > 0) {
+            eventBridge.getReportXlsxBridgeSettings()
+                .stream().map(reportSetting -> {
+                    reportSetting.setXlsxBridge(null);
+                    return reportSetting;
+                }).collect(Collectors.toList());
+        }
+        // null all event id for csv
+        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings())
+            && eventBridge.getReportCsvBridgeSettings().size() > 0) {
+            eventBridge.getReportCsvBridgeSettings()
+                .stream().map(reportSetting -> {
+                    reportSetting.setCsvBridge(null);
+                    return reportSetting;
+                }).collect(Collectors.toList());
+        }
+        // null all event id for data
+        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings())
+            && eventBridge.getReportDataBridgeSettings().size() > 0) {
+            eventBridge.getReportDataBridgeSettings()
+                .stream().map(reportSetting -> {
+                    reportSetting.setDataBridge(null);
+                    return reportSetting;
+                }).collect(Collectors.toList());
+        }
+        // null all event id for fist dim
+        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings())
+            && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
+            eventBridge.getReportFistDimBridgeSettings()
+                .stream().map(reportSetting -> {
+                    reportSetting.setFirstDimensionBridge(null);
+                    return reportSetting;
+                }).collect(Collectors.toList());
+        }
+        // null all event id for sec dim
+        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings())
+            && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
+            eventBridge.getReportSecDimBridgeSettings()
+                .stream().map(reportSetting -> {
+                    reportSetting.setSecondDimensionBridge(null);
+                    return reportSetting;
+                }).collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * Method use to convert the source task to source task response
+     * @param sourceTask
+     * @return SourceTaskResponse
+     * */
+    public default SourceTaskResponse getSourceTaskResponse(SourceTask sourceTask) {
+        SourceTaskResponse sourceTaskResponse = new SourceTaskResponse();
+        sourceTaskResponse.setId(sourceTask.getId());
+        sourceTaskResponse.setTaskName(sourceTask.getTaskName());
+        sourceTaskResponse.setDescription(sourceTask.getDescription());
+        sourceTaskResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTask.getStatus().getLookupType()));
+        sourceTaskResponse.setCreatedBy(getActionUser(sourceTask.getCreatedBy()));
+        sourceTaskResponse.setUpdatedBy(getActionUser(sourceTask.getUpdatedBy()));
+        sourceTaskResponse.setDateUpdated(sourceTask.getDateUpdated());
+        sourceTaskResponse.setDateCreated(sourceTask.getDateCreated());
+        if (!BarcoUtil.isNull(sourceTask.getSourceTaskType())) {
+            SourceTaskTypeResponse sourceTaskTypeResponse = new SourceTaskTypeResponse();
+            sourceTaskTypeResponse.setId(sourceTask.getSourceTaskType().getId());
+            sourceTaskTypeResponse.setServiceName(sourceTask.getSourceTaskType().getServiceName());
+            sourceTaskTypeResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTask.getStatus().getLookupType()));
+            sourceTaskResponse.setLinkStt(sourceTaskTypeResponse);
+        }
+        if (!BarcoUtil.isNull(sourceTask.getGenForm())) {
+            FormResponse formResponse = new FormResponse();
+            formResponse.setId(sourceTask.getGenForm().getId());
+            formResponse.setFormName(sourceTask.getGenForm().getFormName());
+            formResponse.setServiceId(sourceTask.getGenForm().getServiceId());
+            formResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTask.getStatus().getLookupType()));
+            sourceTaskResponse.setLinkForm(formResponse);
+        }
+        return sourceTaskResponse;
     }
 
 }

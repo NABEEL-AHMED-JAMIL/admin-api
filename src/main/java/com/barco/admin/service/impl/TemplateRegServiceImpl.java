@@ -135,7 +135,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            getTemplateRegResponse(templateReg.get()));
+            this.getTemplateRegResponse(templateReg.get()));
     }
 
     /**
@@ -156,7 +156,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(appUser.get().getUsername())
-            .stream().map(templateReg -> getTemplateRegResponse(templateReg)).collect(Collectors.toList()));
+            .stream().map(templateReg -> this.getTemplateRegResponse(templateReg)).collect(Collectors.toList()));
     }
 
     /**

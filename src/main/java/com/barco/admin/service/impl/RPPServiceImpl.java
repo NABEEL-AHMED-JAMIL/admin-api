@@ -455,7 +455,7 @@ public class RPPServiceImpl implements RPPService {
         if (!profile.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.PROFILE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, gateProfileResponse(profile.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.gateProfileResponse(profile.get()));
     }
 
     /**
@@ -734,7 +734,7 @@ public class RPPServiceImpl implements RPPService {
         if (!permission.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.PERMISSION_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, gatePermissionResponse(permission.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.gatePermissionResponse(permission.get()));
     }
 
     /**
@@ -997,7 +997,7 @@ public class RPPServiceImpl implements RPPService {
                         } else {
                             status = APPLICATION_STATUS.getStatusByLookupCode(APPLICATION_STATUS.ACTIVE.getLookupCode());
                         }
-                        profilePermissionCrossTabs.put(key, new KeyValue<Boolean, GLookup>(false, status));
+                        profilePermissionCrossTabs.put(key, new KeyValue<>(false, status));
                     }
                 }
             }

@@ -205,12 +205,8 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         } else {
             reportSettings = this.reportSettingRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE);
         }
-        List<ReportSettingResponse> reportSettingResponses = reportSettings
-            .stream().map(reportSetting -> {
-                ReportSettingResponse reportSettingResponse = getReportSettingResponse(reportSetting);
-                return reportSettingResponse;
-            }).collect(Collectors.toList());
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, reportSettingResponses);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, reportSettings
+            .stream().map(reportSetting -> getReportSettingResponse(reportSetting)).collect(Collectors.toList()));
     }
 
     /**
@@ -236,7 +232,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         if (!reportSetting.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getReportSettingResponse(reportSetting.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getReportSettingResponse(reportSetting.get()));
     }
 
     /**
@@ -251,7 +247,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-                payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
@@ -380,34 +376,34 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         // pdf
         reportSettingResponse.setIsPdf(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsPdf().getLookupType()));
         if (!BarcoUtil.isNull(reportSetting.getPdfBridge())) {
-            reportSettingResponse.setPdfBridge(getEventBridgeResponse(reportSetting.getPdfBridge()));
+            reportSettingResponse.setPdfBridge(this.getEventBridgeResponse(reportSetting.getPdfBridge()));
         }
         // xlsx
         reportSettingResponse.setIsXlsx(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsXlsx().getLookupType()));
         if (!BarcoUtil.isNull(reportSetting.getXlsxBridge())) {
-            reportSettingResponse.setXlsxBridge(getEventBridgeResponse(reportSetting.getXlsxBridge()));
+            reportSettingResponse.setXlsxBridge(this.getEventBridgeResponse(reportSetting.getXlsxBridge()));
         }
         // csv
         reportSettingResponse.setIsCsv(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsCsv().getLookupType()));
         if (!BarcoUtil.isNull(reportSetting.getCsvBridge())) {
-            reportSettingResponse.setCsvBridge(getEventBridgeResponse(reportSetting.getCsvBridge()));
+            reportSettingResponse.setCsvBridge(this.getEventBridgeResponse(reportSetting.getCsvBridge()));
         }
         // data
         reportSettingResponse.setIsData(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsData().getLookupType()));
         if (!BarcoUtil.isNull(reportSetting.getDataBridge())) {
-            reportSettingResponse.setDataBridge(getEventBridgeResponse(reportSetting.getDataBridge()));
+            reportSettingResponse.setDataBridge(this.getEventBridgeResponse(reportSetting.getDataBridge()));
         }
         // first dimension
         reportSettingResponse.setIsFirstDimension(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsFirstDimension().getLookupType()));
         reportSettingResponse.setFirstDimensionLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getFirstDimensionLKValue())));
         if (!BarcoUtil.isNull(reportSetting.getFirstDimensionBridge())) {
-            reportSettingResponse.setFirstDimensionBridge(getEventBridgeResponse(reportSetting.getFirstDimensionBridge()));
+            reportSettingResponse.setFirstDimensionBridge(this.getEventBridgeResponse(reportSetting.getFirstDimensionBridge()));
         }
         // second dimension
         reportSettingResponse.setIsSecondDimension(UI_LOOKUP.getStatusByLookupType(reportSetting.getIsSecondDimension().getLookupType()));
         reportSettingResponse.setSecondDimensionLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getSecondDimensionLKValue())));
         if (!BarcoUtil.isNull(reportSetting.getSecondDimensionBridge())) {
-            reportSettingResponse.setSecondDimensionBridge(getEventBridgeResponse(reportSetting.getSecondDimensionBridge()));
+            reportSettingResponse.setSecondDimensionBridge(this.getEventBridgeResponse(reportSetting.getSecondDimensionBridge()));
         }
         // lk value
         reportSettingResponse.setDistinctLKValue(this.getDBLoopUp(this.lookupDataRepository.findByLookupType(reportSetting.getDistinctLKValue())));
