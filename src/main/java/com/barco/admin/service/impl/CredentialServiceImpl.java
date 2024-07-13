@@ -142,11 +142,11 @@ public class CredentialServiceImpl implements CredentialService {
             credentials = this.credentialRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(
                 startDate, endDate, payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
         } else {
-            readFull = false;
+            readFull = true;
             credentials = this.credentialRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE);
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, credentials.stream()
-            .map(credential -> getCredentialResponse(credential, readFull)).collect(Collectors.toList()));
+            .map(credential -> this.getCredentialResponse(credential, readFull)).collect(Collectors.toList()));
     }
 
     /**
@@ -170,7 +170,7 @@ public class CredentialServiceImpl implements CredentialService {
         Set<CREDENTIAL_TYPE> types =  payload.getTypes().stream().map(type -> CREDENTIAL_TYPE.getByLookupCode(type)).collect(Collectors.toSet());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             this.credentialRepository.findAllByCreatedByAndTypeInAndStatusNot(adminUser.get(), types, APPLICATION_STATUS.DELETE).stream()
-                .map(credential -> getCredentialResponse(credential, false)).collect(Collectors.toList()));
+                .map(credential -> this.getCredentialResponse(credential, true)).collect(Collectors.toList()));
     }
 
     /**

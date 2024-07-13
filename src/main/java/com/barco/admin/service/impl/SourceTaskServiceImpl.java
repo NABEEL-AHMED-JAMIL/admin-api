@@ -181,8 +181,7 @@ public class SourceTaskServiceImpl implements SourceTaskService {
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        else if (BarcoUtil.isNull(payload.getIds())) {
+        } else if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.sourceTaskRepository.saveAll(
@@ -253,7 +252,7 @@ public class SourceTaskServiceImpl implements SourceTaskService {
         if (!sourceTask.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_NOT_FOUND);
         }
-        SourceTaskResponse sourceTaskResponse = getSourceTaskResponse(sourceTask.get());
+        SourceTaskResponse sourceTaskResponse = this.getSourceTaskResponse(sourceTask.get());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sourceTaskResponse);
     }
 
@@ -285,36 +284,4 @@ public class SourceTaskServiceImpl implements SourceTaskService {
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sttListResponses);
     }
 
-    /**
-     * Method use to convert the source task to source task response
-     * @param sourceTask
-     * @return SourceTaskResponse
-     * */
-    private SourceTaskResponse getSourceTaskResponse(SourceTask sourceTask) {
-        SourceTaskResponse sourceTaskResponse = new SourceTaskResponse();
-        sourceTaskResponse.setId(sourceTask.getId());
-        sourceTaskResponse.setTaskName(sourceTask.getTaskName());
-        sourceTaskResponse.setDescription(sourceTask.getDescription());
-        sourceTaskResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTask.getStatus().getLookupType()));
-        sourceTaskResponse.setCreatedBy(getActionUser(sourceTask.getCreatedBy()));
-        sourceTaskResponse.setUpdatedBy(getActionUser(sourceTask.getUpdatedBy()));
-        sourceTaskResponse.setDateUpdated(sourceTask.getDateUpdated());
-        sourceTaskResponse.setDateCreated(sourceTask.getDateCreated());
-        if (!BarcoUtil.isNull(sourceTask.getSourceTaskType())) {
-            SourceTaskTypeResponse sourceTaskTypeResponse = new SourceTaskTypeResponse();
-            sourceTaskTypeResponse.setId(sourceTask.getSourceTaskType().getId());
-            sourceTaskTypeResponse.setServiceName(sourceTask.getSourceTaskType().getServiceName());
-            sourceTaskTypeResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTask.getStatus().getLookupType()));
-            sourceTaskResponse.setLinkStt(sourceTaskTypeResponse);
-        }
-        if (!BarcoUtil.isNull(sourceTask.getGenForm())) {
-            FormResponse formResponse = new FormResponse();
-            formResponse.setId(sourceTask.getGenForm().getId());
-            formResponse.setFormName(sourceTask.getGenForm().getFormName());
-            formResponse.setServiceId(sourceTask.getGenForm().getServiceId());
-            formResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTask.getStatus().getLookupType()));
-            sourceTaskResponse.setLinkForm(formResponse);
-        }
-        return sourceTaskResponse;
-    }
 }

@@ -22,12 +22,8 @@ import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.GLookup;
 import com.barco.model.util.lookup.EVENT_BRIDGE_TYPE;
 import java.io.ByteArrayOutputStream;
-import java.sql.Timestamp;
-import java.util.Calendar;
 import com.barco.model.util.lookup.LookupUtil;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -186,8 +182,8 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             this.eventBridgeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
-            adminUser.get(), APPLICATION_STATUS.DELETE)
-            .stream().map(eventBridge -> {
+            adminUser.get(), APPLICATION_STATUS.DELETE).stream()
+            .map(eventBridge -> {
                 EventBridgeResponse eventBridgeResponse = this.getEventBridgeResponse(eventBridge);
                 eventBridgeResponse.setTotalLinkCount(this.getLinkEventBridgeCount(eventBridge));
                 return eventBridgeResponse;
@@ -498,20 +494,20 @@ public class EventBridgeServiceImpl implements EventBridgeService {
                 }
             } else if (currentRow.getRowNum() > 0) {
                 EventBridgeValidation eventBridgeValidation = new EventBridgeValidation();
-                eventBridgeValidation.setRowCounter(currentRow.getRowNum()+1);
-                for (int i=0; i < sheetFiled.getColTitle().size(); i++) {
-                    int index = 0;
-                    if (i == index) {
-                        eventBridgeValidation.setName(this.bulkExcel.getCellDetail(currentRow, i));
-                    } else if (i == ++index) {
-                        eventBridgeValidation.setBridgeUrl(this.bulkExcel.getCellDetail(currentRow, i));
-                    } else if (i == ++index) {
-                        eventBridgeValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
-                    } else if (i == ++index) {
-                        eventBridgeValidation.setBridgeType(this.bulkExcel.getCellDetail(currentRow, i));
-                    }
-                }
                 try {
+                    eventBridgeValidation.setRowCounter(currentRow.getRowNum()+1);
+                    for (int i=0; i < sheetFiled.getColTitle().size(); i++) {
+                        int index = 0;
+                        if (i == index) {
+                            eventBridgeValidation.setName(this.bulkExcel.getCellDetail(currentRow, i));
+                        } else if (i == ++index) {
+                            eventBridgeValidation.setBridgeUrl(this.bulkExcel.getCellDetail(currentRow, i));
+                        } else if (i == ++index) {
+                            eventBridgeValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
+                        } else if (i == ++index) {
+                            eventBridgeValidation.setBridgeType(this.bulkExcel.getCellDetail(currentRow, i));
+                        }
+                    }
                     eventBridgeValidation.isValidBatch();
                     EVENT_BRIDGE_TYPE.getByLookupCode(eventBridgeValidation.getBridgeType());
                 } catch (RuntimeException ex) {

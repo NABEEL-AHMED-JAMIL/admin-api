@@ -82,19 +82,19 @@ public class AppUserServiceImpl implements AppUserService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         AppUserResponse appUserResponse = this.getAppUserDetail(appUser.get());
+        // app user evn
         if (!BarcoUtil.isNull(appUser.get().getAppUserEnvs())) {
-            appUserResponse.setEnVariables(appUser.get().getAppUserEnvs()
-                .stream()
+            appUserResponse.setEnVariables(appUser.get().getAppUserEnvs().stream()
                 .filter(appUserEnv -> appUserEnv.getStatus().equals(APPLICATION_STATUS.ACTIVE))
-                .map(appUserEnv -> getEnVariablesResponse(appUserEnv))
+                .map(appUserEnv -> this.getEnVariablesResponse(appUserEnv))
                 .collect(Collectors.toList()));
         }
+        // app user web hook
         if (!BarcoUtil.isNull(appUser.get().getAppUserEventBridges())) {
-            appUserResponse.setEventBridge(appUser.get().getAppUserEventBridges()
-                .stream()
+            appUserResponse.setEventBridge(appUser.get().getAppUserEventBridges().stream()
                 .filter(appUserEventBridge -> appUserEventBridge.getStatus().equals(APPLICATION_STATUS.ACTIVE))
                 .map(appUserEventBridge -> {
-                    EventBridgeResponse eventBridgeResponse = getEventBridgeResponse(appUserEventBridge);
+                    EventBridgeResponse eventBridgeResponse = this.getEventBridgeResponse(appUserEventBridge);
                     if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getBridgeType())) {
                         GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService
                             .getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
@@ -102,8 +102,7 @@ public class AppUserServiceImpl implements AppUserService {
                         eventBridgeResponse.setBridgeType(bridgeType);
                     }
                     return eventBridgeResponse;
-                })
-                .collect(Collectors.toList()));
+                }).collect(Collectors.toList()));
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, appUserResponse);
     }
@@ -178,8 +177,7 @@ public class AppUserServiceImpl implements AppUserService {
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        if (!this.passwordEncoder.matches(payload.getOldPassword(), appUser.get().getPassword())) {
+        } else if (!this.passwordEncoder.matches(payload.getOldPassword(), appUser.get().getPassword())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.OLD_PASSWORD_NOT_MATCH);
         }
         appUser.get().setPassword(this.passwordEncoder.encode(payload.getNewPassword()));
@@ -321,8 +319,8 @@ public class AppUserServiceImpl implements AppUserService {
             dataCellValue.add(appUserIter.getUsername());
             dataCellValue.add(appUserIter.getIpAddress());
             dataCellValue.add(appUserIter.getProfile().getProfileName());
-            dataCellValue.add(appUserIter.getAppUserRoles().stream()
-                .map(appUserRole -> appUserRole.getName()).collect(Collectors.joining(",")));
+            dataCellValue.add(appUserIter.getAppUserRoles().stream().map(
+                appUserRole -> appUserRole.getName()).collect(Collectors.joining(",")));
             this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
         }
         ByteArrayOutputStream outSteam = new ByteArrayOutputStream();
@@ -378,8 +376,7 @@ public class AppUserServiceImpl implements AppUserService {
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        if (BarcoUtil.isNull(payload.getFirstName())) {
+        } else if (BarcoUtil.isNull(payload.getFirstName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FIRST_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getLastName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.LAST_NAME_MISSING);

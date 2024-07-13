@@ -81,8 +81,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         refreshToken.setIpAddress(ip);
         refreshToken.setToken(UUID.randomUUID().toString());
         refreshToken.setStatus(APPLICATION_STATUS.ACTIVE);
-        AppUser appUser = this.appUserRepository.findById(appUserId).orElseThrow(
-             () -> new NullPointerException(MessageUtil.APPUSER_NOT_FOUND));
+        AppUser appUser = this.appUserRepository.findById(appUserId)
+            .orElseThrow(() -> new NullPointerException(MessageUtil.APPUSER_NOT_FOUND));
         refreshToken.setCreatedBy(appUser);
         refreshToken.setUpdatedBy(appUser);
         refreshToken.setExpiryDate(Instant.now().plusMillis(this.refreshTokenDurationMs));
