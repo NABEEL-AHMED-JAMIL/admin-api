@@ -1,6 +1,5 @@
 package com.barco.admin.service.impl;
 
-import com.barco.common.utility.validation.LookupDataValidation;
 import com.barco.model.pojo.*;
 import com.barco.model.util.lookup.*;
 import org.apache.poi.ss.usermodel.Row;
@@ -11,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import com.barco.admin.service.LookupDataCacheService;
+import com.barco.common.utility.validation.LookupDataValidation;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.excel.BulkExcel;
 import com.barco.common.utility.excel.SheetFiled;
@@ -325,29 +325,29 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         }
         // if value link then clear it
         if (!BarcoUtil.isNull(lookupData.get().getDashboardSettings())) {
-            lookupData.get().getDashboardSettings()
-                .stream().map(dashboardSetting -> {
+            lookupData.get().getDashboardSettings().stream()
+                .map(dashboardSetting -> {
                     dashboardSetting.setGroupType(null);
                     return dashboardSetting;
-            }).collect(Collectors.toList());
+                }).collect(Collectors.toList());
         }
         if (!BarcoUtil.isNull(lookupData.get().getReportSettings())) {
-            lookupData.get().getReportSettings()
-                .stream().map(reportSetting -> {
+            lookupData.get().getReportSettings().stream()
+                .map(reportSetting -> {
                     reportSetting.setGroupType(null);
                     return reportSetting;
-            }).collect(Collectors.toList());
+                }).collect(Collectors.toList());
         }
         if (!BarcoUtil.isNull(lookupData.get().getGenForms())) {
-            lookupData.get().getGenForms()
-                .stream().map(genForm -> {
+            lookupData.get().getGenForms().stream()
+                .map(genForm -> {
                     genForm.setHomePage(null);
                     return genForm;
                 }).collect(Collectors.toList());
         }
         if (!BarcoUtil.isNull(lookupData.get().getGenControls())) {
-            lookupData.get().getGenControls()
-                .stream().map(genControl -> {
+            lookupData.get().getGenControls().stream()
+                .map(genControl -> {
                     genControl.setFieldLkValue(null);
                     return genControl;
                 }).collect(Collectors.toList());
