@@ -292,7 +292,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             this.nullifyReportSettingReferences(eventBridge);
             return eventBridge;
         }).collect(Collectors.toList()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
     /**

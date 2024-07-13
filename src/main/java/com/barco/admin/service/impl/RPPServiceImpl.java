@@ -201,7 +201,7 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.roleRepository.deleteAll(this.roleRepository.findAllByIdIn(payload.getIds()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL);
     }
 
     /**
@@ -489,7 +489,7 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.profileRepository.deleteAll(this.profileRepository.findAllByIdIn(payload.getIds()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL);
     }
 
     /**
@@ -769,7 +769,7 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.permissionRepository.deleteAll(this.permissionRepository.findAllByIdIn(payload.getIds()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL);
     }
 
     /**

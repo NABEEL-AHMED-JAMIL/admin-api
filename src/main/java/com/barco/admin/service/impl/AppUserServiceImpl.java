@@ -281,7 +281,7 @@ public class AppUserServiceImpl implements AppUserService {
     @Override
     public ByteArrayOutputStream downloadAppUserAccountTemplateFile() throws Exception {
         logger.info("Request downloadAppUserAccountTemplateFile ");
-        return downloadTemplateFile(this.tempStoreDirectory, this.bulkExcel,
+        return this.downloadTemplateFile(this.tempStoreDirectory, this.bulkExcel,
             this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.APP_USER));
     }
 
@@ -329,8 +329,9 @@ public class AppUserServiceImpl implements AppUserService {
             dataCellValue.add(appUserIter.getUsername());
             dataCellValue.add(appUserIter.getIpAddress());
             dataCellValue.add(appUserIter.getProfile().getProfileName());
-            dataCellValue.add(appUserIter.getAppUserRoles().stream().map(
-                appUserRole -> appUserRole.getName()).collect(Collectors.joining(",")));
+            dataCellValue.add(appUserIter.getAppUserRoles().stream()
+                 .map(appUserRole -> appUserRole.getName())
+                 .collect(Collectors.joining(",")));
             this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
         }
         ByteArrayOutputStream outSteam = new ByteArrayOutputStream();
@@ -426,6 +427,7 @@ public class AppUserServiceImpl implements AppUserService {
         if (roleList.size() > 0) {
             appUser.setAppUserRoles(roleList);
         }
+        // profile
         Optional<Profile> profile = this.profileRepository.findProfileByIdAndStatus(payload.getProfile(), APPLICATION_STATUS.ACTIVE);
         if (profile.isPresent()) {
             appUser.setProfile(profile.get());
@@ -443,7 +445,7 @@ public class AppUserServiceImpl implements AppUserService {
             this.appUserEnvRepository.save(getAppUserEnv(adminUser.get(), appUser, envVariables));
         }
         // email send to the user
-        this.sendRegisterUser(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
+        this.sendRegisterUserEmail(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         // email send to the admin
         this.sendNotification(adminUser.get().getUsername(), MessageUtil.NEW_ACCOUNT_ADDED, String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID,
             appUser.getId()), adminUser.get(), this.lookupDataCacheService, this.notificationService);
@@ -494,11 +496,9 @@ public class AppUserServiceImpl implements AppUserService {
         if (!BarcoUtil.isNull(payload.getEmail())) {
             appUser.get().setEmail(payload.getEmail());
         }
-        if (!payload.getUsername().equals(appUser.get().getUsername()) &&
-            this.appUserRepository.existsByUsername(payload.getUsername())) {
+        if (!payload.getUsername().equals(appUser.get().getUsername()) && this.appUserRepository.existsByUsername(payload.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_ALREADY_TAKEN);
-        } else if (!payload.getEmail().equals(appUser.get().getEmail()) &&
-            this.appUserRepository.existsByEmail(payload.getEmail())) {
+        } else if (!payload.getEmail().equals(appUser.get().getEmail()) && this.appUserRepository.existsByEmail(payload.getEmail())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EMAIL_ALREADY_IN_USE);
         }
         if (!BarcoUtil.isNull(payload.getUsername())) {
@@ -515,6 +515,7 @@ public class AppUserServiceImpl implements AppUserService {
         if (roleList.size() > 0) {
             appUser.get().setAppUserRoles(roleList);
         }
+        // profile
         Optional<Profile> profile = this.profileRepository.findProfileByIdAndStatus(payload.getProfile(), APPLICATION_STATUS.ACTIVE);
         if (profile.isPresent()) {
             appUser.get().setProfile(profile.get());
@@ -559,7 +560,7 @@ public class AppUserServiceImpl implements AppUserService {
         }
         this.appUserRepository.save(appUser.get());
         // email to the user
-        this.sendEnabledDisabledRegisterUser(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
+        this.sendEnabledDisabledRegisterUserEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         // notification to admin
         this.sendNotification(adminUser.get().getUsername(), MessageUtil.ACCOUNT_STATUS, (appUser.get().getStatus().equals(APPLICATION_STATUS.ACTIVE) ?
             String.format(MessageUtil.ACCOUNT_ENABLED, appUser.get().getUsername()) : String.format(MessageUtil.ACCOUNT_DISABLED, appUser.get().getUsername())),

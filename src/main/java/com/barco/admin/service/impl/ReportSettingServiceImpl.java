@@ -317,7 +317,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         List<ReportSetting> reportSettings = this.reportSettingRepository.findAllByIdIn(payload.getIds());
         reportSettings.forEach(reportSetting -> reportSetting.setStatus(APPLICATION_STATUS.DELETE));
         this.reportSettingRepository.saveAll(reportSettings);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
     /**
@@ -343,7 +343,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_NOT_FOUND);
         }
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_FETCH_SUCCESSFULLY, ""),
-            fetchReportData(payload, reportSetting.get()));
+            this.fetchReportData(payload, reportSetting.get()));
     }
 
     /**

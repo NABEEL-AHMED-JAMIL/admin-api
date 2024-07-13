@@ -412,7 +412,7 @@ public interface RootService {
      * @param templateRegRepository
      * @param emailMessagesFactory
      * */
-    public default boolean sendRegisterUser(AppUser appUser, LookupDataCacheService lookupDataCacheService,
+    public default boolean sendRegisterUserEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(
@@ -451,7 +451,7 @@ public interface RootService {
      * @param templateRegRepository
      * @param emailMessagesFactory
      * */
-    public default boolean sendEnabledDisabledRegisterUser(AppUser appUser, LookupDataCacheService lookupDataCacheService,
+    public default boolean sendEnabledDisabledRegisterUserEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);

@@ -297,6 +297,6 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         List<DashboardSetting> dashboardSettings = this.dashboardSettingRepository.findAllByIdIn(payload.getIds());
         dashboardSettings.forEach(dashboardSetting -> dashboardSetting.setStatus(APPLICATION_STATUS.DELETE));
         this.dashboardSettingRepository.saveAll(dashboardSettings);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 }
