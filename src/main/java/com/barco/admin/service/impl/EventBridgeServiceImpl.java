@@ -18,11 +18,8 @@ import com.barco.model.repository.AppUserEventBridgeRepository;
 import com.barco.model.repository.CredentialRepository;
 import com.barco.model.repository.EventBridgeRepository;
 import com.barco.model.util.MessageUtil;
-import com.barco.model.util.lookup.APPLICATION_STATUS;
-import com.barco.model.util.lookup.GLookup;
-import com.barco.model.util.lookup.EVENT_BRIDGE_TYPE;
+import com.barco.model.util.lookup.*;
 import java.io.ByteArrayOutputStream;
-import com.barco.model.util.lookup.LookupUtil;
 import com.google.gson.Gson;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -31,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,6 +44,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
 
     @Value("${storage.efsFileDire}")
     private String tempStoreDirectory;
+
     @Autowired
     private BulkExcel bulkExcel;
     @Autowired
@@ -82,6 +81,8 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getBridgeUrl())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_URL_MISSING);
+        } else if (BarcoUtil.isNull(payload.getHttpMethod())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.HTTP_METHOD_MISSING);
         } else if (BarcoUtil.isNull(payload.getDescription())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_DESCRIPTION_MISSING);
         } else if (BarcoUtil.isNull(payload.getBridgeType())) {
@@ -97,6 +98,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         EventBridge eventBridge = new EventBridge();
         eventBridge.setName(payload.getName());
         eventBridge.setBridgeUrl(payload.getBridgeUrl());
+        eventBridge.setHttpMethod(payload.getHttpMethod());
         eventBridge.setDescription(payload.getDescription());
         eventBridge.setBridgeType(EVENT_BRIDGE_TYPE.getByLookupCode(payload.getBridgeType()));
         eventBridge.setCredential(credential.get());
@@ -128,6 +130,8 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getBridgeUrl())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_URL_MISSING);
+        } else if (BarcoUtil.isNull(payload.getHttpMethod())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.HTTP_METHOD_MISSING);
         } else if (BarcoUtil.isNull(payload.getDescription())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_DESCRIPTION_MISSING);
         } else if (BarcoUtil.isNull(payload.getBridgeType())) {
@@ -145,9 +149,10 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         if (!eventBridge.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_NOT_FOUND);
         }
-        eventBridge.get().setBridgeUrl(payload.getBridgeUrl());
         eventBridge.get().setName(payload.getName());
         eventBridge.get().setDescription(payload.getDescription());
+        eventBridge.get().setBridgeUrl(payload.getBridgeUrl());
+        eventBridge.get().setHttpMethod(payload.getHttpMethod());
         eventBridge.get().setBridgeType(EVENT_BRIDGE_TYPE.getByLookupCode(payload.getBridgeType()));
         eventBridge.get().setCredential(credential.get());
         eventBridge.get().setUpdatedBy(adminUser.get());
@@ -155,10 +160,10 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             // if status is in-active & delete then we have filter the role and show only those role in user detail
             eventBridge.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
             eventBridge.get().getAppUserEventBridges().stream()
-                .map(appUserEventBridge -> {
-                    appUserEventBridge.setStatus(eventBridge.get().getStatus());
-                    return appUserEventBridge;
-                }).collect(Collectors.toList());
+            .map(appUserEventBridge -> {
+                appUserEventBridge.setStatus(eventBridge.get().getStatus());
+                return appUserEventBridge;
+            }).collect(Collectors.toList());
         }
         this.eventBridgeRepository.save(eventBridge.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()), payload);
@@ -345,8 +350,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         if (!eventBridge.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         } else if (BarcoUtil.isNull(eventBridge.get().getCredential())) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID,
-                payload.getId()), payload);
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID, payload.getId()), payload);
         }
         Optional<AppUser> appUser = this.appUserRepository.findById(payload.getAppUserId());
         if (!appUser.isPresent()) {
@@ -381,8 +385,8 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         }
         EventBridge eventBridge = linkEventBridge.get().getEventBridge();
         if (BarcoUtil.isNull(eventBridge.getCredential())) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID,
-                payload.getId()), payload);
+            return new AppResponse(BarcoUtil.ERROR, String.format(
+                MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID, payload.getId()), payload);
         }
         return this.generateTokenForEventBridge(linkEventBridge.get(), eventBridge, payload);
     }
@@ -429,17 +433,19 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             eventBridges = this.eventBridgeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
                 appUser.get(), APPLICATION_STATUS.DELETE);
         }
-        eventBridges.forEach(eventBridge -> {
-            if (!eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE)) {
-                rowCount.getAndIncrement();
-                List<String> dataCellValue = new ArrayList<>();
-                dataCellValue.add(eventBridge.getName());
-                dataCellValue.add(eventBridge.getBridgeUrl());
-                dataCellValue.add(eventBridge.getDescription());
-                dataCellValue.add(eventBridge.getBridgeType().name());
-                this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
-            }
-        });
+        // event-bridges
+        eventBridges.stream().filter(eventBridge -> !eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .forEach(eventBridge -> {
+                int currentRowCount = rowCount.incrementAndGet();
+                List<String> dataCellValues = Arrays.asList(
+                    eventBridge.getName(),
+                    eventBridge.getBridgeUrl(),
+                    eventBridge.getHttpMethod().name(),
+                    eventBridge.getDescription(),
+                    eventBridge.getBridgeType().name()
+                );
+                this.bulkExcel.fillBulkBody(dataCellValues, currentRowCount);
+            });
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         workbook.write(outputStream);
         return outputStream;
@@ -503,6 +509,8 @@ public class EventBridgeServiceImpl implements EventBridgeService {
                         } else if (i == ++index) {
                             eventBridgeValidation.setBridgeUrl(this.bulkExcel.getCellDetail(currentRow, i));
                         } else if (i == ++index) {
+                            eventBridgeValidation.setHttpMethod(HttpMethod.resolve(this.bulkExcel.getCellDetail(currentRow, i)));
+                        } else if (i == ++index) {
                             eventBridgeValidation.setDescription(this.bulkExcel.getCellDetail(currentRow, i));
                         } else if (i == ++index) {
                             eventBridgeValidation.setBridgeType(this.bulkExcel.getCellDetail(currentRow, i));
@@ -528,6 +536,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             EventBridge eventBridge = new EventBridge();
             eventBridge.setName(eventBridgeValidation.getName());
             eventBridge.setBridgeUrl(eventBridgeValidation.getBridgeUrl());
+            eventBridge.setHttpMethod(eventBridgeValidation.getHttpMethod());
             eventBridge.setBridgeType(EVENT_BRIDGE_TYPE.getByLookupCode(eventBridgeValidation.getBridgeType()));
             eventBridge.setDescription(eventBridgeValidation.getDescription());
             eventBridge.setCreatedBy(appUser.get());
@@ -607,18 +616,27 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         eventBridgeResponse.setName(eventBridge.getName());
         eventBridgeResponse.setBridgeUrl(eventBridge.getBridgeUrl());
         eventBridgeResponse.setDescription(eventBridge.getDescription());
+        // http method
+        if (!BarcoUtil.isNull(eventBridge.getHttpMethod())) {
+            GLookup httpMethod = GLookup.getGLookup(this.lookupDataCacheService
+                .getChildLookupDataByParentLookupTypeAndChildLookupCode(REQUEST_METHOD.getName(),
+                    Long.valueOf(eventBridge.getHttpMethod().ordinal())));
+            eventBridgeResponse.setHttpMethod(httpMethod);
+        }
+        // bridge type
         if (!BarcoUtil.isNull(eventBridge.getBridgeType())) {
             GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService
                 .getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
                     eventBridge.getBridgeType().getLookupCode()));
             eventBridgeResponse.setBridgeType(bridgeType);
         }
+        // credential
         if (!BarcoUtil.isNull(eventBridge.getCredential())) {
-            eventBridgeResponse.setCredential(getCredentialResponse(eventBridge.getCredential()));
+            eventBridgeResponse.setCredential(this.getCredentialResponse(eventBridge.getCredential()));
         }
-        eventBridgeResponse.setDateUpdated(eventBridge.getDateUpdated());
         eventBridgeResponse.setDateCreated(eventBridge.getDateCreated());
         eventBridgeResponse.setCreatedBy(getActionUser(eventBridge.getCreatedBy()));
+        eventBridgeResponse.setDateUpdated(eventBridge.getDateUpdated());
         eventBridgeResponse.setUpdatedBy(getActionUser(eventBridge.getUpdatedBy()));
         eventBridgeResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(eventBridge.getStatus().getLookupType()));
         return eventBridgeResponse;

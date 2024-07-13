@@ -129,7 +129,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             } else if (BarcoUtil.isNull(apiTaskTypeRequest.getHttpMethod())) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.HTTP_METHOD_MISSING);
             }
-            sourceTaskType.setApiTaskType(this.apiTaskTypeRepository.save(getApiTaskType(apiTaskTypeRequest, adminUser)));
+            sourceTaskType.setApiTaskType(this.apiTaskTypeRepository.save(
+                this.getApiTaskType(apiTaskTypeRequest, adminUser)));
         } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode())) {
             KafkaTaskTypeRequest kafkaTaskTypeRequest = payload.getKafkaTaskType();
             if (BarcoUtil.isNull(kafkaTaskTypeRequest.getNumPartitions())) {
@@ -141,7 +142,8 @@ public class FormSettingServiceImpl implements FormSettingService {
             } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getTopicPattern())) {
                 return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_TOPIC_PATTERN_MISSING);
             }
-            sourceTaskType.setKafkaTaskType(this.kafkaTaskTypeRepository.save(getKafkaTaskType(kafkaTaskTypeRequest, adminUser)));
+            sourceTaskType.setKafkaTaskType(this.kafkaTaskTypeRepository.save(
+                this.getKafkaTaskType(kafkaTaskTypeRequest, adminUser)));
         }
         this.sourceTaskTypeRepository.save(sourceTaskType);
         // link app user stt giving service status
@@ -357,9 +359,9 @@ public class FormSettingServiceImpl implements FormSettingService {
             sourceTaskTypeResponse.setCredential(credentialResponse);
         }
         if (sourceTaskType.get().getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode())) {
-            sourceTaskTypeResponse.setKafkaTaskType(getKafkaTaskTypeResponse(sourceTaskType.get().getKafkaTaskType()));
+            sourceTaskTypeResponse.setKafkaTaskType(this.getKafkaTaskTypeResponse(sourceTaskType.get().getKafkaTaskType()));
         } else {
-            sourceTaskTypeResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.get().getApiTaskType(), this.lookupDataCacheService));
+            sourceTaskTypeResponse.setApiTaskType(this.getApiTaskTypeResponse(sourceTaskType.get().getApiTaskType(), this.lookupDataCacheService));
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sourceTaskTypeResponse);
     }
@@ -403,9 +405,9 @@ public class FormSettingServiceImpl implements FormSettingService {
                     sttResponse.setCredential(credentialResponse);
                 }
                 if (sourceTaskType.getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode()) && !BarcoUtil.isNull(sourceTaskType.getKafkaTaskType())) {
-                    sttResponse.setKafkaTaskType(getKafkaTaskTypeResponse(sourceTaskType.getKafkaTaskType()));
+                    sttResponse.setKafkaTaskType(this.getKafkaTaskTypeResponse(sourceTaskType.getKafkaTaskType()));
                 } else if (!BarcoUtil.isNull(sourceTaskType.getApiTaskType())) {
-                    sttResponse.setApiTaskType(getApiTaskTypeResponse(sourceTaskType.getApiTaskType(), this.lookupDataCacheService));
+                    sttResponse.setApiTaskType(this.getApiTaskTypeResponse(sourceTaskType.getApiTaskType(), this.lookupDataCacheService));
                 }
                 sttResponse.setTotalTask(this.sourceTaskRepository.countBySourceTaskTypeAndStatusNot(sourceTaskType, APPLICATION_STATUS.DELETE));
                 sttResponse.setTotalForm(this.genFormLinkSourceTaskTypeRepository.countBySourceTaskTypeAndStatusNot(sourceTaskType, APPLICATION_STATUS.DELETE));

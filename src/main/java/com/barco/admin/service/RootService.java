@@ -884,6 +884,22 @@ public interface RootService {
         }
     }
 
+    /**
+     * Method use to enabled and disabled the app user event bridges
+     * @param appUser
+     * @param adminUser
+     * */
+    public default void enabledDisabledAppUserEventBridges(AppUser appUser, AppUser adminUser) {
+        if (!BarcoUtil.isNull(appUser.getAppUserEventBridges()) && appUser.getAppUserEventBridges().size() > 0) {
+            appUser.getAppUserEventBridges().stream()
+                .map(appUserEventBridge -> {
+                    appUserEventBridge.setStatus(appUser.getStatus());
+                    appUserEventBridge.setUpdatedBy(adminUser);
+                    return appUserEventBridge;
+                }).collect(Collectors.toList());
+        }
+    }
+
     /***
      * Method use to get the credential detail
      * @param credential

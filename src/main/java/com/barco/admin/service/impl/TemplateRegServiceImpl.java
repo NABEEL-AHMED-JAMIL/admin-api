@@ -155,8 +155,8 @@ public class TemplateRegServiceImpl implements TemplateRegService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(appUser.get().getUsername())
-            .stream().map(templateReg -> this.getTemplateRegResponse(templateReg)).collect(Collectors.toList()));
+            this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(appUser.get().getUsername()).stream()
+                .map(templateReg -> this.getTemplateRegResponse(templateReg)).collect(Collectors.toList()));
     }
 
     /**
@@ -206,7 +206,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.templateRegRepository.deleteAll(this.templateRegRepository.findAllByIdIn(payload.getIds()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
 }

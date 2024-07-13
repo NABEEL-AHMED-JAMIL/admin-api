@@ -17,6 +17,7 @@ import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.GLookup;
 import com.barco.model.util.lookup.EVENT_BRIDGE_TYPE;
+import com.barco.model.util.lookup.REQUEST_METHOD;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
@@ -86,8 +87,7 @@ public class AppUserServiceImpl implements AppUserService {
         if (!BarcoUtil.isNull(appUser.get().getAppUserEnvs())) {
             appUserResponse.setEnVariables(appUser.get().getAppUserEnvs().stream()
                 .filter(appUserEnv -> appUserEnv.getStatus().equals(APPLICATION_STATUS.ACTIVE))
-                .map(appUserEnv -> this.getEnVariablesResponse(appUserEnv))
-                .collect(Collectors.toList()));
+                .map(appUserEnv -> this.getEnVariablesResponse(appUserEnv)).collect(Collectors.toList()));
         }
         // app user web hook
         if (!BarcoUtil.isNull(appUser.get().getAppUserEventBridges())) {
@@ -95,11 +95,19 @@ public class AppUserServiceImpl implements AppUserService {
                 .filter(appUserEventBridge -> appUserEventBridge.getStatus().equals(APPLICATION_STATUS.ACTIVE))
                 .map(appUserEventBridge -> {
                     EventBridgeResponse eventBridgeResponse = this.getEventBridgeResponse(appUserEventBridge);
+                    // event-bridge type
                     if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getBridgeType())) {
                         GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService
                             .getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
                                 appUserEventBridge.getEventBridge().getBridgeType().getLookupCode()));
                         eventBridgeResponse.setBridgeType(bridgeType);
+                    }
+                    // http method
+                    if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getHttpMethod())) {
+                        GLookup httpMethod = GLookup.getGLookup(this.lookupDataCacheService
+                            .getChildLookupDataByParentLookupTypeAndChildLookupCode(REQUEST_METHOD.getName(),
+                                Long.valueOf(appUserEventBridge.getEventBridge().getHttpMethod().ordinal())));
+                        eventBridgeResponse.setHttpMethod(httpMethod);
                     }
                     return eventBridgeResponse;
                 }).collect(Collectors.toList()));
@@ -214,11 +222,12 @@ public class AppUserServiceImpl implements AppUserService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         // if status is in-active & delete then we have filter the role and show only those role in user detail
-        appUser.get().setStatus(APPLICATION_STATUS.DELETE);
         appUser.get().setUpdatedBy(adminUser.get());
-        this.enabledDisabledProfilePermissionsAccesses(appUser.get(), adminUser.get());
-        this.enabledDisabledAppUserRoleAccesses(appUser.get(), adminUser.get());
+        appUser.get().setStatus(APPLICATION_STATUS.DELETE);
         this.enabledDisabledAppUserEnvs(appUser.get(), adminUser.get());
+        this.enabledDisabledAppUserRoleAccesses(appUser.get(), adminUser.get());
+        this.enabledDisabledAppUserEventBridges(appUser.get(), adminUser.get());
+        this.enabledDisabledProfilePermissionsAccesses(appUser.get(), adminUser.get());
         this.appUserRepository.save(appUser.get());
         // email to user
         this.sendCloseUserAccountEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
@@ -249,11 +258,12 @@ public class AppUserServiceImpl implements AppUserService {
         Iterator<AppUser> appUsers= this.appUserRepository.findAllById(payload.getIds()).iterator();
         while (appUsers.hasNext()) {
             AppUser appUser = appUsers.next();
-            appUser.setStatus(APPLICATION_STATUS.DELETE);
             appUser.setUpdatedBy(adminUser.get());
-            this.enabledDisabledProfilePermissionsAccesses(appUser, adminUser.get());
-            this.enabledDisabledAppUserRoleAccesses(appUser, adminUser.get());
+            appUser.setStatus(APPLICATION_STATUS.DELETE);
             this.enabledDisabledAppUserEnvs(appUser, adminUser.get());
+            this.enabledDisabledAppUserRoleAccesses(appUser, adminUser.get());
+            this.enabledDisabledAppUserEventBridges(appUser, adminUser.get());
+            this.enabledDisabledProfilePermissionsAccesses(appUser, adminUser.get());
             this.appUserRepository.save(appUser);
             // email to user
             this.sendCloseUserAccountEmail(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
@@ -540,11 +550,12 @@ public class AppUserServiceImpl implements AppUserService {
         Optional<AppUser> appUser = this.appUserRepository.findById(payload.getId());
         if (!BarcoUtil.isNull(payload.getStatus())) {
             // if status is in-active & delete then we have filter the role and show only those role in user detail
-            appUser.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
             appUser.get().setUpdatedBy(adminUser.get());
-            this.enabledDisabledProfilePermissionsAccesses(appUser.get(), adminUser.get());
-            this.enabledDisabledAppUserRoleAccesses(appUser.get(), adminUser.get());
+            appUser.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
             this.enabledDisabledAppUserEnvs(appUser.get(), adminUser.get());
+            this.enabledDisabledAppUserRoleAccesses(appUser.get(), adminUser.get());
+            this.enabledDisabledAppUserEventBridges(appUser.get(), adminUser.get());
+            this.enabledDisabledProfilePermissionsAccesses(appUser.get(), adminUser.get());
         }
         this.appUserRepository.save(appUser.get());
         // email to the user
