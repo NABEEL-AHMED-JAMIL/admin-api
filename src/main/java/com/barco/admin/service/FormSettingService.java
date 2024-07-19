@@ -9,23 +9,6 @@ import java.io.ByteArrayOutputStream;
  */
 public interface FormSettingService extends RootService {
 
-    public AppResponse addSTT(STTRequest payload) throws Exception;
-
-    public AppResponse editSTT(STTRequest payload) throws Exception;
-
-    public AppResponse deleteSTT(STTRequest payload) throws Exception;
-
-    public AppResponse fetchSTTBySttId(STTRequest payload) throws Exception;
-
-    public AppResponse fetchAllSTT(STTRequest payload) throws Exception;
-
-    public AppResponse deleteAllSTT(STTRequest payload) throws Exception;
-
-    // link stt -> with form
-    public AppResponse fetchAllSTTLinkForm(STTRequest payload) throws Exception;
-
-    public AppResponse linkSTTForm(STTRequest payload) throws Exception;
-
     public AppResponse addForm(FormRequest payload) throws Exception;
 
     public AppResponse editForm(FormRequest payload) throws Exception;

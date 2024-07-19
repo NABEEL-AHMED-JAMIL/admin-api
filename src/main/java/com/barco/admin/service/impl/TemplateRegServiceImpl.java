@@ -54,6 +54,8 @@ public class TemplateRegServiceImpl implements TemplateRegService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getTemplateName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_NAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_DESCRIPTION_MISSING);
         } else if (BarcoUtil.isNull(payload.getTemplateContent())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_CONTENT_MISSING);
         } else if (this.templateRegRepository.findFirstByTemplateNameAndStatusNot(
@@ -62,6 +64,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         }
         TemplateReg templateReg = new TemplateReg();
         templateReg.setTemplateName(payload.getTemplateName());
+        templateReg.setDescription(payload.getDescription());
         templateReg.setTemplateContent(payload.getTemplateContent());
         templateReg.setCreatedBy(appUser.get());
         templateReg.setUpdatedBy(appUser.get());
@@ -89,6 +92,8 @@ public class TemplateRegServiceImpl implements TemplateRegService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         } else if (BarcoUtil.isNull(payload.getTemplateName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_NAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_DESCRIPTION_MISSING);
         } else if (BarcoUtil.isNull(payload.getTemplateContent())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_CONTENT_MISSING);
         }
@@ -99,6 +104,9 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         }
         if (!BarcoUtil.isNull(payload.getTemplateName())) {
             templateReg.get().setTemplateName(payload.getTemplateName());
+        }
+        if (!BarcoUtil.isNull(payload.getDescription())) {
+            templateReg.get().setDescription(payload.getDescription());
         }
         if (!BarcoUtil.isNull(payload.getTemplateContent())) {
             templateReg.get().setTemplateContent(payload.getTemplateContent());

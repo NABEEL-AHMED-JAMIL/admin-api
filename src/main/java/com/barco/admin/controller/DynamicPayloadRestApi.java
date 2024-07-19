@@ -1,7 +1,7 @@
 package com.barco.admin.controller;
 
 import com.barco.admin.service.DynamicPayloadService;
-import com.barco.common.request.ConfigurationMakerRequest;
+import com.barco.model.dto.request.ConfigurationMakerRequest;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.request.DynamicPayloadRequest;

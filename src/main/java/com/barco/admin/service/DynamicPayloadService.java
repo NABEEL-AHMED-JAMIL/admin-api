@@ -1,6 +1,6 @@
 package com.barco.admin.service;
 
-import com.barco.common.request.ConfigurationMakerRequest;
+import com.barco.model.dto.request.ConfigurationMakerRequest;
 import com.barco.model.dto.request.DynamicPayloadRequest;
 import com.barco.model.dto.response.AppResponse;
 

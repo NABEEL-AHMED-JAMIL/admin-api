@@ -61,6 +61,8 @@ public class CredentialServiceImpl implements CredentialService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_DESCRIPTION_MISSING);
         } else if (BarcoUtil.isNull(payload.getType())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_TYPE_MISSING);
         } else if (BarcoUtil.isNull(payload.getContent())) {
@@ -68,6 +70,7 @@ public class CredentialServiceImpl implements CredentialService {
         }
         Credential credential = new Credential();
         credential.setName(payload.getName());
+        credential.setDescription(payload.getDescription());
         credential.setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
         credential.setContent(Base64.getEncoder().encodeToString(
             new Gson().toJson(payload.getContent()).getBytes()));
@@ -98,6 +101,8 @@ public class CredentialServiceImpl implements CredentialService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_ID_MISSING);
         } else if (BarcoUtil.isNull(payload.getName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_DESCRIPTION_MISSING);
         } else if (BarcoUtil.isNull(payload.getType())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_TYPE_MISSING);
         } else if (BarcoUtil.isNull(payload.getContent())) {
@@ -109,6 +114,7 @@ public class CredentialServiceImpl implements CredentialService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
         credential.get().setName(payload.getName());
+        credential.get().setDescription(payload.getDescription());
         credential.get().setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
         credential.get().setContent(Base64.getEncoder().encodeToString(new Gson().toJson(payload.getContent()).getBytes()));
         if (!BarcoUtil.isNull(payload.getStatus())) {
@@ -200,6 +206,7 @@ public class CredentialServiceImpl implements CredentialService {
         CredentialResponse credentialResponse = new CredentialResponse();
         credentialResponse.setId(credential.get().getId());
         credentialResponse.setName(credential.get().getName());
+        credentialResponse.setDescription(credential.get().getDescription());
         credentialResponse.setType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
             CREDENTIAL_TYPE.getName(),credential.get().getType().getLookupCode())));
         credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(credential.get().getStatus().getLookupCode()));
@@ -314,6 +321,7 @@ public class CredentialServiceImpl implements CredentialService {
         CredentialResponse credentialResponse = new CredentialResponse();
         credentialResponse.setId(credential.getId());
         credentialResponse.setName(credential.getName());
+        credentialResponse.setDescription(credential.getDescription());
         credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(credential.getStatus().getLookupType()));
         if (readFull) {
             credentialResponse.setType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(

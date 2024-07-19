@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -72,12 +71,12 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         } else if (BarcoUtil.isNull(payload.getIframe())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.DASHBOARD_IFRAME_MISSING);
         }
-        DashboardSetting dashboardSetting = getDashboardSetting(payload, adminUser.get());
-        dashboardSetting = this.dashboardSettingRepository.save(dashboardSetting);
+        DashboardSetting dashboardSetting = this.getDashboardSetting(payload, adminUser.get());
         Optional<LookupData> groupType = this.lookupDataRepository.findByLookupType(payload.getGroupType());
         if (groupType.isPresent()) {
             dashboardSetting.setGroupType(groupType.get());
         }
+        dashboardSetting = this.dashboardSettingRepository.save(dashboardSetting);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, dashboardSetting.getId().toString()));
     }
 

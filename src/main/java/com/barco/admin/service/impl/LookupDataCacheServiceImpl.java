@@ -49,6 +49,7 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock writeLock = readWriteLock.writeLock();
+
     private Map<String, LookupDataResponse> lookupCacheMap = new HashMap<>();
     private Map<String, SheetFiled> sheetFiledMap = new HashMap<>();
 
@@ -73,9 +74,9 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
             Iterable<LookupData> lookupDataList = this.lookupDataRepository.findByParentLookupIsNull();
             lookupDataList.forEach(lookupData -> {
                 if (this.lookupCacheMap.containsKey(lookupData.getLookupType())) {
-                    this.lookupCacheMap.put(lookupData.getLookupType(), getLookupDataDetail(lookupData));
+                    this.lookupCacheMap.put(lookupData.getLookupType(), this.getLookupDataDetail(lookupData));
                 } else {
-                    this.lookupCacheMap.put(lookupData.getLookupType(), getLookupDataDetail(lookupData));
+                    this.lookupCacheMap.put(lookupData.getLookupType(), this.getLookupDataDetail(lookupData));
                 }
             });
             logger.info("***************Cache-Lookup-End********************************");
@@ -149,8 +150,8 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         lookupData.setLookupType(payload.getLookupType());
         lookupData.setLookupCode(payload.getLookupCode());
         lookupData.setLookupValue(payload.getLookupValue());
-        lookupData.setUiLookup(UI_LOOKUP.getByLookupCode(payload.getUiLookup()));
         lookupData.setDescription(payload.getDescription());
+        lookupData.setUiLookup(UI_LOOKUP.getByLookupCode(payload.getUiLookup()));
         lookupData.setStatus(APPLICATION_STATUS.ACTIVE);
         lookupData.setCreatedBy(appUser.get());
         lookupData.setUpdatedBy(appUser.get());

@@ -278,8 +278,7 @@ public class EVariableServiceImpl implements EVariableService {
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             throw new Exception(MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         }
@@ -292,11 +291,9 @@ public class EVariableServiceImpl implements EVariableService {
         this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
         Iterator<EnvVariables> envVariables;
         if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
-            envVariables = this.envVariablesRepository.findAllByIdInAndStatusNotOrderByDateCreatedDesc(
-                payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
+            envVariables = this.envVariablesRepository.findAllByIdInAndStatusNotOrderByDateCreatedDesc(payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
         } else {
-            envVariables = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(
-                APPLICATION_STATUS.DELETE).iterator();
+            envVariables = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE).iterator();
         }
         while (envVariables.hasNext()) {
             EnvVariables envVariable = envVariables.next();
@@ -418,7 +415,7 @@ public class EVariableServiceImpl implements EVariableService {
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                linkRPUResponses.add(getLinkRPUResponse(data, envVariables.get().getStatus()));
+                linkRPUResponses.add(this.getLinkRPUResponse(data, envVariables.get().getStatus()));
             }
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, linkRPUResponses);
