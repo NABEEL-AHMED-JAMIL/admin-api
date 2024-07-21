@@ -113,6 +113,23 @@ public class DashboardSettingRestApi {
     }
 
     /**
+     * @apiName :- fetchAllDashboardSettingByType
+     * @apiNote :- Method use to fetch all dashboard setting by type
+     * @param payload
+     * @return ResponseEntity
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
+    @RequestMapping(value="/fetchAllDashboardSettingByType", method= RequestMethod.POST)
+    public ResponseEntity<?> fetchAllDashboardSettingByType(@RequestBody DashboardSettingRequest payload) {
+        try {
+            return new ResponseEntity<>(this.dashboardSettingService.fetchAllDashboardSettingByType(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllDashboardSettingByType ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- deleteDashboardSettingById
      * @apiNote :- Method use to delete the dashboard by id
      * @param payload

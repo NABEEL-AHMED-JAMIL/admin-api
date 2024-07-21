@@ -260,7 +260,7 @@ public class DynamicPayloadServiceImpl implements DynamicPayloadService {
     public AppResponse xmlCreateChecker(ConfigurationMakerRequest payload) throws Exception {
         logger.info("Request xmlCreateChecker :- " + payload);
         if (!BarcoUtil.isNull(payload.getXmlTagsInfo())) {
-            return new AppResponse(BarcoUtil.SUCCESS, this.xmlOutTagInfoUtil.makeXml(payload));
+            return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DYNAMIC_PAYLOAD, this.xmlOutTagInfoUtil.makeXml(payload));
         } else {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.WRONG_INPUT);
         }
@@ -274,8 +274,8 @@ public class DynamicPayloadServiceImpl implements DynamicPayloadService {
     @Override
     public AppResponse jsonCreateChecker(ConfigurationMakerRequest payload) throws Exception {
         logger.info("Request jsonCreateChecker :- " + payload);
-        if (!BarcoUtil.isNull(payload.getXmlTagsInfo())) {
-            return new AppResponse(BarcoUtil.SUCCESS, this.jsonOutTagInfoUtil.makeJson(payload));
+        if (!BarcoUtil.isNull(payload.getJsonTagsInfo())) {
+            return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DYNAMIC_PAYLOAD, this.jsonOutTagInfoUtil.makeJson(payload));
         } else {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.WRONG_INPUT);
         }

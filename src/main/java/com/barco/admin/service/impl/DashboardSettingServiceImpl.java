@@ -157,20 +157,7 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         } else {
             dashboardSettings = this.dashboardSettingRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE);
         }
-        List<DashboardSettingResponse> dashboardSettingResponses = dashboardSettings.stream()
-            .map(dashboardSetting -> {
-                DashboardSettingResponse dashboardSettingResponse = this.getDashboardSettingResponse(dashboardSetting);
-                dashboardSettingResponse.setBoardType(GLookup.getGLookup(this.lookupDataCacheService
-                    .getChildLookupDataByParentLookupTypeAndChildLookupCode(DASHBOARD_TYPE.getName(),
-                        Long.valueOf(dashboardSetting.getBoardType().getLookupCode()))));
-                if (!BarcoUtil.isNull(dashboardSetting.getGroupType())) {
-                    LookupData lookupData = dashboardSetting.getGroupType();
-                    dashboardSettingResponse.setGroupType(new GLookup(lookupData.getLookupType(),
-                        lookupData.getLookupCode().toString(), lookupData.getLookupValue()));
-                }
-                return dashboardSettingResponse;
-            }).collect(Collectors.toList());
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, dashboardSettingResponses);
+        return this.getDashboardResponse(dashboardSettings);
     }
 
     /**
@@ -248,6 +235,29 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
     }
 
     /**
+     * Method use to fetch all dashboard by type
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchAllDashboardSettingByType(DashboardSettingRequest payload) throws Exception {
+        logger.info("Request fetchAllDashboardSettingByGroup :- " + payload);
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getBoardType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.DASHBOARD_BOARD_TYPE_MISSING);
+        }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!adminUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        List<DashboardSetting> dashboardSettings = this.dashboardSettingRepository.findAllByCreatedByAndBoardTypeAndStatusNot(
+            adminUser.get(), DASHBOARD_TYPE.getByLookupCode(payload.getBoardType()), APPLICATION_STATUS.DELETE);
+        return this.getDashboardResponse(dashboardSettings);
+    }
+
+    /**
      * Method use to delete the dashboard by id
      * @param payload
      * @return AppResponse
@@ -297,5 +307,27 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         dashboardSettings.forEach(dashboardSetting -> dashboardSetting.setStatus(APPLICATION_STATUS.DELETE));
         this.dashboardSettingRepository.saveAll(dashboardSettings);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
+    }
+
+    /**
+     * Method use to get the dashboard reponse
+     * @param dashboardSettings
+     * @return AppResponse
+     * */
+    private AppResponse getDashboardResponse(List<DashboardSetting> dashboardSettings) {
+        List<DashboardSettingResponse> dashboardSettingResponses = dashboardSettings.stream()
+            .map(dashboardSetting -> {
+                DashboardSettingResponse dashboardSettingResponse = this.getDashboardSettingResponse(dashboardSetting);
+                dashboardSettingResponse.setBoardType(GLookup.getGLookup(this.lookupDataCacheService
+                    .getChildLookupDataByParentLookupTypeAndChildLookupCode(DASHBOARD_TYPE.getName(),
+                        Long.valueOf(dashboardSetting.getBoardType().getLookupCode()))));
+                if (!BarcoUtil.isNull(dashboardSetting.getGroupType())) {
+                    LookupData lookupData = dashboardSetting.getGroupType();
+                    dashboardSettingResponse.setGroupType(new GLookup(lookupData.getLookupType(),
+                        lookupData.getLookupCode().toString(), lookupData.getLookupValue()));
+                }
+                return dashboardSettingResponse;
+            }).collect(Collectors.toList());
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, dashboardSettingResponses);
     }
 }

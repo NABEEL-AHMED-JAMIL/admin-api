@@ -73,7 +73,7 @@ public class CredentialServiceImpl implements CredentialService {
         credential.setDescription(payload.getDescription());
         credential.setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
         credential.setContent(Base64.getEncoder().encodeToString(
-            new Gson().toJson(payload.getContent()).getBytes()));
+             new Gson().toJson(payload.getContent()).getBytes()));
         credential.setStatus(APPLICATION_STATUS.ACTIVE);
         credential.setCreatedBy(adminUser.get());
         credential.setUpdatedBy(adminUser.get());

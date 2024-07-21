@@ -137,13 +137,11 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         }
-        Optional<TemplateReg> templateReg = this.templateRegRepository.findByIdAndUsername(
-            payload.getId(), appUser.get().getUsername());
+        Optional<TemplateReg> templateReg = this.templateRegRepository.findByIdAndUsername(payload.getId(), appUser.get().getUsername());
         if (!templateReg.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.getTemplateRegResponse(templateReg.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getTemplateRegResponse(templateReg.get()));
     }
 
     /**
@@ -164,7 +162,8 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(appUser.get().getUsername()).stream()
-                .map(templateReg -> this.getTemplateRegResponse(templateReg)).collect(Collectors.toList()));
+                .map(templateReg -> this.getTemplateRegResponse(templateReg))
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -185,8 +184,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         }
-        Optional<TemplateReg> templateReg = this.templateRegRepository.findByIdAndUsername(
-            payload.getId(), appUser.get().getUsername());
+        Optional<TemplateReg> templateReg = this.templateRegRepository.findByIdAndUsername(payload.getId(), appUser.get().getUsername());
         if (!templateReg.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }

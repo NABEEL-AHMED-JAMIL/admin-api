@@ -360,7 +360,7 @@ public class AppUserServiceImpl implements AppUserService {
         List<AppUserResponse> subAppUserResponses = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndStatusNotOrderByDateCreatedDesc(
             startDate, endDate, appUser.get(), APPLICATION_STATUS.DELETE).stream()
             .map(subAppUser -> {
-                AppUserResponse appUserResponse = getAppUserDetail(subAppUser);
+                AppUserResponse appUserResponse = this.getAppUserDetail(subAppUser);
                 appUserResponse.setTotalSubUser(subAppUser.getSubAppUsers().size());
                 appUserResponse.setCreatedBy(getActionUser(subAppUser.getCreatedBy()));
                 appUserResponse.setUpdatedBy(getActionUser(subAppUser.getUpdatedBy()));
