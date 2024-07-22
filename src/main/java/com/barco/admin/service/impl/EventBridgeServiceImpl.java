@@ -287,11 +287,12 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         } else if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
-        this.eventBridgeRepository.deleteAll(this.eventBridgeRepository.findAllByIdIn(payload.getIds())
-        .stream().map(eventBridge -> {
-            this.nullifyReportSettingReferences(eventBridge);
-            return eventBridge;
-        }).collect(Collectors.toList()));
+        this.eventBridgeRepository.deleteAll(
+            this.eventBridgeRepository.findAllByIdIn(payload.getIds())
+            .stream().map(eventBridge -> {
+                this.nullifyReportSettingReferences(eventBridge);
+                return eventBridge;
+            }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
@@ -385,8 +386,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         }
         EventBridge eventBridge = linkEventBridge.get().getEventBridge();
         if (BarcoUtil.isNull(eventBridge.getCredential())) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(
-                MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID, payload.getId()), payload);
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID, payload.getId()), payload);
         }
         return this.generateTokenForEventBridge(linkEventBridge.get(), eventBridge, payload);
     }

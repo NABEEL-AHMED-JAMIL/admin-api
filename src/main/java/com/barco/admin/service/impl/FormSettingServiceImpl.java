@@ -57,6 +57,10 @@ public class FormSettingServiceImpl implements FormSettingService {
     @Autowired
     private SourceTaskTypeRepository sourceTaskTypeRepository;
     @Autowired
+    private ReportSettingRepository reportSettingRepository;
+    @Autowired
+    private DashboardSettingRepository dashboardSettingRepository;
+    @Autowired
     private LookupDataRepository lookupDataRepository;
     @Autowired
     private LookupDataCacheService lookupDataCacheService;
@@ -94,9 +98,34 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         GenForm genForm = new GenForm();
         genForm.setFormName(payload.getFormName());
-        Optional<LookupData> homePage = this.lookupDataRepository.findByLookupType(payload.getHomePage());
-        if (homePage.isPresent()) {
-            genForm.setHomePage(homePage.get());
+        // home page
+        if (!BarcoUtil.isNull(payload.getHomePage())) {
+            Optional<LookupData> homePage = this.lookupDataRepository.findByLookupType(payload.getHomePage());
+            if (homePage.isPresent()) {
+                genForm.setHomePage(homePage.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.HOME_PAGE_NOT_FOUND);
+            }
+        }
+        // report id
+        if (!BarcoUtil.isNull(payload.getReportId())) {
+            Optional<ReportSetting> reportSetting = this.reportSettingRepository.findByIdAndUsernameAndStatusNot(
+                payload.getReportId(), adminUser.get().getUsername(), APPLICATION_STATUS.DELETE);
+            if (reportSetting.isPresent()) {
+                genForm.setReport(reportSetting.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_NOT_FOUND);
+            }
+        }
+        // dashboard
+        if (!BarcoUtil.isNull(payload.getDashboardId())) {
+            Optional<DashboardSetting> dashboardSetting = this.dashboardSettingRepository.findByIdAndUsernameAndStatusNot(
+                payload.getDashboardId(), adminUser.get().getUsername(), APPLICATION_STATUS.DELETE);
+            if (dashboardSetting.isPresent()) {
+                genForm.setDashboard(dashboardSetting.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.DASHBOARD_NOT_FOUND);
+            }
         }
         genForm.setDescription(payload.getDescription());
         genForm.setFormType(FORM_TYPE.getByLookupCode(payload.getFormType()));
@@ -145,9 +174,40 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!BarcoUtil.isNull(payload.getServiceId())) {
             genForm.get().setServiceId(payload.getServiceId());
         }
-        Optional<LookupData> homePage = this.lookupDataRepository.findByLookupType(payload.getHomePage());
-        if (homePage.isPresent()) {
-            genForm.get().setHomePage(homePage.get());
+        // home page
+        if (!BarcoUtil.isNull(payload.getHomePage())) {
+            Optional<LookupData> homePage = this.lookupDataRepository.findByLookupType(payload.getHomePage());
+            if (homePage.isPresent()) {
+                genForm.get().setHomePage(homePage.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.HOME_PAGE_NOT_FOUND);
+            }
+        } else {
+            genForm.get().setHomePage((LookupData) BarcoUtil.NULL);
+        }
+        // report id
+        if (!BarcoUtil.isNull(payload.getReportId())) {
+            Optional<ReportSetting> reportSetting = this.reportSettingRepository.findByIdAndUsernameAndStatusNot(
+                payload.getReportId(), adminUser.get().getUsername(), APPLICATION_STATUS.DELETE);
+            if (reportSetting.isPresent()) {
+                genForm.get().setReport(reportSetting.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_NOT_FOUND);
+            }
+        } else {
+            genForm.get().setReport((ReportSetting) BarcoUtil.NULL);
+        }
+        // dashboard
+        if (!BarcoUtil.isNull(payload.getDashboardId())) {
+            Optional<DashboardSetting> dashboardSetting = this.dashboardSettingRepository.findByIdAndUsernameAndStatusNot(
+                payload.getDashboardId(), adminUser.get().getUsername(), APPLICATION_STATUS.DELETE);
+            if (dashboardSetting.isPresent()) {
+                genForm.get().setDashboard(dashboardSetting.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.DASHBOARD_NOT_FOUND);
+            }
+        } else {
+            genForm.get().setDashboard((DashboardSetting) BarcoUtil.NULL);
         }
         if (!BarcoUtil.isNull(payload.getStatus())) {
             genForm.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
@@ -224,7 +284,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!genForm.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getFormResponse(genForm.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getFormResponse(genForm.get()));
     }
 
     /**
@@ -284,7 +344,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, result.stream()
-            .map(genForm -> getFormResponse(genForm)).collect(Collectors.toList()));
+            .map(genForm -> this.getFormResponse(genForm)).collect(Collectors.toList()));
     }
 
     /**
@@ -337,7 +397,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-                payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getId())) {
@@ -353,7 +413,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         List<FormLinkSourceTaskTypeResponse> formLinkSourceTaskTypeResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                formLinkSourceTaskTypeResponses.add(getFormLinkSourceTaskTypeResponse(data, this.lookupDataCacheService));
+                formLinkSourceTaskTypeResponses.add(this.getFormLinkSourceTaskTypeResponse(data, this.lookupDataCacheService));
             }
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, formLinkSourceTaskTypeResponses);
@@ -684,7 +744,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!genSection.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getSectionResponse(genSection.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getSectionResponse(genSection.get()));
     }
 
     /**
@@ -718,7 +778,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             result.stream().map(genSection -> {
-                SectionResponse sectionResponse = getSectionResponse(genSection);
+                SectionResponse sectionResponse = this.getSectionResponse(genSection);
                 // no need to give the count if start date and end date not there
                 if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
                     sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository
@@ -921,13 +981,13 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_FORM_LINK_SECTION,
             genSection.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
-        List<SectionLinkFormResponse> sectionLinkFormRespons = new ArrayList<>();
+        List<SectionLinkFormResponse> sectionLinkFormResponse = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                sectionLinkFormRespons.add(getSectionLinkFromResponse(data, this.lookupDataCacheService));
+                sectionLinkFormResponse.add(this.getSectionLinkFromResponse(data, this.lookupDataCacheService));
             }
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sectionLinkFormRespons);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sectionLinkFormResponse);
     }
 
     /**
@@ -984,13 +1044,14 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (BarcoUtil.isNull(payload.getSectionLinkForm())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_LINK_FORM_MISSING);
         }
-        this.genSectionLinkGenFormRepository.saveAll(this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
-            payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
-            .map(genSectionLinkGenForm -> {
-                genSectionLinkGenForm.setStatus(APPLICATION_STATUS.DELETE);
-                genSectionLinkGenForm.setUpdatedBy(appUser.get());
-                return genSectionLinkGenForm;
-            }).collect(Collectors.toList()));
+        this.genSectionLinkGenFormRepository.saveAll(
+            this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
+                payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
+                .map(genSectionLinkGenForm -> {
+                    genSectionLinkGenForm.setStatus(APPLICATION_STATUS.DELETE);
+                    genSectionLinkGenForm.setUpdatedBy(appUser.get());
+                    return genSectionLinkGenForm;
+                }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
@@ -1015,13 +1076,14 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getSectionOrder())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_LINK_FORM_ORDER_MISSING);
         }
-        this.genSectionLinkGenFormRepository.saveAll(this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
-            payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
-            .map(sectionLinkGenForm -> {
-                sectionLinkGenForm.setSectionOrder(payload.getSectionOrder());
-                sectionLinkGenForm.setUpdatedBy(appUser.get());
-                return sectionLinkGenForm;
-            }).collect(Collectors.toList()));
+        this.genSectionLinkGenFormRepository.saveAll(
+            this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
+                payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
+                .map(sectionLinkGenForm -> {
+                    sectionLinkGenForm.setSectionOrder(payload.getSectionOrder());
+                    sectionLinkGenForm.setUpdatedBy(appUser.get());
+                    return sectionLinkGenForm;
+                }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getSectionLinkForm()), payload);
     }
 
@@ -1209,7 +1271,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!genControl.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getControlResponse(genControl.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getControlResponse(genControl.get()));
     }
 
     /**
@@ -1233,7 +1295,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         List<ControlResponse> controlResponses = this.genControlRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
             startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE).stream()
             .map(genControl -> {
-                ControlResponse controlResponse = getControlResponse(genControl);
+                ControlResponse controlResponse = this.getControlResponse(genControl);
                 controlResponse.setTotalSection(this.genControlLinkGenSectionRepository.countByGenControlAndStatusNot(genControl, APPLICATION_STATUS.DELETE));
                 return controlResponse;
             }).collect(Collectors.toList());
@@ -1259,14 +1321,14 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.genControlRepository.saveAll(
-            this.genControlRepository.findAllByIdIn(payload.getIds())
-            .stream().map(genControl -> {
-                genControl.setStatus(APPLICATION_STATUS.DELETE);
-                if (!BarcoUtil.isNull(genControl.getGenControlLinkGenSections())) {
-                    this.actionOnGenControlLinkGenSections(genControl, appUser.get());
-                }
-                return genControl;
-            }).collect(Collectors.toList()));
+            this.genControlRepository.findAllByIdIn(payload.getIds()).stream()
+                .map(genControl -> {
+                    genControl.setStatus(APPLICATION_STATUS.DELETE);
+                    if (!BarcoUtil.isNull(genControl.getGenControlLinkGenSections())) {
+                        this.actionOnGenControlLinkGenSections(genControl, appUser.get());
+                    }
+                    return genControl;
+                }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
@@ -1806,6 +1868,16 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!BarcoUtil.isNull(genForm.getHomePage())) {
             LookupData lookupData = genForm.getHomePage();
             formResponse.setHomePage(new GLookup(lookupData.getLookupType(), lookupData.getLookupCode(), lookupData.getLookupValue()));
+        }
+        // report
+        if (!BarcoUtil.isNull(genForm.getReport())) {
+            ReportSetting reportSetting = genForm.getReport();
+            formResponse.setReport(new ReportSettingResponse(reportSetting.getId(), reportSetting.getName()));
+        }
+        // dashboard
+        if (!BarcoUtil.isNull(genForm.getDashboard())) {
+            DashboardSetting dashboardSetting = genForm.getDashboard();
+            formResponse.setDashboard(new DashboardSettingResponse(dashboardSetting.getId(), dashboardSetting.getName()));
         }
         formResponse.setServiceId(genForm.getServiceId());
         formResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(genForm.getStatus().getLookupType()));

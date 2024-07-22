@@ -183,7 +183,7 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         if (!dashboardSetting.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.DASHBOARD_NOT_FOUND);
         }
-        DashboardSettingResponse dashboardSettingResponse = getDashboardSettingResponse(dashboardSetting.get());
+        DashboardSettingResponse dashboardSettingResponse = this.getDashboardSettingResponse(dashboardSetting.get());
         dashboardSettingResponse.setBoardType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
             DASHBOARD_TYPE.getName(), Long.valueOf(dashboardSetting.get().getBoardType().getLookupCode()))));
         if (!BarcoUtil.isNull(dashboardSetting.get().getGroupType())) {

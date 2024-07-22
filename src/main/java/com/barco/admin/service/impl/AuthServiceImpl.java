@@ -169,8 +169,7 @@ public class AuthServiceImpl implements AuthService {
         if (BarcoUtil.isNull(payload.getEmail())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EMAIL_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(
-            payload.getEmail(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(payload.getEmail(), APPLICATION_STATUS.ACTIVE);
         if (appUser.isPresent()) {
             // email and notification
             this.sendForgotPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory, this.jwtUtils);

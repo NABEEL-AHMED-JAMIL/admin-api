@@ -67,7 +67,7 @@ public class NotificationServiceImpl implements NotificationService {
         this.notificationAuditRepository.save(notificationAudit);
         payload.setId(notificationAudit.getId());
         payload.setDateCreated(notificationAudit.getDateCreated());
-        this.sendNotificationToSpecificUser(getNotificationResponse(notificationAudit));
+        this.sendNotificationToSpecificUser(this.getNotificationResponse(notificationAudit));
     }
 
     /**
@@ -108,7 +108,7 @@ public class NotificationServiceImpl implements NotificationService {
             new NotificationSpecification(appUser.get(), Long.valueOf(notificationTime.getLookupValue())),
             PageRequest.of(0, 5000, Sort.by(Sort.Order.asc(NOTIFY_ID))));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            notificationAuditPage.map(notificationAudit -> (getNotificationResponse(notificationAudit))).getContent());
+            notificationAuditPage.map(notificationAudit -> (this.getNotificationResponse(notificationAudit))).getContent());
     }
 
     /**

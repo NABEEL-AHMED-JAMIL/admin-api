@@ -37,182 +37,169 @@ public class TemplateRegServiceImpl implements TemplateRegService {
 
     public TemplateRegServiceImpl() {}
 
-    /**
-     * Method use to add the email template in db
-     * @param payload
-     * @return AppResponse
-     * */
     @Override
     public AppResponse addTemplateReg(TemplateRegRequest payload) throws Exception {
         logger.info("Request addTemplateReg :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getTemplateName())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_NAME_MISSING);
-        } else if (BarcoUtil.isNull(payload.getDescription())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_DESCRIPTION_MISSING);
-        } else if (BarcoUtil.isNull(payload.getTemplateContent())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_CONTENT_MISSING);
-        } else if (this.templateRegRepository.findFirstByTemplateNameAndStatusNot(
+        if (this.templateRegRepository.findFirstByTemplateNameAndStatusNot(
             payload.getTemplateName(), APPLICATION_STATUS.DELETE).isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_ALREADY_EXIST);
         }
-        TemplateReg templateReg = new TemplateReg();
-        templateReg.setTemplateName(payload.getTemplateName());
-        templateReg.setDescription(payload.getDescription());
-        templateReg.setTemplateContent(payload.getTemplateContent());
-        templateReg.setCreatedBy(appUser.get());
-        templateReg.setUpdatedBy(appUser.get());
-        templateReg.setStatus(APPLICATION_STATUS.ACTIVE);
+        TemplateReg templateReg = this.createTemplateReg(payload);
         this.templateRegRepository.save(templateReg);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, templateReg.getId()), payload);
     }
 
-    /**
-     * Method use to edit the email template in db
-     * @param payload
-     * @return AppResponse
-     * */
     @Override
     public AppResponse editTemplateReg(TemplateRegRequest payload) throws Exception {
         logger.info("Request editTemplateReg :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getId())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
-        } else if (BarcoUtil.isNull(payload.getTemplateName())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_NAME_MISSING);
-        } else if (BarcoUtil.isNull(payload.getDescription())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_DESCRIPTION_MISSING);
-        } else if (BarcoUtil.isNull(payload.getTemplateContent())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_CONTENT_MISSING);
-        }
-        Optional<TemplateReg> templateReg = this.templateRegRepository.findByIdAndUsername(
-            payload.getId(), appUser.get().getUsername());
-        if (!templateReg.isPresent()) {
+        Optional<TemplateReg> templateRegOpt = this.templateRegRepository.findByIdAndUsername(
+            payload.getId(), payload.getSessionUser().getUsername());
+        if (!templateRegOpt.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
-        if (!BarcoUtil.isNull(payload.getTemplateName())) {
-            templateReg.get().setTemplateName(payload.getTemplateName());
-        }
-        if (!BarcoUtil.isNull(payload.getDescription())) {
-            templateReg.get().setDescription(payload.getDescription());
-        }
-        if (!BarcoUtil.isNull(payload.getTemplateContent())) {
-            templateReg.get().setTemplateContent(payload.getTemplateContent());
-        }
-        if (!BarcoUtil.isNull(payload.getStatus())) {
-            templateReg.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-        }
-        templateReg.get().setUpdatedBy(appUser.get());
-        this.templateRegRepository.save(templateReg.get());
+        TemplateReg templateReg = this.updateTemplateRegFromPayload(templateRegOpt.get(), payload);
+        this.templateRegRepository.save(templateReg);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()), payload);
     }
 
-    /**
-     * Method use to find the email template from db by template id
-     * @param payload
-     * @return AppResponse
-     * */
     @Override
     public AppResponse findTemplateRegByTemplateId(TemplateRegRequest payload) throws Exception {
         logger.info("Request findTemplateRegByTemplateId :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        AppResponse validationResponse = this.validateUsernameAndId(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getId())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
-        }
-        Optional<TemplateReg> templateReg = this.templateRegRepository.findByIdAndUsername(payload.getId(), appUser.get().getUsername());
-        if (!templateReg.isPresent()) {
+        Optional<TemplateReg> templateRegOpt = this.templateRegRepository.findByIdAndUsername(
+            payload.getId(), payload.getSessionUser().getUsername());
+        if (!templateRegOpt.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getTemplateRegResponse(templateReg.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getTemplateRegResponse(templateRegOpt.get()));
     }
 
-    /**
-     * Method use to find all email template from db by username
-     * @param payload
-     * @return AppResponse
-     * */
     @Override
     public AppResponse fetchTemplateReg(TemplateRegRequest payload) throws Exception {
         logger.info("Request fetchTemplateReg :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(appUser.get().getUsername()).stream()
-                .map(templateReg -> this.getTemplateRegResponse(templateReg))
-                .collect(Collectors.toList()));
+            this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(payload.getSessionUser().getUsername()).stream()
+                .map(this::getTemplateRegResponse).collect(Collectors.toList()));
     }
 
-    /**
-     * Method use to delete template by template id and username
-     * @param payload
-     * @return AppResponse
-     * */
     @Override
     public AppResponse deleteTemplateReg(TemplateRegRequest payload) throws Exception {
         logger.info("Request deleteTemplateReg :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        AppResponse validationResponse = this.validateUsernameAndId(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getId())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
-        }
-        Optional<TemplateReg> templateReg = this.templateRegRepository.findByIdAndUsername(payload.getId(), appUser.get().getUsername());
-        if (!templateReg.isPresent()) {
+        Optional<TemplateReg> templateRegOpt = this.templateRegRepository.findByIdAndUsername(
+            payload.getId(), payload.getSessionUser().getUsername());
+        if (!templateRegOpt.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
-        this.templateRegRepository.delete(templateReg.get());
+        this.templateRegRepository.delete(templateRegOpt.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
     }
 
-    /**
-     * Method use to delete all email template from db by username
-     * @param payload
-     * @return AppResponse
-     * */
     @Override
     @Transactional
     public AppResponse deleteAllTemplateReg(TemplateRegRequest payload) throws Exception {
         logger.info("Request deleteAllTemplateReg :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         } else if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.templateRegRepository.deleteAll(this.templateRegRepository.findAllByIdIn(payload.getIds()));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
+    }
+
+    private AppResponse validateAddOrUpdatePayload(TemplateRegRequest payload) {
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUserOpt = appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUserOpt.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getTemplateName())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_NAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_DESCRIPTION_MISSING);
+        } else if (BarcoUtil.isNull(payload.getTemplateContent())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_CONTENT_MISSING);
+        }
+        return (AppResponse) BarcoUtil.NULL;
+    }
+
+    private AppResponse validateUsername(TemplateRegRequest payload) {
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        } else if (!this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE).isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        return (AppResponse) BarcoUtil.NULL;
+    }
+
+    private AppResponse validateUsernameAndId(TemplateRegRequest payload) {
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
+        } else if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
+        }
+        return (AppResponse) BarcoUtil.NULL;
+    }
+
+    private TemplateReg createTemplateReg(TemplateRegRequest payload) throws Exception {
+        TemplateReg templateReg = new TemplateReg();
+        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (appUserOpt.isPresent()) {
+            AppUser appUser = appUserOpt.get();
+            templateReg.setTemplateName(payload.getTemplateName());
+            templateReg.setDescription(payload.getDescription());
+            templateReg.setTemplateContent(payload.getTemplateContent());
+            templateReg.setCreatedBy(appUser);
+            templateReg.setUpdatedBy(appUser);
+            templateReg.setStatus(APPLICATION_STATUS.ACTIVE);
+        }
+        return templateReg;
+    }
+
+    private TemplateReg updateTemplateRegFromPayload(TemplateReg templateReg, TemplateRegRequest payload) {
+        if (!BarcoUtil.isNull(payload.getTemplateName())) {
+            templateReg.setTemplateName(payload.getTemplateName());
+        }
+        if (!BarcoUtil.isNull(payload.getDescription())) {
+            templateReg.setDescription(payload.getDescription());
+        }
+        if (!BarcoUtil.isNull(payload.getTemplateContent())) {
+            templateReg.setTemplateContent(payload.getTemplateContent());
+        }
+        if (!BarcoUtil.isNull(payload.getStatus())) {
+            templateReg.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+        }
+        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (appUserOpt.isPresent()) {
+            templateReg.setUpdatedBy(appUserOpt.get());
+        }
+        return templateReg;
     }
 
 }

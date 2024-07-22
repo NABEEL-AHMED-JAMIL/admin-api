@@ -95,7 +95,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             }
         }
         ReportSetting reportSetting = new ReportSetting();
-        reportSetting = getReportSetting(payload, reportSetting);
+        reportSetting = this.getReportSetting(payload, reportSetting);
         Optional<LookupData> groupType = this.lookupDataRepository.findByLookupType(payload.getGroupType());
         if (groupType.isPresent()) {
             reportSetting.setGroupType(groupType.get());
@@ -176,7 +176,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         if (groupType.isPresent()) {
             reportSetting.get().setGroupType(groupType.get());
         }
-        this.reportSettingRepository.save(getReportSetting(payload, reportSetting.get()));
+        this.reportSettingRepository.save(this.getReportSetting(payload, reportSetting.get()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()));
     }
 
@@ -205,8 +205,8 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         } else {
             reportSettings = this.reportSettingRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, reportSettings
-            .stream().map(reportSetting -> getReportSettingResponse(reportSetting)).collect(Collectors.toList()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, reportSettings.stream()
+            .map(reportSetting -> this.getReportSettingResponse(reportSetting)).collect(Collectors.toList()));
     }
 
     /**

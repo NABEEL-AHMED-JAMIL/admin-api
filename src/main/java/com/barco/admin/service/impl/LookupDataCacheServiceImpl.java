@@ -506,8 +506,8 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
                 lookupData.setLookupCode(Long.valueOf(lookupDataValidation.getLookupCode()));
             }
             if (!BarcoUtil.isNull(lookupDataValidation.getUiLookup())) {
-                GLookup gUI_LOOKUP = UI_LOOKUP.getStatusByLookupType(lookupDataValidation.getUiLookup());
-                lookupData.setUiLookup(UI_LOOKUP.getByLookupCode(Long.parseLong(gUI_LOOKUP.getLookupCode().toString())));
+                GLookup gLookup = UI_LOOKUP.getStatusByLookupType(lookupDataValidation.getUiLookup());
+                lookupData.setUiLookup(UI_LOOKUP.getByLookupCode(Long.parseLong(gLookup.getLookupCode().toString())));
             }
             lookupData.setLookupValue(lookupDataValidation.getLookupValue());
             lookupData.setLookupType(lookupDataValidation.getLookupType());

@@ -135,7 +135,8 @@ public interface RootService {
      * @param
      * @return SectionLinkControlResponse
      * */
-    public default SectionLinkControlResponse getSectionLinkControlResponse(HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
+    public default SectionLinkControlResponse getSectionLinkControlResponse(
+        HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
         SectionLinkControlResponse sectionLinkControlResponse = new SectionLinkControlResponse();
         if (data.containsKey(QueryService.ID)) {
             sectionLinkControlResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
@@ -1358,6 +1359,42 @@ public interface RootService {
                 genControlLinkGenSections.setUpdatedBy(appUser);
                 return genControlLinkGenSections;
             }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method using to delete the event bridge credential
+     * @param credential
+     * @return void
+     * */
+    public default void deleteEventBridgesCredential(Credential credential) {
+        if (!BarcoUtil.isNull(credential.getEventBridges())) {
+            credential.getEventBridges().stream()
+                .filter(eventBridge -> !eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
+                .map(eventBridge -> {
+                    eventBridge.setCredential(null);
+                    // if Credential is delete from the event bridge the delete teh all app user event bridge
+                    if (!BarcoUtil.isNull(eventBridge.getAppUserEventBridges())) {
+                        eventBridge.getAppUserEventBridges().clear();
+                    }
+                    return eventBridge;
+                }).collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * Method using to delete the source credential
+     * @param credential
+     * @return void
+     * */
+    public default void deleteSourceTaskCredential(Credential credential) {
+        if (!BarcoUtil.isNull(credential.getSourceTaskTypes())) {
+            credential.getSourceTaskTypes().stream()
+                .filter(sourceTaskTypes -> !sourceTaskTypes.getStatus().equals(APPLICATION_STATUS.DELETE))
+                .map(sourceTaskTypes -> {
+                    sourceTaskTypes.setCredential(null);
+                    return sourceTaskTypes;
+                }).collect(Collectors.toList());
+        }
     }
 
 }

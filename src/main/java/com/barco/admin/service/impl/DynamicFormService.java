@@ -75,8 +75,8 @@ public class DynamicFormService {
      * */
     public IDynamicSection getDynamicSection(GenSectionLinkGenForm sectionLinkForm) throws Exception {
         IDynamicSection dynamicSection = new IDynamicSection();
-        dynamicSection.setOrder(sectionLinkForm.getSectionOrder());
         dynamicSection.setId(sectionLinkForm.getGenSection().getId());
+        dynamicSection.setOrder(sectionLinkForm.getSectionOrder());
         dynamicSection.setName(sectionLinkForm.getGenSection().getSectionName());
         dynamicSection.setControls(this.genControlLinkGenSectionRepository.findAllByGenSectionAndStatus(
             sectionLinkForm.getGenSection(), APPLICATION_STATUS.ACTIVE)
@@ -107,8 +107,7 @@ public class DynamicFormService {
         dynamicControl.setLabel(genControl.getFieldTitle());
         dynamicControl.setPattern(genControl.getPattern());
         if (dynamicControl.getType().getLookupCode().equals(FIELD_TYPE.MULTI_SELECT.getLookupCode())) {
-            dynamicControl.setValue(!BarcoUtil.isBlank(genControl.getDefaultValue())
-                ? genControl.getDefaultValue().split(","): new Object[]{});
+            dynamicControl.setValue(!BarcoUtil.isBlank(genControl.getDefaultValue()) ? genControl.getDefaultValue().split(","): new Object[]{});
         } else {
             dynamicControl.setValue(genControl.getDefaultValue());
         }

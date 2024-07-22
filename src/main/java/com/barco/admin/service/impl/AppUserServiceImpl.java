@@ -416,8 +416,8 @@ public class AppUserServiceImpl implements AppUserService {
         appUser.setUsername(payload.getUsername());
         appUser.setImg(payload.getProfileImg());
         appUser.setIpAddress(payload.getIpAddress());
-        appUser.setStatus(APPLICATION_STATUS.ACTIVE);
         appUser.setPassword(this.passwordEncoder.encode(payload.getPassword()));
+        appUser.setStatus(APPLICATION_STATUS.ACTIVE);
         if (adminUser.isPresent()) {
             appUser.setCreatedBy(adminUser.get());
             appUser.setUpdatedBy(adminUser.get());
@@ -496,9 +496,11 @@ public class AppUserServiceImpl implements AppUserService {
         if (!BarcoUtil.isNull(payload.getEmail())) {
             appUser.get().setEmail(payload.getEmail());
         }
-        if (!payload.getUsername().equals(appUser.get().getUsername()) && this.appUserRepository.existsByUsername(payload.getUsername())) {
+        if (!payload.getUsername().equals(appUser.get().getUsername())
+            && this.appUserRepository.existsByUsername(payload.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_ALREADY_TAKEN);
-        } else if (!payload.getEmail().equals(appUser.get().getEmail()) && this.appUserRepository.existsByEmail(payload.getEmail())) {
+        } else if (!payload.getEmail().equals(appUser.get().getEmail())
+            && this.appUserRepository.existsByEmail(payload.getEmail())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EMAIL_ALREADY_IN_USE);
         }
         if (!BarcoUtil.isNull(payload.getUsername())) {
