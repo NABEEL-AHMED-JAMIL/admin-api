@@ -64,10 +64,8 @@ public class SettingServiceImpl implements SettingService {
             String.format(QueryService.PROFILE_SETTING_STATISTICS, appUser.get().getId())));
         settingDashboard.put("FORM_SETTING_STATISTICS", this.queryService.executeQueryResponse(
             String.format(QueryService.FORM_SETTING_STATISTICS, appUser.get().getId())));
-        settingDashboard.put("REPORT_SETTING_STATISTICS", this.queryService.executeQueryResponse(
-            String.format(QueryService.REPORT_SETTING_STATISTICS, appUser.get().getId())));
-        settingDashboard.put("DASHBOARD_SETTING_STATISTICS", this.queryService.executeQueryResponse(
-            String.format(QueryService.DASHBOARD_SETTING_STATISTICS, appUser.get().getId())));
+        settingDashboard.put("DASHBOARD_AND_REPORT_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+            String.format(QueryService.DASHBOARD_AND_REPORT_SETTING_STATISTICS, appUser.get().getId())));
         settingDashboard.put("SERVICE_SETTING_STATISTICS", this.queryService.executeQueryResponse(
             String.format(QueryService.SERVICE_SETTING_STATISTICS, appUser.get().getId())));
         settingDashboard.put("SESSION_COUNT_STATISTICS", this.queryService.executeQueryResponse(
