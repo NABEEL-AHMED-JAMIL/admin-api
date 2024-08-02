@@ -72,7 +72,8 @@ public class CredentialServiceImpl implements CredentialService {
         credential.setName(payload.getName());
         credential.setDescription(payload.getDescription());
         credential.setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
-        credential.setContent(Base64.getEncoder().encodeToString(new Gson().toJson(payload.getContent()).getBytes()));
+        credential.setContent(Base64.getEncoder().encodeToString(
+            new Gson().toJson(payload.getContent()).getBytes()));
         credential.setStatus(APPLICATION_STATUS.ACTIVE);
         credential.setCreatedBy(adminUser.get());
         credential.setUpdatedBy(adminUser.get());
@@ -115,7 +116,8 @@ public class CredentialServiceImpl implements CredentialService {
         credential.get().setName(payload.getName());
         credential.get().setDescription(payload.getDescription());
         credential.get().setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
-        credential.get().setContent(Base64.getEncoder().encodeToString(new Gson().toJson(payload.getContent()).getBytes()));
+        credential.get().setContent(Base64.getEncoder().encodeToString(
+            new Gson().toJson(payload.getContent()).getBytes()));
         if (!BarcoUtil.isNull(payload.getStatus())) {
             credential.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
         }
@@ -173,10 +175,12 @@ public class CredentialServiceImpl implements CredentialService {
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Set<CREDENTIAL_TYPE> types =  payload.getTypes().stream().map(type -> CREDENTIAL_TYPE.getByLookupCode(type)).collect(Collectors.toSet());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.credentialRepository.findAllByCreatedByAndTypeInAndStatusNot(adminUser.get(), types, APPLICATION_STATUS.DELETE).stream()
-                .map(credential -> this.getCredentialResponse(credential, true)).collect(Collectors.toList()));
+            this.credentialRepository.findAllByCreatedByAndTypeInAndStatusNot(adminUser.get(), payload.getTypes()
+                .stream().map(type -> CREDENTIAL_TYPE.getByLookupCode(type))
+                .collect(Collectors.toSet()), APPLICATION_STATUS.DELETE)
+                .stream().map(credential -> this.getCredentialResponse(credential, true))
+                .collect(Collectors.toList()));
     }
 
     /**

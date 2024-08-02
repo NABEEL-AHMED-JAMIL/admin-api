@@ -1,14 +1,14 @@
 package com.barco.admin.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import javax.annotation.PostConstruct;
 import com.barco.model.pojo.*;
 import com.barco.model.util.lookup.*;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import javax.annotation.PostConstruct;
 import com.barco.admin.service.LookupDataCacheService;
 import com.barco.common.utility.validation.LookupDataValidation;
 import com.barco.common.utility.BarcoUtil;
@@ -93,7 +93,8 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         logger.info("****************Sheet-Start***************************");
         ClassLoader cl = this.getClass().getClassLoader();
         InputStream inputStream = cl.getResourceAsStream(this.bulkExcel.SHEET_COL);
-        String result = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charsets.UTF_8);
+        String result = CharStreams.toString(inputStreamReader);
         Type type = new TypeToken<Map<String, SheetFiled>>(){}.getType();
         this.sheetFiledMap = new Gson().fromJson(result, type);
         logger.info("Sheet Map " + this.sheetFiledMap.size());
@@ -122,7 +123,6 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
      * @param payload
      * @return ResponseEntity<?> addLookupData
      * */
-
     @Override
     public AppResponse addLookupData(LookupDataRequest payload) throws Exception {
         logger.info("Request addLookupData :- " + payload);

@@ -344,6 +344,25 @@ public interface RootService {
     }
 
     /**
+     * Method use to get the organization response
+     * @param organization
+     * @return OrganizationResponse
+     * */
+    public default OrganizationResponse getOrganizationResponse(Organization organization) {
+        OrganizationResponse organizationResponse = new OrganizationResponse();
+        organizationResponse.setId(organization.getId());
+        organizationResponse.setName(organization.getName());
+        organizationResponse.setEmail(organization.getEmail());
+        organizationResponse.setPhone(organization.getPhone());
+        organizationResponse.setAddress(organization.getAddress());
+        organizationResponse.setCountry(new ETLCountryResponse(
+            organization.getCountry().getCountryCode(),
+            organization.getCountry().getCountryName(),
+            organization.getCountry().getCode()));
+        return organizationResponse;
+    }
+
+    /**
      * getRoleResponse method use to convert entity to dto
      * @param profile
      * */
@@ -1372,7 +1391,7 @@ public interface RootService {
                 .filter(eventBridge -> !eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
                 .map(eventBridge -> {
                     eventBridge.setCredential(null);
-                    // if Credential is delete from the event bridge the delete teh all app user event bridge
+                    // if Credential is delete from the event bridge the delete the all app user event bridge
                     if (!BarcoUtil.isNull(eventBridge.getAppUserEventBridges())) {
                         eventBridge.getAppUserEventBridges().clear();
                     }

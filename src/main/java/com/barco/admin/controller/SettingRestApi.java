@@ -6,6 +6,8 @@ import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.request.QueryRequest;
 import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.response.AppResponse;
+import com.barco.model.util.MessageUtil;
+import org.hibernate.exception.SQLGrammarException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +63,10 @@ public class SettingRestApi {
     public ResponseEntity<?> dynamicQueryResponse(@RequestBody QueryRequest payload) {
         try {
             return new ResponseEntity<>(this.settingService.dynamicQueryResponse(payload), HttpStatus.OK);
-        } catch (Exception ex) {
+        } catch (SQLGrammarException ex) {
+            logger.error("An error occurred while dynamicQueryResponse", ExceptionUtil.getRootCauseMessage(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.SQL_GRAMMAR_EXCEPTION), HttpStatus.BAD_REQUEST);
+        }  catch (Exception ex) {
             logger.error("An error occurred while dynamicQueryResponse ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
@@ -83,6 +88,9 @@ public class SettingRestApi {
             headers.add(BarcoUtil.CONTENT_DISPOSITION, BarcoUtil.FILE_NAME_HEADER + fileName);
             ByteArrayOutputStream byteArrayOutputStream = this.settingService.downloadDynamicQueryFile(payload);
             return ResponseEntity.ok().headers(headers).body(byteArrayOutputStream.toByteArray());
+        } catch (SQLGrammarException ex) {
+            logger.error("An error occurred while downloadDynamicQueryFile xlsx file", ExceptionUtil.getRootCauseMessage(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.SQL_GRAMMAR_EXCEPTION), HttpStatus.BAD_REQUEST);
         } catch (Exception ex) {
             logger.error("An error occurred while downloadDynamicQueryFile xlsx file", ExceptionUtil.getRootCauseMessage(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);

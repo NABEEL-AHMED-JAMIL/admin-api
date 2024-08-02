@@ -8,16 +8,11 @@ import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.excel.BulkExcel;
 import com.barco.common.utility.excel.SheetFiled;
 import com.barco.model.dto.request.*;
-import com.barco.model.dto.response.AppResponse;
-import com.barco.model.dto.response.AppUserResponse;
-import com.barco.model.dto.response.EventBridgeResponse;
+import com.barco.model.dto.response.*;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.*;
 import com.barco.model.util.MessageUtil;
-import com.barco.model.util.lookup.APPLICATION_STATUS;
-import com.barco.model.util.lookup.GLookup;
-import com.barco.model.util.lookup.EVENT_BRIDGE_TYPE;
-import com.barco.model.util.lookup.REQUEST_METHOD;
+import com.barco.model.util.lookup.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
@@ -83,6 +78,16 @@ public class AppUserServiceImpl implements AppUserService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         AppUserResponse appUserResponse = this.getAppUserDetail(appUser.get());
+        // account type
+        if (!BarcoUtil.isNull(appUser.get().getAccountType())) {
+            appUserResponse.setAccountType(GLookup.getGLookup(
+                this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+                ACCOUNT_TYPE.getName(), Long.valueOf(appUser.get().getAccountType().ordinal()))));
+        }
+        // organization
+        if (!BarcoUtil.isNull(appUser.get().getOrganization())) {
+            appUserResponse.setOrganization(this.getOrganizationResponse(appUser.get().getOrganization()));
+        }
         // app user evn
         if (!BarcoUtil.isNull(appUser.get().getAppUserEnvs())) {
             appUserResponse.setEnVariables(appUser.get().getAppUserEnvs().stream()

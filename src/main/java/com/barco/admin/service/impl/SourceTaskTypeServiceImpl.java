@@ -99,6 +99,7 @@ public class SourceTaskTypeServiceImpl implements SourceTaskTypeService {
         sourceTaskType.setServiceName(payload.getServiceName());
         sourceTaskType.setDescription(payload.getDescription());
         sourceTaskType.setTaskType(TASK_TYPE.getRequestMethodByValue(payload.getTaskType()));
+        // credential
         if (!BarcoUtil.isNull(payload.getCredentialId())) {
             Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(
                 payload.getCredentialId(), adminUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
@@ -143,8 +144,7 @@ public class SourceTaskTypeServiceImpl implements SourceTaskTypeService {
         appUserSTT.setCreatedBy(adminUser.get());
         appUserSTT.setUpdatedBy(adminUser.get());
         this.appUserLinkSourceTaskTypeRepository.save(appUserSTT);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(
-            MessageUtil.DATA_SAVED, sourceTaskType.getId().toString()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, sourceTaskType.getId().toString()), payload);
     }
 
     /**
@@ -190,6 +190,7 @@ public class SourceTaskTypeServiceImpl implements SourceTaskTypeService {
         if (!BarcoUtil.isNull(payload.getStatus())) {
             sourceTaskType.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
         }
+        // credential
         if (!BarcoUtil.isNull(payload.getCredentialId())) {
             Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(
                 payload.getCredentialId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);

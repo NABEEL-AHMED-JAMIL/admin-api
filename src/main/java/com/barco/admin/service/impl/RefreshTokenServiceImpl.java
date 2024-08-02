@@ -95,11 +95,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * @return AppResponse
      * */
     public AppResponse verifyExpiration(RefreshToken payload) {
-        logger.info("Request verifyExpiration :- " + payload);
         if (payload.getExpiryDate().compareTo(Instant.now()) < 0) {
             payload.setStatus(APPLICATION_STATUS.DELETE);
             this.appTokenRepository.save(payload);
-            return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.REFRESH_TOKEN_EXPIRED, payload);
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REFRESH_TOKEN_EXPIRED, payload);
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.REFRESH_TOKEN_VALID, payload);
     }
