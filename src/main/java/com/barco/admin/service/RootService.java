@@ -92,7 +92,7 @@ public interface RootService {
             linkRPUResponse.setExpireTime(data.get(QueryService.EXPIRE_TIME).toString());
         }
         linkRPUResponse.setProfile(new ProfileResponse(Long.valueOf(data.get(QueryService.PROFILE_ID).toString()),
-            data.get(QueryService.PROFILE_NAME).toString()));
+            data.get(QueryService.PROFILE_NAME).toString(), data.get(QueryService.DESCRIPTION).toString()));
         return linkRPUResponse;
     }
 
@@ -135,7 +135,8 @@ public interface RootService {
      * @param
      * @return SectionLinkControlResponse
      * */
-    public default SectionLinkControlResponse getSectionLinkControlResponse(HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
+    public default SectionLinkControlResponse getSectionLinkControlResponse(
+        HashMap<String, Object> data, LookupDataCacheService lookupDataCacheService) {
         SectionLinkControlResponse sectionLinkControlResponse = new SectionLinkControlResponse();
         if (data.containsKey(QueryService.ID)) {
             sectionLinkControlResponse.setId(Long.valueOf(data.get(QueryService.ID).toString()));
@@ -343,6 +344,25 @@ public interface RootService {
     }
 
     /**
+     * Method use to get the organization response
+     * @param organization
+     * @return OrganizationResponse
+     * */
+    public default OrganizationResponse getOrganizationResponse(Organization organization) {
+        OrganizationResponse organizationResponse = new OrganizationResponse();
+        organizationResponse.setId(organization.getId());
+        organizationResponse.setName(organization.getName());
+        organizationResponse.setEmail(organization.getEmail());
+        organizationResponse.setPhone(organization.getPhone());
+        organizationResponse.setAddress(organization.getAddress());
+        organizationResponse.setCountry(new ETLCountryResponse(
+            organization.getCountry().getCountryCode(),
+            organization.getCountry().getCountryName(),
+            organization.getCountry().getCode()));
+        return organizationResponse;
+    }
+
+    /**
      * getRoleResponse method use to convert entity to dto
      * @param profile
      * */
@@ -412,7 +432,7 @@ public interface RootService {
      * @param templateRegRepository
      * @param emailMessagesFactory
      * */
-    public default boolean sendRegisterUser(AppUser appUser, LookupDataCacheService lookupDataCacheService,
+    public default boolean sendRegisterUserEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(
@@ -451,7 +471,7 @@ public interface RootService {
      * @param templateRegRepository
      * @param emailMessagesFactory
      * */
-    public default boolean sendEnabledDisabledRegisterUser(AppUser appUser, LookupDataCacheService lookupDataCacheService,
+    public default boolean sendEnabledDisabledRegisterUserEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
@@ -662,6 +682,7 @@ public interface RootService {
         TemplateRegResponse templateRegResponse = new TemplateRegResponse();
         templateRegResponse.setId(templateReg.getId());
         templateRegResponse.setTemplateName(templateReg.getTemplateName());
+        templateRegResponse.setDescription(templateReg.getDescription());
         templateRegResponse.setTemplateContent(templateReg.getTemplateContent());
         templateRegResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(templateReg.getStatus().getLookupType()));
         templateRegResponse.setCreatedBy(getActionUser(templateReg.getCreatedBy()));
@@ -1201,6 +1222,198 @@ public interface RootService {
             sourceTaskResponse.setLinkForm(formResponse);
         }
         return sourceTaskResponse;
+    }
+
+    /**
+     * Method use to get kafka task type
+     * @param kafkaTaskTypeRequest
+     * @param adminUser
+     * @return ApiTaskType
+     * */
+    public default KafkaTaskType getKafkaTaskType(
+        KafkaTaskTypeRequest kafkaTaskTypeRequest, Optional<AppUser> adminUser) {
+        KafkaTaskType kafkaTaskType = new KafkaTaskType();
+        kafkaTaskType.setServiceUrl(kafkaTaskTypeRequest.getServiceUrl());
+        kafkaTaskType.setNumPartitions(kafkaTaskTypeRequest.getNumPartitions());
+        kafkaTaskType.setTopicName(kafkaTaskTypeRequest.getTopicName());
+        kafkaTaskType.setTopicPattern(kafkaTaskTypeRequest.getTopicPattern());
+        kafkaTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
+        kafkaTaskType.setCreatedBy(adminUser.get());
+        kafkaTaskType.setUpdatedBy(adminUser.get());
+        return kafkaTaskType;
+    }
+
+    /**
+     * Method use to get api task type
+     * @param apiTaskTypeRequest
+     * @param adminUser
+     * @return ApiTaskType
+     * */
+    public default ApiTaskType getApiTaskType(
+        ApiTaskTypeRequest apiTaskTypeRequest, Optional<AppUser> adminUser) {
+        ApiTaskType apiTaskType = new ApiTaskType();
+        apiTaskType.setApiUrl(apiTaskTypeRequest.getApiUrl());
+        apiTaskType.setHttpMethod(apiTaskTypeRequest.getHttpMethod());
+        apiTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
+        apiTaskType.setCreatedBy(adminUser.get());
+        apiTaskType.setUpdatedBy(adminUser.get());
+        return apiTaskType;
+    }
+
+    /**
+     * Method use to action on link source task with user
+     * @param sourceTaskType
+     * @param adminUser
+     * */
+    public default void actionAppUserLinkSourceTaskTypes(SourceTaskType sourceTaskType, AppUser adminUser) {
+        sourceTaskType.getAppUserLinkSourceTaskTypes().stream()
+            .filter(appUserLinkStt -> !appUserLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(appUserLinkStt -> {
+                appUserLinkStt.setStatus(sourceTaskType.getStatus());
+                appUserLinkStt.setUpdatedBy(adminUser);
+                return appUserLinkStt;
+            }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method use to action on link source task with form
+     * @param sourceTaskType
+     * @param adminUser
+     * */
+    public default void actionGenFormLinkSourceTaskTypes(SourceTaskType sourceTaskType, AppUser adminUser) {
+        sourceTaskType.getGenFormLinkSourceTaskTypes().stream()
+            .filter(genFormLinkStt -> !genFormLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(genFormLinkStt -> {
+                genFormLinkStt.setStatus(sourceTaskType.getStatus());
+                genFormLinkStt.setUpdatedBy(adminUser);
+                return genFormLinkStt;
+            }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method use to action on gen form link source task types
+     * @param genForm
+     * @param appUser
+     * */
+    public default void actionOnGenFormLinkSourceTaskTypes(GenForm genForm, AppUser appUser) {
+        genForm.getGenFormLinkSourceTaskTypes().stream()
+            .filter(genFormLinkStt -> !genFormLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(genFormLinkStt -> {
+                genFormLinkStt.setStatus(genForm.getStatus());
+                genFormLinkStt.setUpdatedBy(appUser);
+                return genFormLinkStt;
+            }).collect(Collectors.toList());
+    }
+
+    /***
+     * Method use to action on gen section link gen from
+     * @param genForm
+     * @param appUser
+     * */
+    public default void actionOnGenSectionLinkGenForms(GenForm genForm, AppUser appUser) {
+        genForm.getGenSectionLinkGenForms().stream()
+            .filter(genFormLinkSection -> !genFormLinkSection.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(genFormLinkSection -> {
+                genFormLinkSection.setStatus(genForm.getStatus());
+                genFormLinkSection.setUpdatedBy(appUser);
+                return genFormLinkSection;
+            }).collect(Collectors.toList());
+    }
+
+    /***
+     * Method use to action on link report setting with gen form
+     * @param genForm
+     * @param appUser
+     * */
+    public default void actionOnReportSettingLinkGenForms(GenForm genForm, AppUser appUser) {
+        genForm.getReportSettings().stream()
+            .filter(reportSetting -> !reportSetting.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(reportSetting -> {
+                reportSetting.setGenForm(null);
+                reportSetting.setUpdatedBy(appUser);
+                return reportSetting;
+            }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method use to action on gen section link gen from
+     * @param genSection
+     * @param appUser
+     * */
+    public default void actionOnGenSectionLinkGenForms(GenSection genSection, AppUser appUser) {
+        genSection.getGenSectionLinkGenForms().stream()
+            .filter(genFormLinkSection -> !genFormLinkSection.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(genFormLinkSection -> {
+                genFormLinkSection.setStatus(genSection.getStatus());
+                genFormLinkSection.setUpdatedBy(appUser);
+                return genFormLinkSection;
+            }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method use to action on gen control link gen sections
+     * @param genSection
+     * @param appUser
+     * */
+    public default void actionOnGenSectionsLinkGenControl(GenSection genSection, AppUser appUser) {
+        genSection.getGenControlLinkGenSections().stream()
+            .filter(genControlLinkGenSections -> !genControlLinkGenSections.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(genControlLinkGenSections -> {
+                genControlLinkGenSections.setStatus(genSection.getStatus());
+                genControlLinkGenSections.setUpdatedBy(appUser);
+                return genControlLinkGenSections;
+            }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method use to action on gen control link gen sections
+     * @param genControl
+     * @param appUser
+     * */
+    public default void actionOnGenControlLinkGenSections(GenControl genControl, AppUser appUser) {
+        genControl.getGenControlLinkGenSections().stream()
+            .filter(genControlLinkGenSections -> !genControlLinkGenSections.getStatus().equals(APPLICATION_STATUS.DELETE))
+            .map(genControlLinkGenSections -> {
+                genControlLinkGenSections.setStatus(genControl.getStatus());
+                genControlLinkGenSections.setUpdatedBy(appUser);
+                return genControlLinkGenSections;
+            }).collect(Collectors.toList());
+    }
+
+    /**
+     * Method using to delete the event bridge credential
+     * @param credential
+     * @return void
+     * */
+    public default void deleteEventBridgesCredential(Credential credential) {
+        if (!BarcoUtil.isNull(credential.getEventBridges())) {
+            credential.getEventBridges().stream()
+                .filter(eventBridge -> !eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
+                .map(eventBridge -> {
+                    eventBridge.setCredential(null);
+                    // if Credential is delete from the event bridge the delete the all app user event bridge
+                    if (!BarcoUtil.isNull(eventBridge.getAppUserEventBridges())) {
+                        eventBridge.getAppUserEventBridges().clear();
+                    }
+                    return eventBridge;
+                }).collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * Method using to delete the source credential
+     * @param credential
+     * @return void
+     * */
+    public default void deleteSourceTaskCredential(Credential credential) {
+        if (!BarcoUtil.isNull(credential.getSourceTaskTypes())) {
+            credential.getSourceTaskTypes().stream()
+                .filter(sourceTaskTypes -> !sourceTaskTypes.getStatus().equals(APPLICATION_STATUS.DELETE))
+                .map(sourceTaskTypes -> {
+                    sourceTaskTypes.setCredential(null);
+                    return sourceTaskTypes;
+                }).collect(Collectors.toList());
+        }
     }
 
 }

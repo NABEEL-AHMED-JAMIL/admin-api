@@ -117,7 +117,7 @@ public class EVariableServiceImpl implements EVariableService {
         if (!envVariables.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getId().toString()));
         } else if (!envVariables.get().getEnvKey().equals(payload.getEnvKey()) && this.envVariablesRepository
-                .findByEnvKeyAndStatusNot(payload.getEnvKey(), APPLICATION_STATUS.DELETE).isPresent()) {
+            .findByEnvKeyAndStatusNot(payload.getEnvKey(), APPLICATION_STATUS.DELETE).isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ENV_ENVKEY_ALREADY_EXIST, payload);
         }
         envVariables.get().setEnvKey(payload.getEnvKey());
@@ -295,8 +295,7 @@ public class EVariableServiceImpl implements EVariableService {
             envVariables = this.envVariablesRepository.findAllByIdInAndStatusNotOrderByDateCreatedDesc(
                 payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
         } else {
-            envVariables = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(
-                APPLICATION_STATUS.DELETE).iterator();
+            envVariables = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE).iterator();
         }
         while (envVariables.hasNext()) {
             EnvVariables envVariable = envVariables.next();
@@ -418,7 +417,7 @@ public class EVariableServiceImpl implements EVariableService {
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                linkRPUResponses.add(getLinkRPUResponse(data, envVariables.get().getStatus()));
+                linkRPUResponses.add(this.getLinkRPUResponse(data, envVariables.get().getStatus()));
             }
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, linkRPUResponses);

@@ -199,7 +199,7 @@ public class SourceTaskServiceImpl implements SourceTaskService {
                     return sourceTask;
                 }).collect(Collectors.toList())
         );
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
     /***

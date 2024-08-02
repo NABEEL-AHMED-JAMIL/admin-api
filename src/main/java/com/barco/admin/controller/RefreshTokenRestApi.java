@@ -33,7 +33,7 @@ public class RefreshTokenRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
     @RequestMapping(value="/fetchByAllRefreshToken", method=RequestMethod.POST)
     public ResponseEntity<?> fetchByAllRefreshToken(@RequestBody TokenRefreshRequest payload) {
         try {
@@ -50,7 +50,7 @@ public class RefreshTokenRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
     @RequestMapping(value="/deleteRefreshToken", method=RequestMethod.POST)
     public ResponseEntity<?> deleteRefreshToken(@RequestBody TokenRefreshRequest payload) {
         try {
@@ -67,7 +67,7 @@ public class RefreshTokenRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
     @RequestMapping(value="/deleteAllRefreshToken", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllRefreshToken(@RequestBody TokenRefreshRequest payload) {
         try {

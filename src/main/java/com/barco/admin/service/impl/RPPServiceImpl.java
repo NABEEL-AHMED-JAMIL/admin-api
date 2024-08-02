@@ -149,7 +149,7 @@ public class RPPServiceImpl implements RPPService {
         logger.info("Request fetchAllRole :- " + payload);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             RoleRepository.asStream(this.roleRepository.findAll().iterator())
-                .map(role -> gateRoleResponse(role)).collect(Collectors.toList()));
+                .map(role -> this.gateRoleResponse(role)).collect(Collectors.toList()));
     }
 
     /**
@@ -167,7 +167,7 @@ public class RPPServiceImpl implements RPPService {
         if (!role.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ROLE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, gateRoleResponse(role.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.gateRoleResponse(role.get()));
     }
 
     /**
@@ -186,7 +186,7 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ROLE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
         this.roleRepository.delete(role.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED,payload.getId().toString()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId().toString()));
     }
 
     /**
@@ -201,7 +201,7 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.roleRepository.deleteAll(this.roleRepository.findAllByIdIn(payload.getIds()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL);
     }
 
     /**
@@ -436,8 +436,7 @@ public class RPPServiceImpl implements RPPService {
         logger.info("Request fetchAllProfile :- " + payload);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             RoleRepository.asStream(this.profileRepository.findAll().iterator())
-                .map(profile -> gateProfileResponse(profile))
-                .collect(Collectors.toList()));
+                .map(profile -> this.gateProfileResponse(profile)).collect(Collectors.toList()));
     }
 
     /**
@@ -474,7 +473,7 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.PROFILE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
         this.profileRepository.delete(profile.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED,payload.getId().toString()));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId().toString()));
     }
 
     /**
@@ -489,7 +488,7 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.profileRepository.deleteAll(this.profileRepository.findAllByIdIn(payload.getIds()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL);
     }
 
     /**
@@ -606,8 +605,7 @@ public class RPPServiceImpl implements RPPService {
                 rppValidation.isValidBatch();
                 Optional<Profile> isAlreadyExistProfile = this.profileRepository.findProfileByProfileName(rppValidation.getName());
                 if (isAlreadyExistProfile.isPresent()) {
-                    rppValidation.setErrorMsg(String.format(MessageUtil.PROFILE_TYPE_ALREADY_USE_AT_ROW,
-                        rppValidation.getName(), rppValidation.getRowCounter()));
+                    rppValidation.setErrorMsg(String.format(MessageUtil.PROFILE_TYPE_ALREADY_USE_AT_ROW, rppValidation.getName(), rppValidation.getRowCounter()));
                 }
                 if (!BarcoUtil.isNull(rppValidation.getErrorMsg())) {
                     errors.add(rppValidation.getErrorMsg());
@@ -696,11 +694,12 @@ public class RPPServiceImpl implements RPPService {
         // active and in-active
         if (!BarcoUtil.isNull(payload.getStatus())) {
             permission.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-            permission.get().getProfilePermissions().stream().map(profilePermission -> {
-                profilePermission.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-                profilePermission.setUpdatedBy(appUser.get());
-                return profilePermission;
-            }).collect(Collectors.toList());
+            permission.get().getProfilePermissions().stream()
+                .map(profilePermission -> {
+                    profilePermission.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+                    profilePermission.setUpdatedBy(appUser.get());
+                    return profilePermission;
+                }).collect(Collectors.toList());
         }
         permission.get().setUpdatedBy(appUser.get());
         this.permissionRepository.save(permission.get());
@@ -717,7 +716,7 @@ public class RPPServiceImpl implements RPPService {
         logger.info("Request fetchAllProfile :- " + payload);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             RoleRepository.asStream(this.permissionRepository.findAll().iterator())
-            .map(permission -> gatePermissionResponse(permission)).collect(Collectors.toList()));
+            .map(permission -> this.gatePermissionResponse(permission)).collect(Collectors.toList()));
     }
 
     /**
@@ -769,7 +768,7 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.permissionRepository.deleteAll(this.permissionRepository.findAllByIdIn(payload.getIds()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL);
     }
 
     /**
@@ -885,8 +884,7 @@ public class RPPServiceImpl implements RPPService {
                 rppValidation.isValidBatch();
                 Optional<Permission> isAlreadyExistPermission = this.permissionRepository.findPermissionByPermissionName(rppValidation.getName());
                 if (isAlreadyExistPermission.isPresent()) {
-                    rppValidation.setErrorMsg(String.format(MessageUtil.PERMISSION_TYPE_ALREADY_USE_AT_ROW,
-                        rppValidation.getName(), rppValidation.getRowCounter()));
+                    rppValidation.setErrorMsg(String.format(MessageUtil.PERMISSION_TYPE_ALREADY_USE_AT_ROW, rppValidation.getName(), rppValidation.getRowCounter()));
                 }
                 if (!BarcoUtil.isNull(rppValidation.getErrorMsg())) {
                     errors.add(rppValidation.getErrorMsg());
@@ -962,8 +960,7 @@ public class RPPServiceImpl implements RPPService {
                     permissionResponse.setPermissionName(String.valueOf(data.get(QueryService.PERMISSION_NAME)));
                 }
                 if (data.containsKey(QueryService.STATUS)) {
-                    permissionResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(
-                        Long.valueOf(data.get(QueryService.STATUS).toString())));
+                    permissionResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(Long.valueOf(data.get(QueryService.STATUS).toString())));
                 }
                 if (data.containsKey(QueryService.DESCRIPTION)) {
                     permissionResponse.setDescription(String.valueOf(data.get(QueryService.DESCRIPTION)));
@@ -973,8 +970,7 @@ public class RPPServiceImpl implements RPPService {
             crossTabResponse.setCol(permissionResponses);
         }
         // existing cross
-        queryResponse = this.queryService.executeQueryResponse(String.format(
-            QueryService.FETCH_PROFILE_PERMISSION, appUser.get().getId()));
+        queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_PROFILE_PERMISSION, appUser.get().getId()));
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             Hashtable<String, Object> profilePermissionCrossTabs = new Hashtable<>();
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -1059,7 +1055,7 @@ public class RPPServiceImpl implements RPPService {
         logger.info("Request fetchLinkRoleWithRootUser :- " + payload);
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
             this.lookupDataCacheService.getParentLookupDataByParentLookupType(
-                LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
+                 LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getRoleId())) {
@@ -1109,7 +1105,7 @@ public class RPPServiceImpl implements RPPService {
         }
         // add operation de-link
         if (payload.getLinked()) {
-            this.appUserRoleAccessRepository.save(getAppUserRoleAccess(superAdmin.get(), role.get(), appUser.get()));
+            this.appUserRoleAccessRepository.save(this.getAppUserRoleAccess(superAdmin.get(), role.get(), appUser.get()));
         } else {
             // delete operation de-link
             this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_ROLE_ACCESS_BY_ROLE_ID_AND_APP_USER_ID,
@@ -1143,7 +1139,7 @@ public class RPPServiceImpl implements RPPService {
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                linkRPUResponses.add(getLinkRPUResponse(data, profile.get().getStatus()));
+                linkRPUResponses.add(this.getLinkRPUResponse(data, profile.get().getStatus()));
             }
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, linkRPUResponses);

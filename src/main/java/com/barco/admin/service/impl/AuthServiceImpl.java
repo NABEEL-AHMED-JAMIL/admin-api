@@ -10,7 +10,9 @@ import com.barco.model.pojo.*;
 import com.barco.model.repository.*;
 import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.MessageUtil;
+import com.barco.model.util.lookup.ACCOUNT_TYPE;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
+import com.barco.model.util.lookup.GLookup;
 import com.barco.model.util.lookup.LookupUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +26,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Nabeel Ahmed
@@ -88,11 +89,12 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken refreshToken = this.refreshTokenService.createRefreshToken(userDetails.getId(), payload.getIpAddress());
         AuthResponse authResponse = new AuthResponse(jwtToken, refreshToken.getToken());
         authResponse.setIpAddress(payload.getIpAddress());
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.USER_SUCCESSFULLY_AUTHENTICATE, getAuthResponseDetail(authResponse, userDetails));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.USER_SUCCESSFULLY_AUTHENTICATE,
+            this.getAuthResponseDetail(authResponse, userDetails));
     }
 
     /**
-     * Method use for signUp appUser as admin
+     * Method use for signUp appUser as user-customer
      * @param payload
      * @return AppResponse
      * */
@@ -124,39 +126,43 @@ public class AuthServiceImpl implements AuthService {
         appUser.setIpAddress(payload.getIpAddress());
         appUser.setStatus(APPLICATION_STATUS.ACTIVE);
         appUser.setPassword(this.passwordEncoder.encode(payload.getPassword()));
-        // set the parent user which is master admin
-        Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
+        /**
+         * ALL USER REGISTER FROM THE MAIN REGISTER PAGE THEY ARE NORMAL USER
+         * AND THEY WILL GET THE NORMAL ACCOUNT TYPE
+         * AND THEY WILL GET THE USER DEFAULT PROFILE
+         * AND THEY WILL GET THE USER DEFAULT USER ROLE
+         * **/
+        // register user will get the default role USER
+        Optional<Role> userRole = this.roleRepository.findByNameAndStatus(
             this.lookupDataCacheService.getParentLookupDataByParentLookupType(
-                LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
+                LookupUtil.DEFAULT_ROLE).getLookupValue(), APPLICATION_STATUS.ACTIVE);
+        if (userRole.isPresent()) {
+            appUser.setAppUserRoles(Set.of(userRole.get()));
+        }
+        // register user will get the default profile USER
+        Optional<Profile> userProfile = this.profileRepository.findProfileByProfileName(
+            this.lookupDataCacheService.getParentLookupDataByParentLookupType(
+               LookupUtil.DEFAULT_PROFILE).getLookupValue());
+        if (userProfile.isPresent()) {
+            appUser.setProfile(userProfile.get());
+        }
+        // register user account type as 'Customer'
+        appUser.setAccountType(ACCOUNT_TYPE.NORMAL);
+        this.appUserRepository.save(appUser);
+        // notification & register email
+        Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(this.lookupDataCacheService
+            .getParentLookupDataByParentLookupType(LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
         if (superAdmin.isPresent()) {
             appUser.setCreatedBy(superAdmin.get());
             appUser.setUpdatedBy(superAdmin.get());
         }
-        // register user role default as admin role
-        Optional<Role> adminRole = this.roleRepository.findByNameAndStatus(
-            this.lookupDataCacheService.getParentLookupDataByParentLookupType(
-                LookupUtil.DEFAULT_ROLE).getLookupValue(), APPLICATION_STATUS.ACTIVE);
-        if (adminRole.isPresent()) {
-            appUser.setAppUserRoles(Set.of(adminRole.get()));
-        }
-        Optional<Profile> adminProfile = this.profileRepository.findProfileByProfileName(
-            this.lookupDataCacheService.getParentLookupDataByParentLookupType(
-                LookupUtil.DEFAULT_PROFILE).getLookupValue());
-        if (adminProfile.isPresent()) {
-            appUser.setProfile(adminProfile.get());
-        }
-        this.appUserRepository.save(appUser);
-        SubAppUser subAppUser = new SubAppUser();
-        subAppUser.setAppUserParent(superAdmin.get());
-        subAppUser.setAppUserChild(appUser);
-        subAppUser.setCreatedBy(superAdmin.get());
-        subAppUser.setUpdatedBy(superAdmin.get());
-        subAppUser.setStatus(APPLICATION_STATUS.ACTIVE);
-        this.subAppUserRepository.save(subAppUser);
-        this.sendRegisterUser(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
+        this.sendRegisterUserEmail(appUser, this.lookupDataCacheService,
+             this.templateRegRepository, this.emailMessagesFactory);
         this.sendNotification(superAdmin.get().getUsername(), MessageUtil.REQUESTED_FOR_NEW_ACCOUNT,
-            String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()), superAdmin.get(), this.lookupDataCacheService, this.notificationService);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.USER_SUCCESSFULLY_REGISTER, appUser.getUsername()), payload);
+            String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()),
+            superAdmin.get(), this.lookupDataCacheService, this.notificationService);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.USER_SUCCESSFULLY_REGISTER,
+             appUser.getUsername()), payload);
     }
 
     /**
@@ -170,13 +176,14 @@ public class AuthServiceImpl implements AuthService {
         if (BarcoUtil.isNull(payload.getEmail())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EMAIL_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(
-            payload.getEmail(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(payload.getEmail(), APPLICATION_STATUS.ACTIVE);
         if (appUser.isPresent()) {
-            this.sendForgotPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository,
-                this.emailMessagesFactory, this.jwtUtils);
-            this.sendNotification(appUser.get().getUsername(), MessageUtil.FORGOT_PASSWORD, MessageUtil.FORGOT_EMAIL_SEND_TO_YOUR_EMAIL,
-                appUser.get(), this.lookupDataCacheService, this.notificationService);
+            // email and notification
+            this.sendForgotPasswordEmail(appUser.get(), this.lookupDataCacheService,
+                this.templateRegRepository, this.emailMessagesFactory, this.jwtUtils);
+            this.sendNotification(appUser.get().getUsername(), MessageUtil.FORGOT_PASSWORD,
+                MessageUtil.FORGOT_EMAIL_SEND_TO_YOUR_EMAIL, appUser.get(),
+                this.lookupDataCacheService, this.notificationService);
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.EMAIL_SEND_SUCCESSFULLY);
         }
         return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACCOUNT_NOT_EXIST);
@@ -201,9 +208,11 @@ public class AuthServiceImpl implements AuthService {
         if (appUser.isPresent()) {
             appUser.get().setPassword(this.passwordEncoder.encode(payload.getNewPassword()));
             this.appUserRepository.save(appUser.get());
-            this.sendResetPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
-            this.sendNotification(appUser.get().getUsername(), MessageUtil.RESET_PASSWORD, MessageUtil.RESET_EMAIL_SEND_TO_YOUR_EMAIL,
-                appUser.get(), this.lookupDataCacheService, this.notificationService);
+            this.sendResetPasswordEmail(appUser.get(), this.lookupDataCacheService,
+                this.templateRegRepository, this.emailMessagesFactory);
+            this.sendNotification(appUser.get().getUsername(), MessageUtil.RESET_PASSWORD,
+                MessageUtil.RESET_EMAIL_SEND_TO_YOUR_EMAIL, appUser.get(),
+                this.lookupDataCacheService, this.notificationService);
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.EMAIL_SEND_SUCCESSFULLY);
         }
         return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACCOUNT_NOT_EXIST);
@@ -216,16 +225,16 @@ public class AuthServiceImpl implements AuthService {
      * */
     @Override
     public AppResponse authClamByRefreshToken(TokenRefreshRequest payload) throws Exception {
-        AtomicReference<String> requestRefreshToken = new AtomicReference<>(payload.getRefreshToken());
-        return this.refreshTokenService.findByToken(requestRefreshToken.get())
-            .map(this.refreshTokenService::verifyExpiration)
-            .map(appResponse -> {
-                if (appResponse.getStatus().equals(BarcoUtil.SUCCESS)) {
-                    RefreshToken refreshToken = (RefreshToken) appResponse.getData();
-                    requestRefreshToken.set(this.jwtUtils.generateTokenFromUsername(refreshToken.getCreatedBy().getUsername()));
-                }
-                return new AppResponse(appResponse.getStatus(), appResponse.getMessage(), requestRefreshToken);
-            }).orElse(new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.DATA_NOT_FOUND, MessageUtil.REFRESH_TOKEN), requestRefreshToken));
+        logger.info("Request authClamByRefreshToken :- " + payload);
+        Optional<RefreshToken> refreshToken = this.refreshTokenService.findByToken(payload.getRefreshToken());
+        if (!refreshToken.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.DATA_NOT_FOUND, MessageUtil.REFRESH_TOKEN), payload);
+        }
+        AppResponse appResponse = this.refreshTokenService.verifyExpiration(refreshToken.get());
+        if (appResponse.getStatus().equals(BarcoUtil.SUCCESS)) {
+            payload.setRefreshToken(this.jwtUtils.generateTokenFromUsername(refreshToken.get().getCreatedBy().getUsername()));
+        }
+        return new AppResponse(appResponse.getStatus(), appResponse.getMessage(), payload);
     }
 
     /**
@@ -235,6 +244,7 @@ public class AuthServiceImpl implements AuthService {
      * */
     @Override
     public AppResponse logoutAppUser(TokenRefreshRequest payload) throws Exception {
+        logger.info("Request logoutAppUser :- " + payload);
         return this.refreshTokenService.deleteRefreshToken(payload);
     }
 

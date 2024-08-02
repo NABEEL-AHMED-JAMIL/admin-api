@@ -61,6 +61,8 @@ public class CredentialServiceImpl implements CredentialService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_DESCRIPTION_MISSING);
         } else if (BarcoUtil.isNull(payload.getType())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_TYPE_MISSING);
         } else if (BarcoUtil.isNull(payload.getContent())) {
@@ -68,8 +70,10 @@ public class CredentialServiceImpl implements CredentialService {
         }
         Credential credential = new Credential();
         credential.setName(payload.getName());
+        credential.setDescription(payload.getDescription());
         credential.setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
-        credential.setContent(Base64.getEncoder().encodeToString(new Gson().toJson(payload.getContent()).getBytes()));
+        credential.setContent(Base64.getEncoder().encodeToString(
+            new Gson().toJson(payload.getContent()).getBytes()));
         credential.setStatus(APPLICATION_STATUS.ACTIVE);
         credential.setCreatedBy(adminUser.get());
         credential.setUpdatedBy(adminUser.get());
@@ -97,6 +101,8 @@ public class CredentialServiceImpl implements CredentialService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_ID_MISSING);
         } else if (BarcoUtil.isNull(payload.getName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_DESCRIPTION_MISSING);
         } else if (BarcoUtil.isNull(payload.getType())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_TYPE_MISSING);
         } else if (BarcoUtil.isNull(payload.getContent())) {
@@ -108,8 +114,10 @@ public class CredentialServiceImpl implements CredentialService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
         credential.get().setName(payload.getName());
+        credential.get().setDescription(payload.getDescription());
         credential.get().setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
-        credential.get().setContent(Base64.getEncoder().encodeToString(new Gson().toJson(payload.getContent()).getBytes()));
+        credential.get().setContent(Base64.getEncoder().encodeToString(
+            new Gson().toJson(payload.getContent()).getBytes()));
         if (!BarcoUtil.isNull(payload.getStatus())) {
             credential.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
         }
@@ -167,10 +175,12 @@ public class CredentialServiceImpl implements CredentialService {
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Set<CREDENTIAL_TYPE> types =  payload.getTypes().stream().map(type -> CREDENTIAL_TYPE.getByLookupCode(type)).collect(Collectors.toSet());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.credentialRepository.findAllByCreatedByAndTypeInAndStatusNot(adminUser.get(), types, APPLICATION_STATUS.DELETE).stream()
-                .map(credential -> this.getCredentialResponse(credential, true)).collect(Collectors.toList()));
+            this.credentialRepository.findAllByCreatedByAndTypeInAndStatusNot(adminUser.get(), payload.getTypes()
+                .stream().map(type -> CREDENTIAL_TYPE.getByLookupCode(type))
+                .collect(Collectors.toSet()), APPLICATION_STATUS.DELETE)
+                .stream().map(credential -> this.getCredentialResponse(credential, true))
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -199,6 +209,7 @@ public class CredentialServiceImpl implements CredentialService {
         CredentialResponse credentialResponse = new CredentialResponse();
         credentialResponse.setId(credential.get().getId());
         credentialResponse.setName(credential.get().getName());
+        credentialResponse.setDescription(credential.get().getDescription());
         credentialResponse.setType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
             CREDENTIAL_TYPE.getName(),credential.get().getType().getLookupCode())));
         credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(credential.get().getStatus().getLookupCode()));
@@ -230,8 +241,8 @@ public class CredentialServiceImpl implements CredentialService {
         if (!credential.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
+        // de-link the source and event bridge [if its connect with other then service or task then add new mthod]
         credential.get().setStatus(APPLICATION_STATUS.DELETE);
-        // de-link the source and event bridge
         this.deleteEventBridgesCredential(credential.get());
         this.deleteSourceTaskCredential(credential.get());
         this.credentialRepository.save(credential.get());
@@ -258,49 +269,13 @@ public class CredentialServiceImpl implements CredentialService {
         }
         List<Credential> credentials = this.credentialRepository.findAllByIdIn(payload.getIds());
         credentials.forEach(credential -> {
+            // de-link the source and event bridge [if its connect with other then service or task then add new mthod]
             credential.setStatus(APPLICATION_STATUS.DELETE);
-            // de-link the source and event bridge
             this.deleteEventBridgesCredential(credential);
             this.deleteSourceTaskCredential(credential);
         });
         this.credentialRepository.saveAll(credentials);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
-    }
-
-    /**
-     * Method using to delete the event bridge credential
-     * @param credential
-     * @return void
-     * */
-    private void deleteEventBridgesCredential(Credential credential) {
-        if (!BarcoUtil.isNull(credential.getEventBridges())) {
-            credential.getEventBridges().stream()
-            .filter(eventBridge -> !eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(eventBridge -> {
-                eventBridge.setCredential(null);
-                // if Credential is delete from the event bridge the delete teh all app user event bridge
-                if (!BarcoUtil.isNull(eventBridge.getAppUserEventBridges())) {
-                    eventBridge.getAppUserEventBridges().clear();
-                }
-                return eventBridge;
-            }).collect(Collectors.toList());
-        }
-    }
-
-    /**
-     * Method using to delete the source credential
-     * @param credential
-     * @return void
-     * */
-    private void deleteSourceTaskCredential(Credential credential) {
-        if (!BarcoUtil.isNull(credential.getSourceTaskTypes())) {
-            credential.getSourceTaskTypes().stream()
-            .filter(sourceTaskTypes -> !sourceTaskTypes.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(sourceTaskTypes -> {
-                sourceTaskTypes.setCredential(null);
-                return sourceTaskTypes;
-            }).collect(Collectors.toList());
-        }
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
     /**
@@ -313,13 +288,12 @@ public class CredentialServiceImpl implements CredentialService {
         CredentialResponse credentialResponse = new CredentialResponse();
         credentialResponse.setId(credential.getId());
         credentialResponse.setName(credential.getName());
+        credentialResponse.setDescription(credential.getDescription());
         credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(credential.getStatus().getLookupType()));
         if (readFull) {
-            credentialResponse.setType(GLookup.getGLookup(
-                this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                    CREDENTIAL_TYPE.getName(),credential.getType().getLookupCode())));
-            credentialResponse.setTotalCount(
-                this.eventBridgeRepository.countByCredentialAndStatusNot(credential, APPLICATION_STATUS.DELETE) +
+            credentialResponse.setType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+                CREDENTIAL_TYPE.getName(),credential.getType().getLookupCode())));
+            credentialResponse.setTotalCount(this.eventBridgeRepository.countByCredentialAndStatusNot(credential, APPLICATION_STATUS.DELETE) +
                 this.sourceTaskTypeRepository.countByCredentialAndStatusNot(credential, APPLICATION_STATUS.DELETE));
             credentialResponse.setCreatedBy(getActionUser(credential.getCreatedBy()));
             credentialResponse.setUpdatedBy(getActionUser(credential.getCreatedBy()));

@@ -1,15 +1,13 @@
 package com.barco.admin.controller;
 
 import com.barco.admin.service.SettingService;
-import com.barco.common.request.ConfigurationMakerRequest;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
-import com.barco.common.utility.JsonOutTagInfoUtil;
-import com.barco.common.utility.XmlOutTagInfoUtil;
 import com.barco.model.dto.request.QueryRequest;
 import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.util.MessageUtil;
+import org.hibernate.exception.SQLGrammarException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,11 +35,6 @@ public class SettingRestApi {
 
     @Autowired
     private SettingService settingService;
-    @Autowired
-    private XmlOutTagInfoUtil xmlOutTagInfoUtil;
-    @Autowired
-    private JsonOutTagInfoUtil jsonOutTagInfoUtil;
-
 
     /**
      * @apiName :- fetchSettingDashboard
@@ -70,7 +63,10 @@ public class SettingRestApi {
     public ResponseEntity<?> dynamicQueryResponse(@RequestBody QueryRequest payload) {
         try {
             return new ResponseEntity<>(this.settingService.dynamicQueryResponse(payload), HttpStatus.OK);
-        } catch (Exception ex) {
+        } catch (SQLGrammarException ex) {
+            logger.error("An error occurred while dynamicQueryResponse", ExceptionUtil.getRootCauseMessage(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.SQL_GRAMMAR_EXCEPTION), HttpStatus.BAD_REQUEST);
+        }  catch (Exception ex) {
             logger.error("An error occurred while dynamicQueryResponse ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
@@ -92,50 +88,11 @@ public class SettingRestApi {
             headers.add(BarcoUtil.CONTENT_DISPOSITION, BarcoUtil.FILE_NAME_HEADER + fileName);
             ByteArrayOutputStream byteArrayOutputStream = this.settingService.downloadDynamicQueryFile(payload);
             return ResponseEntity.ok().headers(headers).body(byteArrayOutputStream.toByteArray());
+        } catch (SQLGrammarException ex) {
+            logger.error("An error occurred while downloadDynamicQueryFile xlsx file", ExceptionUtil.getRootCauseMessage(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.SQL_GRAMMAR_EXCEPTION), HttpStatus.BAD_REQUEST);
         } catch (Exception ex) {
             logger.error("An error occurred while downloadDynamicQueryFile xlsx file", ExceptionUtil.getRootCauseMessage(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- xmlCreateChecker
-     * @apiName :- Api use to create the xml setting for source task
-     * @param payload
-     * @return ResponseEntity<?> xmlCreateChecker
-     * */
-    @PreAuthorize("hasRole('DEV')")
-    @RequestMapping(path="/xmlCreateChecker", method=RequestMethod.POST)
-    public ResponseEntity<?> xmlCreateChecker(@RequestBody ConfigurationMakerRequest payload) {
-        try {
-            if (!BarcoUtil.isNull(payload.getXmlTagsInfo())) {
-                return new ResponseEntity<>(new AppResponse(BarcoUtil.SUCCESS, this.xmlOutTagInfoUtil.makeXml(payload)), HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.WRONG_INPUT), HttpStatus.OK);
-            }
-        } catch (Exception ex) {
-            logger.error("An error occurred while xmlCreateChecker ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- jsonCreateChecker
-     * @apiName :- Api use to create the json setting for source task
-     * @param payload
-     * @return ResponseEntity<?> jsonCreateChecker
-     * */
-    @PreAuthorize("hasRole('DEV')")
-    @RequestMapping(path="/jsonCreateChecker", method=RequestMethod.POST)
-    public ResponseEntity<?> jsonCreateChecker(@RequestBody ConfigurationMakerRequest payload) {
-        try {
-            if (!BarcoUtil.isNull(payload.getJsonTagsInfo())) {
-                return new ResponseEntity<>(new AppResponse(BarcoUtil.SUCCESS, this.jsonOutTagInfoUtil.makeJson(payload)), HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.WRONG_INPUT), HttpStatus.OK);
-            }
-        } catch (Exception ex) {
-            logger.error("An error occurred while jsonCreateChecker ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

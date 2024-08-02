@@ -10,9 +10,9 @@ import java.io.ByteArrayOutputStream;
  */
 public interface SettingService extends RootService {
 
-    public AppResponse fetchSettingDashboard(SessionUser principal);
+    public AppResponse fetchSettingDashboard(SessionUser principal) throws Exception;
 
-    public AppResponse dynamicQueryResponse(QueryRequest payload);
+    public AppResponse dynamicQueryResponse(QueryRequest payload) throws Exception;
 
     public ByteArrayOutputStream downloadDynamicQueryFile(QueryRequest payload) throws Exception;
 

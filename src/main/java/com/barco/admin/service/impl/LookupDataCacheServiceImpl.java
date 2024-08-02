@@ -1,14 +1,14 @@
 package com.barco.admin.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import javax.annotation.PostConstruct;
 import com.barco.model.pojo.*;
 import com.barco.model.util.lookup.*;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import javax.annotation.PostConstruct;
 import com.barco.admin.service.LookupDataCacheService;
 import com.barco.common.utility.validation.LookupDataValidation;
 import com.barco.common.utility.BarcoUtil;
@@ -49,6 +49,7 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock writeLock = readWriteLock.writeLock();
+
     private Map<String, LookupDataResponse> lookupCacheMap = new HashMap<>();
     private Map<String, SheetFiled> sheetFiledMap = new HashMap<>();
 
@@ -73,9 +74,9 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
             Iterable<LookupData> lookupDataList = this.lookupDataRepository.findByParentLookupIsNull();
             lookupDataList.forEach(lookupData -> {
                 if (this.lookupCacheMap.containsKey(lookupData.getLookupType())) {
-                    this.lookupCacheMap.put(lookupData.getLookupType(), getLookupDataDetail(lookupData));
+                    this.lookupCacheMap.put(lookupData.getLookupType(), this.getLookupDataDetail(lookupData));
                 } else {
-                    this.lookupCacheMap.put(lookupData.getLookupType(), getLookupDataDetail(lookupData));
+                    this.lookupCacheMap.put(lookupData.getLookupType(), this.getLookupDataDetail(lookupData));
                 }
             });
             logger.info("***************Cache-Lookup-End********************************");
@@ -92,7 +93,8 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         logger.info("****************Sheet-Start***************************");
         ClassLoader cl = this.getClass().getClassLoader();
         InputStream inputStream = cl.getResourceAsStream(this.bulkExcel.SHEET_COL);
-        String result = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charsets.UTF_8);
+        String result = CharStreams.toString(inputStreamReader);
         Type type = new TypeToken<Map<String, SheetFiled>>(){}.getType();
         this.sheetFiledMap = new Gson().fromJson(result, type);
         logger.info("Sheet Map " + this.sheetFiledMap.size());
@@ -121,7 +123,6 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
      * @param payload
      * @return ResponseEntity<?> addLookupData
      * */
-
     @Override
     public AppResponse addLookupData(LookupDataRequest payload) throws Exception {
         logger.info("Request addLookupData :- " + payload);
@@ -149,8 +150,8 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
         lookupData.setLookupType(payload.getLookupType());
         lookupData.setLookupCode(payload.getLookupCode());
         lookupData.setLookupValue(payload.getLookupValue());
-        lookupData.setUiLookup(UI_LOOKUP.getByLookupCode(payload.getUiLookup()));
         lookupData.setDescription(payload.getDescription());
+        lookupData.setUiLookup(UI_LOOKUP.getByLookupCode(payload.getUiLookup()));
         lookupData.setStatus(APPLICATION_STATUS.ACTIVE);
         lookupData.setCreatedBy(appUser.get());
         lookupData.setUpdatedBy(appUser.get());
@@ -505,8 +506,8 @@ public class LookupDataCacheServiceImpl implements LookupDataCacheService {
                 lookupData.setLookupCode(Long.valueOf(lookupDataValidation.getLookupCode()));
             }
             if (!BarcoUtil.isNull(lookupDataValidation.getUiLookup())) {
-                GLookup gUI_LOOKUP = UI_LOOKUP.getStatusByLookupType(lookupDataValidation.getUiLookup());
-                lookupData.setUiLookup(UI_LOOKUP.getByLookupCode(Long.parseLong(gUI_LOOKUP.getLookupCode().toString())));
+                GLookup gLookup = UI_LOOKUP.getStatusByLookupType(lookupDataValidation.getUiLookup());
+                lookupData.setUiLookup(UI_LOOKUP.getByLookupCode(Long.parseLong(gLookup.getLookupCode().toString())));
             }
             lookupData.setLookupValue(lookupDataValidation.getLookupValue());
             lookupData.setLookupType(lookupDataValidation.getLookupType());

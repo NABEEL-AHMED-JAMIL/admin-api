@@ -30,6 +30,13 @@ public class SettingServiceImpl implements SettingService {
 
     private Logger logger = LoggerFactory.getLogger(SettingServiceImpl.class);
 
+    private String APP_SETTING_STATISTICS = "APP_SETTING_STATISTICS";
+    private String PROFILE_SETTING_STATISTICS = "PROFILE_SETTING_STATISTICS";
+    private String FORM_SETTING_STATISTICS = "FORM_SETTING_STATISTICS";
+    private String DASHBOARD_AND_REPORT_SETTING_STATISTICS = "DASHBOARD_AND_REPORT_SETTING_STATISTICS";
+    private String SERVICE_SETTING_STATISTICS = "SERVICE_SETTING_STATISTICS";
+    private String SESSION_COUNT_STATISTICS = "SESSION_COUNT_STATISTICS";
+
     @Autowired
     private BulkExcel bulkExcel;
     @Autowired
@@ -47,7 +54,7 @@ public class SettingServiceImpl implements SettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchSettingDashboard(SessionUser sessionUser) {
+    public AppResponse fetchSettingDashboard(SessionUser sessionUser) throws Exception {
         logger.info("Request dynamicQueryResponse :- " + sessionUser);
         if (BarcoUtil.isNull(sessionUser.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
@@ -58,19 +65,17 @@ public class SettingServiceImpl implements SettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         Map<String, Object> settingDashboard = new HashMap<>();
-        settingDashboard.put("APP_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+        settingDashboard.put(APP_SETTING_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.APP_SETTING_STATISTICS, appUser.get().getId())));
-        settingDashboard.put("PROFILE_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+        settingDashboard.put(PROFILE_SETTING_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.PROFILE_SETTING_STATISTICS, appUser.get().getId())));
-        settingDashboard.put("FORM_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+        settingDashboard.put(FORM_SETTING_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.FORM_SETTING_STATISTICS, appUser.get().getId())));
-        settingDashboard.put("REPORT_SETTING_STATISTICS", this.queryService.executeQueryResponse(
-            String.format(QueryService.REPORT_SETTING_STATISTICS, appUser.get().getId())));
-        settingDashboard.put("DASHBOARD_SETTING_STATISTICS", this.queryService.executeQueryResponse(
-            String.format(QueryService.DASHBOARD_SETTING_STATISTICS, appUser.get().getId())));
-        settingDashboard.put("SERVICE_SETTING_STATISTICS", this.queryService.executeQueryResponse(
+        settingDashboard.put(DASHBOARD_AND_REPORT_SETTING_STATISTICS, this.queryService.executeQueryResponse(
+            String.format(QueryService.DASHBOARD_AND_REPORT_SETTING_STATISTICS, appUser.get().getId())));
+        settingDashboard.put(SERVICE_SETTING_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.SERVICE_SETTING_STATISTICS, appUser.get().getId())));
-        settingDashboard.put("SESSION_COUNT_STATISTICS", this.queryService.executeQueryResponse(
+        settingDashboard.put(SESSION_COUNT_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.SESSION_COUNT_STATISTICS, appUser.get().getId())));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, settingDashboard);
     }
@@ -81,7 +86,7 @@ public class SettingServiceImpl implements SettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse dynamicQueryResponse(QueryRequest payload) {
+    public AppResponse dynamicQueryResponse(QueryRequest payload) throws Exception {
         logger.info("Request dynamicQueryResponse :- " + payload);
         if (BarcoUtil.isNull(payload.getQuery())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_MISSING);

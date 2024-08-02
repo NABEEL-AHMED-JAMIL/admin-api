@@ -1,5 +1,6 @@
 package com.barco.admin.service;
 
+import com.barco.model.dto.request.ConfigurationMakerRequest;
 import com.barco.model.dto.request.DynamicPayloadRequest;
 import com.barco.model.dto.response.AppResponse;
 
@@ -19,4 +20,9 @@ public interface DynamicPayloadService extends RootService {
     public AppResponse deleteDynamicPayloadById(DynamicPayloadRequest payload) throws Exception;
 
     public AppResponse deleteAllDynamicPayload(DynamicPayloadRequest payload) throws Exception;
+
+    public AppResponse xmlCreateChecker(ConfigurationMakerRequest payload) throws Exception;
+
+    public AppResponse jsonCreateChecker(ConfigurationMakerRequest payload) throws Exception;
+
 }

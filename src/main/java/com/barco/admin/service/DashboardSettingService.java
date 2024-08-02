@@ -18,6 +18,8 @@ public interface DashboardSettingService extends RootService {
 
     public AppResponse fetchAllDashboardSettingByGroup(DashboardSettingRequest payload) throws Exception;
 
+    public AppResponse fetchAllDashboardSettingByType(DashboardSettingRequest payload) throws Exception;
+
     public AppResponse deleteDashboardSettingById(DashboardSettingRequest payload) throws Exception;
 
     public AppResponse deleteAllDashboardSetting(DashboardSettingRequest payload) throws Exception;

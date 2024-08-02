@@ -69,7 +69,9 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_DESCRIPTION_MISSING);
         } else if (BarcoUtil.isNull(payload.getDateFilter())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_DATA_FILTER_MISSING);
-        }  else if (BarcoUtil.isNull(payload.getFetchRate())) {
+        } else if (BarcoUtil.isNull(payload.getRecordReport())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_RECORD_REPORT_MISSING);
+        } else if (BarcoUtil.isNull(payload.getFetchRate())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_FETCH_RATE_MISSING);
         } else if (BarcoUtil.isNull(payload.getPayloadRef())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_PAYLOAD_REF_MISSING);
@@ -95,7 +97,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             }
         }
         ReportSetting reportSetting = new ReportSetting();
-        reportSetting = getReportSetting(payload, reportSetting);
+        reportSetting = this.getReportSetting(payload, reportSetting);
         Optional<LookupData> groupType = this.lookupDataRepository.findByLookupType(payload.getGroupType());
         if (groupType.isPresent()) {
             reportSetting.setGroupType(groupType.get());
@@ -137,6 +139,8 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_DESCRIPTION_MISSING);
         } else if (BarcoUtil.isNull(payload.getDateFilter())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_DATA_FILTER_MISSING);
+        } else if (BarcoUtil.isNull(payload.getRecordReport())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_RECORD_REPORT_MISSING);
         } else if (BarcoUtil.isNull(payload.getFetchRate())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_SETTING_FETCH_RATE_MISSING);
         } else if (BarcoUtil.isNull(payload.getPayloadRef())) {
@@ -176,7 +180,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         if (groupType.isPresent()) {
             reportSetting.get().setGroupType(groupType.get());
         }
-        this.reportSettingRepository.save(getReportSetting(payload, reportSetting.get()));
+        this.reportSettingRepository.save(this.getReportSetting(payload, reportSetting.get()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()));
     }
 
@@ -205,8 +209,8 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         } else {
             reportSettings = this.reportSettingRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, reportSettings
-            .stream().map(reportSetting -> getReportSettingResponse(reportSetting)).collect(Collectors.toList()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, reportSettings.stream()
+            .map(reportSetting -> this.getReportSettingResponse(reportSetting)).collect(Collectors.toList()));
     }
 
     /**
@@ -317,7 +321,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         List<ReportSetting> reportSettings = this.reportSettingRepository.findAllByIdIn(payload.getIds());
         reportSettings.forEach(reportSetting -> reportSetting.setStatus(APPLICATION_STATUS.DELETE));
         this.reportSettingRepository.saveAll(reportSettings);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
     /**
@@ -343,7 +347,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_NOT_FOUND);
         }
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_FETCH_SUCCESSFULLY, ""),
-            fetchReportData(payload, reportSetting.get()));
+            this.fetchReportData(payload, reportSetting.get()));
     }
 
     /**
@@ -363,6 +367,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         reportSettingResponse.setId(reportSetting.getId());
         reportSettingResponse.setName(reportSetting.getName());
         reportSettingResponse.setDateFilter(UI_LOOKUP.getStatusByLookupType(reportSetting.getDateFilter().getLookupType()));
+        reportSettingResponse.setRecordReport(UI_LOOKUP.getStatusByLookupType(reportSetting.getRecordReport().getLookupType()));
         reportSettingResponse.setFetchRate(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
             FETCH_LIMIT.getName(), Long.valueOf(reportSetting.getFetchRate().getLookupCode()))));
         if (!BarcoUtil.isNull(reportSetting.getGroupType())) {
@@ -428,6 +433,7 @@ public class ReportSettingServiceImpl implements ReportSettingService {
     private ReportSetting getReportSetting(ReportSettingRequest payload, ReportSetting reportSetting) {
         reportSetting.setName(payload.getName());
         reportSetting.setDateFilter(UI_LOOKUP.getByLookupCode(payload.getDateFilter()));
+        reportSetting.setRecordReport(UI_LOOKUP.getByLookupCode(payload.getRecordReport()));
         reportSetting.setFetchRate(FETCH_LIMIT.getByLookupCode(payload.getFetchRate()));
         reportSetting.setDescription(payload.getDescription());
         reportSetting.setPayloadRef(PAYLOAD_REF.getByLookupCode(payload.getPayloadRef()));

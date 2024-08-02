@@ -1,10 +1,12 @@
 package com.barco.admin.controller;
 
 import com.barco.admin.service.DynamicPayloadService;
+import com.barco.model.dto.request.ConfigurationMakerRequest;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.request.DynamicPayloadRequest;
 import com.barco.model.dto.response.AppResponse;
+import com.barco.model.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +28,6 @@ public class DynamicPayloadRestApi {
 
     @Autowired
     private DynamicPayloadService dynamicPayloadService;
-
 
     /**
      * @apiName :- addDynamicPayload
@@ -131,6 +132,48 @@ public class DynamicPayloadRestApi {
             return new ResponseEntity<>(this.dynamicPayloadService.deleteAllDynamicPayload(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllDynamicPayload ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- xmlCreateChecker
+     * @apiName :- Api use to create the xml setting for source task
+     * @param payload
+     * @return ResponseEntity<?> xmlCreateChecker
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(path="/xmlCreateChecker", method=RequestMethod.POST)
+    public ResponseEntity<?> xmlCreateChecker(@RequestBody ConfigurationMakerRequest payload) {
+        try {
+            if (!BarcoUtil.isNull(payload.getXmlTagsInfo())) {
+                return new ResponseEntity<>(this.dynamicPayloadService.xmlCreateChecker(payload), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.WRONG_INPUT), HttpStatus.OK);
+            }
+        } catch (Exception ex) {
+            logger.error("An error occurred while xmlCreateChecker ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- jsonCreateChecker
+     * @apiName :- Api use to create the json setting for source task
+     * @param payload
+     * @return ResponseEntity<?> jsonCreateChecker
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(path="/jsonCreateChecker", method=RequestMethod.POST)
+    public ResponseEntity<?> jsonCreateChecker(@RequestBody ConfigurationMakerRequest payload) {
+        try {
+            if (!BarcoUtil.isNull(payload.getJsonTagsInfo())) {
+                return new ResponseEntity<>(this.dynamicPayloadService.jsonCreateChecker(payload), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.WRONG_INPUT), HttpStatus.OK);
+            }
+        } catch (Exception ex) {
+            logger.error("An error occurred while jsonCreateChecker ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

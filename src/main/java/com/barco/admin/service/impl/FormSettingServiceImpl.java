@@ -57,19 +57,13 @@ public class FormSettingServiceImpl implements FormSettingService {
     @Autowired
     private SourceTaskTypeRepository sourceTaskTypeRepository;
     @Autowired
-    private CredentialRepository credentialRepository;
+    private ReportSettingRepository reportSettingRepository;
+    @Autowired
+    private DashboardSettingRepository dashboardSettingRepository;
     @Autowired
     private LookupDataRepository lookupDataRepository;
     @Autowired
     private LookupDataCacheService lookupDataCacheService;
-    @Autowired
-    private KafkaTaskTypeRepository kafkaTaskTypeRepository;
-    @Autowired
-    private ApiTaskTypeRepository apiTaskTypeRepository;
-    @Autowired
-    private SourceTaskRepository sourceTaskRepository;
-    @Autowired
-    private AppUserLinkSourceTaskTypeRepository appUserLinkSourceTaskTypeRepository;
     @Autowired
     private GenFormLinkSourceTaskTypeRepository genFormLinkSourceTaskTypeRepository;
     @Autowired
@@ -77,500 +71,7 @@ public class FormSettingServiceImpl implements FormSettingService {
     @Autowired
     private GenSectionLinkGenFormRepository genSectionLinkGenFormRepository;
 
-    /**
-     * Method use to add the stt
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse addSTT(STTRequest payload) throws Exception {
-        logger.info("Request addSTT :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getServiceName())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_SERVICE_NAME_MISSING);
-        } else if (BarcoUtil.isNull(payload.getDescription())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_DESCRIPTION_MISSING);
-        } else if (BarcoUtil.isNull(payload.getTaskType())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_MISSING);
-        } else if ((payload.getTaskType().equals(TASK_TYPE.API.getLookupCode()) ||
-            payload.getTaskType().equals(TASK_TYPE.AWS_SQS.getLookupCode()) ||
-            payload.getTaskType().equals(TASK_TYPE.WEB_SOCKET.getLookupCode())) &&
-            BarcoUtil.isNull(payload.getApiTaskType())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_WITH_API_TYPE_MISSING);
-        } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode()) && BarcoUtil.isNull(payload.getKafkaTaskType())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_WITH_KAFKA_TYPE_MISSING);
-        }
-        SourceTaskType sourceTaskType = new SourceTaskType();
-        sourceTaskType.setServiceName(payload.getServiceName());
-        sourceTaskType.setDescription(payload.getDescription());
-        sourceTaskType.setTaskType(TASK_TYPE.getRequestMethodByValue(payload.getTaskType()));
-        if (!BarcoUtil.isNull(payload.getCredentialId())) {
-            Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(
-                payload.getCredentialId(), adminUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
-            if (credential.isPresent()) {
-                sourceTaskType.setCredential(credential.get());
-            }
-        }
-        sourceTaskType.setCreatedBy(adminUser.get());
-        sourceTaskType.setUpdatedBy(adminUser.get());
-        sourceTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (payload.getTaskType().equals(TASK_TYPE.AWS_SQS.getLookupCode()) ||
-            payload.getTaskType().equals(TASK_TYPE.API.getLookupCode()) ||
-            payload.getTaskType().equals(TASK_TYPE.WEB_SOCKET.getLookupCode())) {
-            ApiTaskTypeRequest apiTaskTypeRequest = payload.getApiTaskType();
-            if (BarcoUtil.isNull(apiTaskTypeRequest.getApiUrl())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.API_URL_MISSING);
-            } else if (BarcoUtil.isNull(apiTaskTypeRequest.getHttpMethod())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.HTTP_METHOD_MISSING);
-            }
-            sourceTaskType.setApiTaskType(this.apiTaskTypeRepository.save(
-                this.getApiTaskType(apiTaskTypeRequest, adminUser)));
-        } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode())) {
-            KafkaTaskTypeRequest kafkaTaskTypeRequest = payload.getKafkaTaskType();
-            if (BarcoUtil.isNull(kafkaTaskTypeRequest.getNumPartitions())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_NUM_PARTITIONS);
-            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getServiceUrl())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_SERVICE_URL_MISSING);
-            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getTopicName())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_TOPIC_NAME_MISSING);
-            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getTopicPattern())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_TOPIC_PATTERN_MISSING);
-            }
-            sourceTaskType.setKafkaTaskType(this.kafkaTaskTypeRepository.save(
-                this.getKafkaTaskType(kafkaTaskTypeRequest, adminUser)));
-        }
-        this.sourceTaskTypeRepository.save(sourceTaskType);
-        // link app user stt giving service status
-        AppUserLinkSourceTaskType appUserSTT = new AppUserLinkSourceTaskType();
-        appUserSTT.setSourceTaskType(sourceTaskType);
-        appUserSTT.setAppUser(adminUser.get());
-        appUserSTT.setStatus(sourceTaskType.getStatus());
-        appUserSTT.setCreatedBy(adminUser.get());
-        appUserSTT.setUpdatedBy(adminUser.get());
-        this.appUserLinkSourceTaskTypeRepository.save(appUserSTT);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, sourceTaskType.getId().toString()), payload);
-    }
-
-    /**
-     * Method use to edit the stt
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse editSTT(STTRequest payload) throws Exception {
-        logger.info("Request editSTT :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getId())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_ID_MISSING);
-        } else if (BarcoUtil.isNull(payload.getServiceName())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_SERVICE_NAME_MISSING);
-        } else if (BarcoUtil.isNull(payload.getDescription())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_DESCRIPTION_MISSING);
-        } else if (BarcoUtil.isNull(payload.getTaskType())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_MISSING);
-        } else if ((payload.getTaskType().equals(TASK_TYPE.API.getLookupCode()) ||
-            payload.getTaskType().equals(TASK_TYPE.AWS_SQS.getLookupCode()) ||
-            payload.getTaskType().equals(TASK_TYPE.WEB_SOCKET.getLookupCode())) &&
-            BarcoUtil.isNull(payload.getApiTaskType())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_WITH_API_TYPE_MISSING);
-        } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode()) && BarcoUtil.isNull(payload.getKafkaTaskType())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_WITH_KAFKA_TYPE_MISSING);
-        }
-        Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
-            payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
-        if (!sourceTaskType.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
-        } else if (!sourceTaskType.get().getTaskType().getLookupCode().equals(payload.getTaskType())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_CANNOT_CHANGE_TO_DIFFERENT_TASK_TYPE);
-        }
-        sourceTaskType.get().setServiceName(payload.getServiceName());
-        sourceTaskType.get().setDescription(payload.getDescription());
-        if (!BarcoUtil.isNull(payload.getStatus())) {
-            sourceTaskType.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-        }
-        if (!BarcoUtil.isNull(payload.getCredentialId())) {
-            Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(
-                payload.getCredentialId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-            if (credential.isPresent()) {
-                sourceTaskType.get().setCredential(credential.get());
-            }
-        }
-        if (payload.getTaskType().equals(TASK_TYPE.AWS_SQS.getLookupCode()) ||
-            payload.getTaskType().equals(TASK_TYPE.API.getLookupCode()) ||
-            payload.getTaskType().equals(TASK_TYPE.WEB_SOCKET.getLookupCode())) {
-            ApiTaskTypeRequest apiTaskTypeRequest = payload.getApiTaskType();
-            if (BarcoUtil.isNull(apiTaskTypeRequest.getApiUrl())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.API_URL_MISSING);
-            } else if (BarcoUtil.isNull(apiTaskTypeRequest.getHttpMethod())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.HTTP_METHOD_MISSING);
-            }
-            sourceTaskType.get().getApiTaskType().setApiUrl(apiTaskTypeRequest.getApiUrl());
-            sourceTaskType.get().getApiTaskType().setHttpMethod(apiTaskTypeRequest.getHttpMethod());
-            // give the same status of parent type
-            if (!BarcoUtil.isNull(payload.getStatus())) {
-                sourceTaskType.get().getApiTaskType().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-                sourceTaskType.get().getApiTaskType().setUpdatedBy(adminUser.get());
-            }
-        } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode())) {
-            KafkaTaskTypeRequest kafkaTaskTypeRequest = payload.getKafkaTaskType();
-            if (BarcoUtil.isNull(kafkaTaskTypeRequest.getNumPartitions())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_NUM_PARTITIONS);
-            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getServiceUrl())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_SERVICE_URL_MISSING);
-            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getTopicName())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_TOPIC_NAME_MISSING);
-            } else if (BarcoUtil.isNull(kafkaTaskTypeRequest.getTopicPattern())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.KAFKA_TOPIC_PATTERN_MISSING);
-            }
-            sourceTaskType.get().getKafkaTaskType().setServiceUrl(kafkaTaskTypeRequest.getServiceUrl());
-            sourceTaskType.get().getKafkaTaskType().setNumPartitions(kafkaTaskTypeRequest.getNumPartitions());
-            sourceTaskType.get().getKafkaTaskType().setTopicName(kafkaTaskTypeRequest.getTopicName());
-            sourceTaskType.get().getKafkaTaskType().setTopicPattern(kafkaTaskTypeRequest.getTopicPattern());
-            // give the same status of parent type
-            if (!BarcoUtil.isNull(payload.getStatus())) {
-                sourceTaskType.get().getKafkaTaskType().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-                sourceTaskType.get().getKafkaTaskType().setUpdatedBy(adminUser.get());
-            }
-        }
-        // edit all source task
-        if (!BarcoUtil.isNull(sourceTaskType.get().getAppUserLinkSourceTaskTypes())) {
-            this.actionAppUserLinkSourceTaskTypes(sourceTaskType.get(), adminUser.get());
-        }
-        // edit all form
-        if (!BarcoUtil.isNull(sourceTaskType.get().getGenFormLinkSourceTaskTypes())) {
-            this.actionGenFormLinkSourceTaskTypes(sourceTaskType.get(), adminUser.get());
-        }
-        sourceTaskType.get().setUpdatedBy(adminUser.get());
-        this.sourceTaskTypeRepository.save(sourceTaskType.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()), payload);
-    }
-
-    /**
-     * Method use to delete the stt
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse deleteSTT(STTRequest payload) throws Exception {
-        logger.info("Request deleteSTT :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getId())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_ID_MISSING);
-        }
-        Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
-            payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
-        if (!sourceTaskType.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
-        }
-        sourceTaskType.get().setUpdatedBy(appUser.get());
-        sourceTaskType.get().setStatus(APPLICATION_STATUS.DELETE);
-        // delete api task type
-        if (!BarcoUtil.isNull(sourceTaskType.get().getApiTaskType())) {
-            sourceTaskType.get().getApiTaskType().setStatus(APPLICATION_STATUS.DELETE);
-            sourceTaskType.get().getApiTaskType().setUpdatedBy(appUser.get());
-        } else if (!BarcoUtil.isNull(sourceTaskType.get().getKafkaTaskType())) {
-            sourceTaskType.get().getKafkaTaskType().setStatus(APPLICATION_STATUS.DELETE);
-            sourceTaskType.get().getKafkaTaskType().setUpdatedBy(appUser.get());
-        }
-        // edit all source task
-        if (!BarcoUtil.isNull(sourceTaskType.get().getAppUserLinkSourceTaskTypes())) {
-            this.actionAppUserLinkSourceTaskTypes(sourceTaskType.get(), appUser.get());
-        }
-        // edit all form
-        if (!BarcoUtil.isNull(sourceTaskType.get().getGenFormLinkSourceTaskTypes())) {
-            this.actionGenFormLinkSourceTaskTypes(sourceTaskType.get(), appUser.get());
-        }
-        // **-> setting null mean we are de-linkin the source task with source task type
-        if (!BarcoUtil.isNull(sourceTaskType.get().getSourceTasks())) {
-            sourceTaskType.get().getSourceTasks().stream()
-                .filter(sourceTask -> !sourceTask.getStatus().equals(APPLICATION_STATUS.DELETE))
-                .map(sourceTask -> {
-                    sourceTask.setSourceTaskType(null);
-                    sourceTask.setUpdatedBy(appUser.get());
-                    if (!BarcoUtil.isNull(sourceTask.getSourceTaskData())) {
-                        sourceTask.getSourceTaskData().stream()
-                        .filter(sourceTaskData -> !sourceTaskData.getStatus().equals(APPLICATION_STATUS.DELETE))
-                        .map(sourceTaskData -> {
-                            sourceTaskData.setStatus(APPLICATION_STATUS.DELETE);
-                            return sourceTaskData;
-                        }).collect(Collectors.toList());
-                    }
-                    return sourceTask;
-                }).collect(Collectors.toList());
-        }
-        sourceTaskType.get().setUpdatedBy(appUser.get());
-        this.sourceTaskTypeRepository.save(sourceTaskType.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId().toString()), payload);
-    }
-
-    /**
-     * Method use to fetch stt by stt id(source task type)
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse fetchSTTBySttId(STTRequest payload) throws Exception {
-        logger.info("Request fetchSTTBySttId :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getId())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_ID_MISSING);
-        }
-        Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
-            payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
-        if (!sourceTaskType.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
-        }
-        SourceTaskTypeResponse sourceTaskTypeResponse = new SourceTaskTypeResponse();
-        sourceTaskTypeResponse.setId(sourceTaskType.get().getId());
-        sourceTaskTypeResponse.setServiceName(sourceTaskType.get().getServiceName());
-        sourceTaskTypeResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(
-            sourceTaskType.get().getStatus().getLookupCode()));
-        sourceTaskTypeResponse.setTaskType(GLookup.getGLookup(this.lookupDataCacheService
-            .getChildLookupDataByParentLookupTypeAndChildLookupCode(TASK_TYPE.getName(),
-                sourceTaskType.get().getTaskType().getLookupCode())));
-        if (!BarcoUtil.isNull(sourceTaskType.get().getCredential())) {
-            CredentialResponse credentialResponse = new CredentialResponse();
-            credentialResponse.setId(sourceTaskType.get().getCredential().getId());
-            credentialResponse.setName(sourceTaskType.get().getCredential().getName());
-            sourceTaskTypeResponse.setCredential(credentialResponse);
-        }
-        if (sourceTaskType.get().getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode())) {
-            sourceTaskTypeResponse.setKafkaTaskType(this.getKafkaTaskTypeResponse(sourceTaskType.get().getKafkaTaskType()));
-        } else {
-            sourceTaskTypeResponse.setApiTaskType(this.getApiTaskTypeResponse(sourceTaskType.get().getApiTaskType(), this.lookupDataCacheService));
-        }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sourceTaskTypeResponse);
-    }
-
-    /***
-     * Method use to fetch stt (source task type)
-     * @param payload
-     * @return AppResponse
-     */
-    @Override
-    public AppResponse fetchAllSTT(STTRequest payload) throws Exception {
-        logger.info("Request fetchAllSTT :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
-        List<SourceTaskType> result = this.sourceTaskTypeRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
-            startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE);
-        if (result.isEmpty()) {
-            return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
-        }
-        List<STTListResponse> sttListResponses = result.stream()
-            .map(sourceTaskType -> {
-                STTListResponse sttResponse = new STTListResponse();
-                sttResponse.setId(sourceTaskType.getId());
-                sttResponse.setServiceName(sourceTaskType.getServiceName());
-                sttResponse.setDescription(sourceTaskType.getDescription());
-                sttResponse.setTaskType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                    TASK_TYPE.getName(), sourceTaskType.getTaskType().getLookupCode())));
-                if (!BarcoUtil.isNull(sourceTaskType.getCredential())) {
-                    CredentialResponse credentialResponse = new CredentialResponse();
-                    credentialResponse.setId(sourceTaskType.getCredential().getId());
-                    credentialResponse.setName(sourceTaskType.getCredential().getName());
-                    credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTaskType.getCredential().getStatus().getLookupType()));
-                    sttResponse.setCredential(credentialResponse);
-                }
-                if (sourceTaskType.getTaskType().getLookupCode().equals(TASK_TYPE.KAFKA.getLookupCode()) && !BarcoUtil.isNull(sourceTaskType.getKafkaTaskType())) {
-                    sttResponse.setKafkaTaskType(this.getKafkaTaskTypeResponse(sourceTaskType.getKafkaTaskType()));
-                } else if (!BarcoUtil.isNull(sourceTaskType.getApiTaskType())) {
-                    sttResponse.setApiTaskType(this.getApiTaskTypeResponse(sourceTaskType.getApiTaskType(), this.lookupDataCacheService));
-                }
-                sttResponse.setTotalTask(this.sourceTaskRepository.countBySourceTaskTypeAndStatusNot(sourceTaskType, APPLICATION_STATUS.DELETE));
-                sttResponse.setTotalForm(this.genFormLinkSourceTaskTypeRepository.countBySourceTaskTypeAndStatusNot(sourceTaskType, APPLICATION_STATUS.DELETE));
-                sttResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(sourceTaskType.getStatus().getLookupType()));
-                sttResponse.setCreatedBy(getActionUser(sourceTaskType.getCreatedBy()));
-                sttResponse.setUpdatedBy(getActionUser(sourceTaskType.getUpdatedBy()));
-                sttResponse.setDateUpdated(sourceTaskType.getDateUpdated());
-                sttResponse.setDateCreated(sourceTaskType.getDateCreated());
-                return sttResponse;
-            }).collect(Collectors.toList());
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sttListResponses);
-    }
-
-    /**
-     * Method use to delete all stt
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse deleteAllSTT(STTRequest payload) throws Exception {
-        logger.info("Request deleteAllSTT :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        else if (BarcoUtil.isNull(payload.getIds())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
-        }
-        this.sourceTaskTypeRepository.saveAll(
-            this.sourceTaskTypeRepository.findAllByIdIn(payload.getIds()).stream()
-                .map(sourceTaskType -> {
-                    // de-link all source task
-                    sourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
-                    sourceTaskType.setUpdatedBy(appUser.get());
-                    if (!BarcoUtil.isNull(sourceTaskType.getAppUserLinkSourceTaskTypes())) {
-                        this.actionAppUserLinkSourceTaskTypes(sourceTaskType, appUser.get());
-                    }
-                    if (!BarcoUtil.isNull(sourceTaskType.getGenFormLinkSourceTaskTypes())) {
-                        this.actionGenFormLinkSourceTaskTypes(sourceTaskType, appUser.get());
-                    }
-                    // **-> setting null mean we are de-linkin the source task with source task type
-                    if (!BarcoUtil.isNull(sourceTaskType.getSourceTasks())) {
-                        sourceTaskType.getSourceTasks().stream()
-                            .filter(sourceTask -> !sourceTask.getStatus().equals(APPLICATION_STATUS.DELETE))
-                            .map(sourceTask -> {
-                                sourceTask.setSourceTaskType(null);
-                                sourceTask.setUpdatedBy(appUser.get());
-                                if (!BarcoUtil.isNull(sourceTask.getSourceTaskData())) {
-                                    sourceTask.getSourceTaskData().stream()
-                                    .filter(sourceTaskData -> !sourceTaskData.getStatus().equals(APPLICATION_STATUS.DELETE))
-                                    .map(sourceTaskData -> {
-                                        sourceTaskData.setStatus(APPLICATION_STATUS.DELETE);
-                                        return sourceTaskData;
-                                    }).collect(Collectors.toList());
-                                }
-                                return sourceTask;
-                            }).collect(Collectors.toList());
-                    }
-                    return sourceTaskType;
-                }).collect(Collectors.toList())
-        );
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
-    }
-
-    /**
-     * Method use to fetch the stt link form
-     * @param payload
-     * @return AppResponse
-     * **/
-    @Override
-    public AppResponse fetchAllSTTLinkForm(STTRequest payload) throws Exception {
-        logger.info("Request fetchAllSTTLinkForm :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getId())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
-        }
-        Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
-            payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
-        if (!sourceTaskType.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
-        }
-        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_FORM_LINK_STT,
-            sourceTaskType.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), FORM_TYPE.SERVICE_FORM.getLookupCode(), appUser.get().getId()));
-        List<SourceTaskTypeLinkFormResponse> sourceTaskTypeLinkFormResponses = new ArrayList<>();
-        if (!BarcoUtil.isNull(queryResponse.getData())) {
-            for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                sourceTaskTypeLinkFormResponses.add(getSourceTaskTypeLinkFormResponse(data, this.lookupDataCacheService));
-            }
-        }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sourceTaskTypeLinkFormResponses);
-    }
-
-    /**
-     * Method use to link the stt with form
-     * @param payload
-     * @return AppResponse
-     * **/
-    @Override
-    public AppResponse linkSTTForm(STTRequest payload) throws Exception {
-        logger.info("Request linkSTTForm :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getAction())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACTION_MISSING);
-        }
-        if (payload.getAction().equals(Action.LINK)) {
-            if (BarcoUtil.isNull(payload.getId())) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_ID_MISSING);
-            } else if (BarcoUtil.isNull(payload.getFormId()) && payload.getFormId().size() > 0) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_ID_MISSING);
-            }
-            Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
-                payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
-            if (!sourceTaskType.isPresent()) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
-            }
-            List<GenForm> getForms = this.genFormRepository.findAllByIdInAndStatusNot(payload.getFormId(), APPLICATION_STATUS.DELETE);
-            if (getForms.size() == 0) {
-                return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
-            }
-            this.genFormLinkSourceTaskTypeRepository.saveAll(getForms.stream()
-                .map(getForm -> {
-                    GenFormLinkSourceTaskType genFormLinkSourceTaskType = new GenFormLinkSourceTaskType();
-                    genFormLinkSourceTaskType.setGenForm(getForm);
-                    genFormLinkSourceTaskType.setSourceTaskType(sourceTaskType.get());
-                    if (sourceTaskType.get().getStatus().equals(APPLICATION_STATUS.ACTIVE) &&
-                        getForm.getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
-                        genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
-                    } else {
-                        genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.INACTIVE);
-                    }
-                    genFormLinkSourceTaskType.setCreatedBy(appUser.get());
-                    genFormLinkSourceTaskType.setUpdatedBy(appUser.get());
-                    return genFormLinkSourceTaskType;
-                }).collect(Collectors.toList()));
-            return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()), payload);
-        }
-        if (BarcoUtil.isNull(payload.getSttLinkForm())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_LINK_STT_MISSING);
-        }
-        this.genFormLinkSourceTaskTypeRepository.saveAll(
-            this.genFormLinkSourceTaskTypeRepository.findAllByIdInAndStatusNot(payload.getSttLinkForm(), APPLICATION_STATUS.DELETE)
-                .stream().map(genFormLinkSourceTaskType -> {
-                    genFormLinkSourceTaskType.setStatus(APPLICATION_STATUS.DELETE);
-                    genFormLinkSourceTaskType.setUpdatedBy(appUser.get());
-                    return genFormLinkSourceTaskType;
-                }).collect(Collectors.toList()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
+    public FormSettingServiceImpl() {
     }
 
     /**
@@ -597,9 +98,34 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         GenForm genForm = new GenForm();
         genForm.setFormName(payload.getFormName());
-        Optional<LookupData> homePage = this.lookupDataRepository.findByLookupType(payload.getHomePage());
-        if (homePage.isPresent()) {
-            genForm.setHomePage(homePage.get());
+        // home page
+        if (!BarcoUtil.isNull(payload.getHomePage())) {
+            Optional<LookupData> homePage = this.lookupDataRepository.findByLookupType(payload.getHomePage());
+            if (homePage.isPresent()) {
+                genForm.setHomePage(homePage.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.HOME_PAGE_NOT_FOUND);
+            }
+        }
+        // report id
+        if (!BarcoUtil.isNull(payload.getReportId())) {
+            Optional<ReportSetting> reportSetting = this.reportSettingRepository.findByIdAndUsernameAndStatusNot(
+                payload.getReportId(), adminUser.get().getUsername(), APPLICATION_STATUS.DELETE);
+            if (reportSetting.isPresent()) {
+                genForm.setReport(reportSetting.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_NOT_FOUND);
+            }
+        }
+        // dashboard
+        if (!BarcoUtil.isNull(payload.getDashboardId())) {
+            Optional<DashboardSetting> dashboardSetting = this.dashboardSettingRepository.findByIdAndUsernameAndStatusNot(
+                payload.getDashboardId(), adminUser.get().getUsername(), APPLICATION_STATUS.DELETE);
+            if (dashboardSetting.isPresent()) {
+                genForm.setDashboard(dashboardSetting.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.DASHBOARD_NOT_FOUND);
+            }
         }
         genForm.setDescription(payload.getDescription());
         genForm.setFormType(FORM_TYPE.getByLookupCode(payload.getFormType()));
@@ -648,9 +174,40 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!BarcoUtil.isNull(payload.getServiceId())) {
             genForm.get().setServiceId(payload.getServiceId());
         }
-        Optional<LookupData> homePage = this.lookupDataRepository.findByLookupType(payload.getHomePage());
-        if (homePage.isPresent()) {
-            genForm.get().setHomePage(homePage.get());
+        // home page
+        if (!BarcoUtil.isNull(payload.getHomePage())) {
+            Optional<LookupData> homePage = this.lookupDataRepository.findByLookupType(payload.getHomePage());
+            if (homePage.isPresent()) {
+                genForm.get().setHomePage(homePage.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.HOME_PAGE_NOT_FOUND);
+            }
+        } else {
+            genForm.get().setHomePage((LookupData) BarcoUtil.NULL);
+        }
+        // report id
+        if (!BarcoUtil.isNull(payload.getReportId())) {
+            Optional<ReportSetting> reportSetting = this.reportSettingRepository.findByIdAndUsernameAndStatusNot(
+                payload.getReportId(), adminUser.get().getUsername(), APPLICATION_STATUS.DELETE);
+            if (reportSetting.isPresent()) {
+                genForm.get().setReport(reportSetting.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.REPORT_NOT_FOUND);
+            }
+        } else {
+            genForm.get().setReport((ReportSetting) BarcoUtil.NULL);
+        }
+        // dashboard
+        if (!BarcoUtil.isNull(payload.getDashboardId())) {
+            Optional<DashboardSetting> dashboardSetting = this.dashboardSettingRepository.findByIdAndUsernameAndStatusNot(
+                payload.getDashboardId(), adminUser.get().getUsername(), APPLICATION_STATUS.DELETE);
+            if (dashboardSetting.isPresent()) {
+                genForm.get().setDashboard(dashboardSetting.get());
+            } else {
+                return new AppResponse(BarcoUtil.ERROR, MessageUtil.DASHBOARD_NOT_FOUND);
+            }
+        } else {
+            genForm.get().setDashboard((DashboardSetting) BarcoUtil.NULL);
         }
         if (!BarcoUtil.isNull(payload.getStatus())) {
             genForm.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
@@ -727,7 +284,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!genForm.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FORM_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getFormResponse(genForm.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getFormResponse(genForm.get()));
     }
 
     /**
@@ -787,7 +344,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, new ArrayList<>());
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, result.stream()
-            .map(genForm -> getFormResponse(genForm)).collect(Collectors.toList()));
+            .map(genForm -> this.getFormResponse(genForm)).collect(Collectors.toList()));
     }
 
     /**
@@ -840,7 +397,7 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-                payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getId())) {
@@ -856,7 +413,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         List<FormLinkSourceTaskTypeResponse> formLinkSourceTaskTypeResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                formLinkSourceTaskTypeResponses.add(getFormLinkSourceTaskTypeResponse(data, this.lookupDataCacheService));
+                formLinkSourceTaskTypeResponses.add(this.getFormLinkSourceTaskTypeResponse(data, this.lookupDataCacheService));
             }
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, formLinkSourceTaskTypeResponses);
@@ -1187,7 +744,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!genSection.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getSectionResponse(genSection.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getSectionResponse(genSection.get()));
     }
 
     /**
@@ -1221,7 +778,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             result.stream().map(genSection -> {
-                SectionResponse sectionResponse = getSectionResponse(genSection);
+                SectionResponse sectionResponse = this.getSectionResponse(genSection);
                 // no need to give the count if start date and end date not there
                 if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
                     sectionResponse.setTotalForm(this.genSectionLinkGenFormRepository
@@ -1424,13 +981,13 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ALL_FORM_LINK_SECTION,
             genSection.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), appUser.get().getId()));
-        List<SectionLinkFormResponse> sectionLinkFormRespons = new ArrayList<>();
+        List<SectionLinkFormResponse> sectionLinkFormResponse = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
-                sectionLinkFormRespons.add(getSectionLinkFromResponse(data, this.lookupDataCacheService));
+                sectionLinkFormResponse.add(this.getSectionLinkFromResponse(data, this.lookupDataCacheService));
             }
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sectionLinkFormRespons);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, sectionLinkFormResponse);
     }
 
     /**
@@ -1487,13 +1044,14 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (BarcoUtil.isNull(payload.getSectionLinkForm())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_LINK_FORM_MISSING);
         }
-        this.genSectionLinkGenFormRepository.saveAll(this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
-            payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
-            .map(genSectionLinkGenForm -> {
-                genSectionLinkGenForm.setStatus(APPLICATION_STATUS.DELETE);
-                genSectionLinkGenForm.setUpdatedBy(appUser.get());
-                return genSectionLinkGenForm;
-            }).collect(Collectors.toList()));
+        this.genSectionLinkGenFormRepository.saveAll(
+            this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
+                payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
+                .map(genSectionLinkGenForm -> {
+                    genSectionLinkGenForm.setStatus(APPLICATION_STATUS.DELETE);
+                    genSectionLinkGenForm.setUpdatedBy(appUser.get());
+                    return genSectionLinkGenForm;
+                }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
@@ -1518,13 +1076,14 @@ public class FormSettingServiceImpl implements FormSettingService {
         } else if (BarcoUtil.isNull(payload.getSectionOrder())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SECTION_LINK_FORM_ORDER_MISSING);
         }
-        this.genSectionLinkGenFormRepository.saveAll(this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
-            payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
-            .map(sectionLinkGenForm -> {
-                sectionLinkGenForm.setSectionOrder(payload.getSectionOrder());
-                sectionLinkGenForm.setUpdatedBy(appUser.get());
-                return sectionLinkGenForm;
-            }).collect(Collectors.toList()));
+        this.genSectionLinkGenFormRepository.saveAll(
+            this.genSectionLinkGenFormRepository.findAllByIdInAndStatusNot(
+                payload.getSectionLinkForm(), APPLICATION_STATUS.DELETE).stream()
+                .map(sectionLinkGenForm -> {
+                    sectionLinkGenForm.setSectionOrder(payload.getSectionOrder());
+                    sectionLinkGenForm.setUpdatedBy(appUser.get());
+                    return sectionLinkGenForm;
+                }).collect(Collectors.toList()));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getSectionLinkForm()), payload);
     }
 
@@ -1712,7 +1271,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!genControl.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CONTROL_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, getControlResponse(genControl.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getControlResponse(genControl.get()));
     }
 
     /**
@@ -1736,7 +1295,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         List<ControlResponse> controlResponses = this.genControlRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
             startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE).stream()
             .map(genControl -> {
-                ControlResponse controlResponse = getControlResponse(genControl);
+                ControlResponse controlResponse = this.getControlResponse(genControl);
                 controlResponse.setTotalSection(this.genControlLinkGenSectionRepository.countByGenControlAndStatusNot(genControl, APPLICATION_STATUS.DELETE));
                 return controlResponse;
             }).collect(Collectors.toList());
@@ -1762,15 +1321,15 @@ public class FormSettingServiceImpl implements FormSettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.genControlRepository.saveAll(
-            this.genControlRepository.findAllByIdIn(payload.getIds())
-            .stream().map(genControl -> {
-                genControl.setStatus(APPLICATION_STATUS.DELETE);
-                if (!BarcoUtil.isNull(genControl.getGenControlLinkGenSections())) {
-                    this.actionOnGenControlLinkGenSections(genControl, appUser.get());
-                }
-                return genControl;
-            }).collect(Collectors.toList()));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
+            this.genControlRepository.findAllByIdIn(payload.getIds()).stream()
+                .map(genControl -> {
+                    genControl.setStatus(APPLICATION_STATUS.DELETE);
+                    if (!BarcoUtil.isNull(genControl.getGenControlLinkGenSections())) {
+                        this.actionOnGenControlLinkGenSections(genControl, appUser.get());
+                    }
+                    return genControl;
+                }).collect(Collectors.toList()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
     /**
@@ -2310,6 +1869,16 @@ public class FormSettingServiceImpl implements FormSettingService {
             LookupData lookupData = genForm.getHomePage();
             formResponse.setHomePage(new GLookup(lookupData.getLookupType(), lookupData.getLookupCode(), lookupData.getLookupValue()));
         }
+        // report
+        if (!BarcoUtil.isNull(genForm.getReport())) {
+            ReportSetting reportSetting = genForm.getReport();
+            formResponse.setReport(new ReportSettingResponse(reportSetting.getId(), reportSetting.getName()));
+        }
+        // dashboard
+        if (!BarcoUtil.isNull(genForm.getDashboard())) {
+            DashboardSetting dashboardSetting = genForm.getDashboard();
+            formResponse.setDashboard(new DashboardSettingResponse(dashboardSetting.getId(), dashboardSetting.getName()));
+        }
         formResponse.setServiceId(genForm.getServiceId());
         formResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(genForm.getStatus().getLookupType()));
         formResponse.setCreatedBy(getActionUser(genForm.getCreatedBy()));
@@ -2375,160 +1944,4 @@ public class FormSettingServiceImpl implements FormSettingService {
         return controlResponse;
     }
 
-    /**
-     * Method use to action on gen form link source task types
-     * @param genForm
-     * @param appUser
-     * */
-    private void actionOnGenFormLinkSourceTaskTypes(GenForm genForm, AppUser appUser) {
-        genForm.getGenFormLinkSourceTaskTypes().stream()
-            .filter(genFormLinkStt -> !genFormLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(genFormLinkStt -> {
-                genFormLinkStt.setStatus(genForm.getStatus());
-                genFormLinkStt.setUpdatedBy(appUser);
-                return genFormLinkStt;
-            }).collect(Collectors.toList());
-    }
-
-    /***
-     * Method use to action on gen section link gen from
-     * @param genForm
-     * @param appUser
-     * */
-    private void actionOnGenSectionLinkGenForms(GenForm genForm, AppUser appUser) {
-        genForm.getGenSectionLinkGenForms().stream()
-            .filter(genFormLinkSection -> !genFormLinkSection.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(genFormLinkSection -> {
-                genFormLinkSection.setStatus(genForm.getStatus());
-                genFormLinkSection.setUpdatedBy(appUser);
-                return genFormLinkSection;
-            }).collect(Collectors.toList());
-    }
-
-    /***
-     * Method use to action on link report setting with gen form
-     * @param genForm
-     * @param appUser
-     * */
-    private void actionOnReportSettingLinkGenForms(GenForm genForm, AppUser appUser) {
-        genForm.getReportSettings().stream()
-            .filter(reportSetting -> !reportSetting.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(reportSetting -> {
-                reportSetting.setGenForm(null);
-                reportSetting.setUpdatedBy(appUser);
-                return reportSetting;
-        }).collect(Collectors.toList());
-    }
-
-    /**
-     * Method use to action on gen section link gen from
-     * @param genSection
-     * @param appUser
-     * */
-    private void actionOnGenSectionLinkGenForms(GenSection genSection, AppUser appUser) {
-        genSection.getGenSectionLinkGenForms().stream()
-            .filter(genFormLinkSection -> !genFormLinkSection.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(genFormLinkSection -> {
-                genFormLinkSection.setStatus(genSection.getStatus());
-                genFormLinkSection.setUpdatedBy(appUser);
-                return genFormLinkSection;
-            }).collect(Collectors.toList());
-    }
-
-    /**
-     * Method use to action on gen control link gen sections
-     * @param genSection
-     * @param appUser
-     * */
-    private void actionOnGenSectionsLinkGenControl(GenSection genSection, AppUser appUser) {
-        genSection.getGenControlLinkGenSections().stream()
-            .filter(genControlLinkGenSections -> !genControlLinkGenSections.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(genControlLinkGenSections -> {
-                genControlLinkGenSections.setStatus(genSection.getStatus());
-                genControlLinkGenSections.setUpdatedBy(appUser);
-                return genControlLinkGenSections;
-            }).collect(Collectors.toList());
-    }
-
-    /**
-     * Method use to action on gen control link gen sections
-     * @param genControl
-     * @param appUser
-     * */
-    private void actionOnGenControlLinkGenSections(GenControl genControl, AppUser appUser) {
-        genControl.getGenControlLinkGenSections().stream()
-            .filter(genControlLinkGenSections -> !genControlLinkGenSections.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(genControlLinkGenSections -> {
-                genControlLinkGenSections.setStatus(genControl.getStatus());
-                genControlLinkGenSections.setUpdatedBy(appUser);
-                return genControlLinkGenSections;
-            }).collect(Collectors.toList());
-    }
-
-    /**
-     * Method use to action on link source task with user
-     * @param sourceTaskType
-     * @param adminUser
-     * */
-    public void actionAppUserLinkSourceTaskTypes(SourceTaskType sourceTaskType, AppUser adminUser) {
-        sourceTaskType.getAppUserLinkSourceTaskTypes().stream()
-            .filter(appUserLinkStt -> !appUserLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(appUserLinkStt -> {
-                appUserLinkStt.setStatus(sourceTaskType.getStatus());
-                appUserLinkStt.setUpdatedBy(adminUser);
-                return appUserLinkStt;
-            }).collect(Collectors.toList());
-    }
-
-    /**
-     * Method use to action on link source task with form
-     * @param sourceTaskType
-     * @param adminUser
-     * */
-    public void actionGenFormLinkSourceTaskTypes(
-        SourceTaskType sourceTaskType, AppUser adminUser) {
-        sourceTaskType.getGenFormLinkSourceTaskTypes().stream()
-            .filter(genFormLinkStt -> !genFormLinkStt.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(genFormLinkStt -> {
-                genFormLinkStt.setStatus(sourceTaskType.getStatus());
-                genFormLinkStt.setUpdatedBy(adminUser);
-                return genFormLinkStt;
-            }).collect(Collectors.toList());
-    }
-
-    /**
-     * Method use to get kafka task type
-     * @param kafkaTaskTypeRequest
-     * @param adminUser
-     * @return ApiTaskType
-     * */
-    private static KafkaTaskType getKafkaTaskType(
-        KafkaTaskTypeRequest kafkaTaskTypeRequest, Optional<AppUser> adminUser) {
-        KafkaTaskType kafkaTaskType = new KafkaTaskType();
-        kafkaTaskType.setServiceUrl(kafkaTaskTypeRequest.getServiceUrl());
-        kafkaTaskType.setNumPartitions(kafkaTaskTypeRequest.getNumPartitions());
-        kafkaTaskType.setTopicName(kafkaTaskTypeRequest.getTopicName());
-        kafkaTaskType.setTopicPattern(kafkaTaskTypeRequest.getTopicPattern());
-        kafkaTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
-        kafkaTaskType.setCreatedBy(adminUser.get());
-        kafkaTaskType.setUpdatedBy(adminUser.get());
-        return kafkaTaskType;
-    }
-
-    /**
-     * Method use to get api task type
-     * @param apiTaskTypeRequest
-     * @param adminUser
-     * @return ApiTaskType
-     * */
-    private static ApiTaskType getApiTaskType(
-        ApiTaskTypeRequest apiTaskTypeRequest, Optional<AppUser> adminUser) {
-        ApiTaskType apiTaskType = new ApiTaskType();
-        apiTaskType.setApiUrl(apiTaskTypeRequest.getApiUrl());
-        apiTaskType.setHttpMethod(apiTaskTypeRequest.getHttpMethod());
-        apiTaskType.setStatus(APPLICATION_STATUS.ACTIVE);
-        apiTaskType.setCreatedBy(adminUser.get());
-        apiTaskType.setUpdatedBy(adminUser.get());
-        return apiTaskType;
-    }
 }
