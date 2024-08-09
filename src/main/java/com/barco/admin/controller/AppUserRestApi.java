@@ -52,22 +52,6 @@ public class AppUserRestApi {
     }
 
     /**
-     * @apiName :- updateAppUserProfile
-     * @apiNote :- Api use to update app user profile
-     * @param payload
-     * @return ResponseEntity<?>
-     * */
-    @RequestMapping(value = "/updateAppUserProfile", method = RequestMethod.POST)
-    public ResponseEntity<?> updateAppUserProfile(@RequestBody UpdateUserProfileRequest payload) {
-        try {
-            return new ResponseEntity<>(this.appUserService.updateAppUserProfile(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while updateAppUserProfile ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
      * @apiName :- updateAppUserEnvVariable
      * @apiNote :- Api use to update app user env variable
      * @param payload
@@ -100,15 +84,16 @@ public class AppUserRestApi {
     }
 
     /**
-     * @apiName :- closeAppUserAccount
-     * @apiNote :- Api use to close app user account
+     * @apiName :- deleteAppUserAccount
+     * @apiNote :- Api use to delete app user account
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @RequestMapping(value = "/closeAppUserAccount", method = RequestMethod.POST)
-    public ResponseEntity<?> closeAppUserAccount(@RequestBody AppUserRequest payload) {
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @RequestMapping(value = "/deleteAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> deleteAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
-            return new ResponseEntity<>(this.appUserService.closeAppUserAccount(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.appUserService.deleteAppUserAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while closeAppUserAccount ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);

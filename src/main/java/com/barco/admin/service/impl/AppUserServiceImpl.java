@@ -80,9 +80,10 @@ public class AppUserServiceImpl implements AppUserService {
         AppUserResponse appUserResponse = this.getAppUserDetail(appUser.get());
         // account type
         if (!BarcoUtil.isNull(appUser.get().getAccountType())) {
-            appUserResponse.setAccountType(GLookup.getGLookup(
-                this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                ACCOUNT_TYPE.getName(), Long.valueOf(appUser.get().getAccountType().ordinal()))));
+            GLookup accountType = GLookup.getGLookup(this.lookupDataCacheService
+                .getChildLookupDataByParentLookupTypeAndChildLookupCode(ACCOUNT_TYPE.getName(),
+                     Long.valueOf(appUser.get().getAccountType().ordinal())));
+            appUserResponse.setAccountType(accountType);
         }
         // organization
         if (!BarcoUtil.isNull(appUser.get().getOrganization())) {
@@ -96,51 +97,29 @@ public class AppUserServiceImpl implements AppUserService {
         }
         // app user web hook
         if (!BarcoUtil.isNull(appUser.get().getAppUserEventBridges())) {
-            appUserResponse.setEventBridge(appUser.get().getAppUserEventBridges().stream()
-                .filter(appUserEventBridge -> appUserEventBridge.getStatus().equals(APPLICATION_STATUS.ACTIVE))
-                .map(appUserEventBridge -> {
-                    EventBridgeResponse eventBridgeResponse = this.getEventBridgeResponse(appUserEventBridge);
-                    // event-bridge type
-                    if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getBridgeType())) {
-                        GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService
-                            .getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
-                                appUserEventBridge.getEventBridge().getBridgeType().getLookupCode()));
-                        eventBridgeResponse.setBridgeType(bridgeType);
-                    }
-                    // http method
-                    if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getHttpMethod())) {
-                        GLookup httpMethod = GLookup.getGLookup(this.lookupDataCacheService
-                            .getChildLookupDataByParentLookupTypeAndChildLookupCode(REQUEST_METHOD.getName(),
-                                Long.valueOf(appUserEventBridge.getEventBridge().getHttpMethod().ordinal())));
-                        eventBridgeResponse.setHttpMethod(httpMethod);
-                    }
-                    return eventBridgeResponse;
-                }).collect(Collectors.toList()));
+            appUserResponse.setEventBridge(
+                appUser.get().getAppUserEventBridges().stream()
+                    .filter(appUserEventBridge -> appUserEventBridge.getStatus().equals(APPLICATION_STATUS.ACTIVE))
+                    .map(appUserEventBridge -> {
+                        EventBridgeResponse eventBridgeResponse = this.getEventBridgeResponse(appUserEventBridge);
+                        // event-bridge type
+                        if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getBridgeType())) {
+                            GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService
+                                .getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
+                                    appUserEventBridge.getEventBridge().getBridgeType().getLookupCode()));
+                            eventBridgeResponse.setBridgeType(bridgeType);
+                        }
+                        // http method
+                        if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getHttpMethod())) {
+                            GLookup httpMethod = GLookup.getGLookup(this.lookupDataCacheService
+                                .getChildLookupDataByParentLookupTypeAndChildLookupCode(REQUEST_METHOD.getName(),
+                                    Long.valueOf(appUserEventBridge.getEventBridge().getHttpMethod().ordinal())));
+                            eventBridgeResponse.setHttpMethod(httpMethod);
+                        }
+                        return eventBridgeResponse;
+                    }).collect(Collectors.toList()));
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, appUserResponse);
-    }
-
-    /**
-     * Method use to update app user profile
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public AppResponse updateAppUserProfile(UpdateUserProfileRequest payload) throws Exception {
-        logger.info("Request updateAppUserProfile :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        appUser.get().setFirstName(payload.getFirstName());
-        appUser.get().setLastName(payload.getLastName());
-        appUser.get().setIpAddress(payload.getIpAddress());
-        this.appUserRepository.save(appUser.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, appUser.get().getUsername()), payload);
     }
 
     /**
@@ -187,7 +166,8 @@ public class AppUserServiceImpl implements AppUserService {
         } else if (BarcoUtil.isNull(payload.getNewPassword())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.NEW_PASSWORD_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            payload.getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (!this.passwordEncoder.matches(payload.getOldPassword(), appUser.get().getPassword())) {
@@ -209,8 +189,8 @@ public class AppUserServiceImpl implements AppUserService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse closeAppUserAccount(AppUserRequest payload) throws Exception {
-        logger.info("Request closeAppUserAccount :- " + payload);
+    public AppResponse deleteAppUserAccount(AppUserRequest payload) throws Exception {
+        logger.info("Request deleteAppUserAccount :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getUsername())) {
@@ -237,7 +217,7 @@ public class AppUserServiceImpl implements AppUserService {
         // email to user
         this.sendCloseUserAccountEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         // notification to admin
-        this.sendNotification(adminUser.get().getUsername(), MessageUtil.ACCOUNT_STATUS, String.format(MessageUtil.ACCOUNT_CLOSE_DETAIL,
+        this.sendNotification(adminUser.get().getUsername(), MessageUtil.ACCOUNT_STATUS, String.format(MessageUtil.ACCOUNT_DELETE_DETAIL,
             appUser.get().getUsername()), adminUser.get(), this.lookupDataCacheService, this.notificationService);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, appUser.get().getUsername()), payload);
     }
@@ -273,7 +253,7 @@ public class AppUserServiceImpl implements AppUserService {
             // email to user
             this.sendCloseUserAccountEmail(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
             // notification to admin
-            this.sendNotification(adminUser.get().getUsername(), MessageUtil.ACCOUNT_STATUS, String.format(MessageUtil.ACCOUNT_CLOSE_DETAIL,
+            this.sendNotification(adminUser.get().getUsername(), MessageUtil.ACCOUNT_STATUS, String.format(MessageUtil.ACCOUNT_DELETE_DETAIL,
                 appUser.getUsername()), adminUser.get(), this.lookupDataCacheService, this.notificationService);
         }
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
@@ -318,11 +298,11 @@ public class AppUserServiceImpl implements AppUserService {
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
         Iterator<AppUser> appUserIterator;
         if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
-            appUserIterator = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndAppUserIdInAndStatusNotOrderByDateCreatedDesc(
-                startDate, endDate, appUser.get(), payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
+            appUserIterator = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndOrgIdAndAppUserIdInAndStatusNotOrderByDateCreatedDesc(
+                startDate, endDate, appUser.get(), appUser.get().getOrganization(), payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
         } else {
-            appUserIterator = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndStatusNotOrderByDateCreatedDesc(
-                startDate, endDate, appUser.get(), APPLICATION_STATUS.DELETE).iterator();
+            appUserIterator = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndOrgIdAndStatusNotOrderByDateCreatedDesc(
+                startDate, endDate, appUser.get(), appUser.get().getOrganization(), APPLICATION_STATUS.DELETE).iterator();
         }
         while (appUserIterator.hasNext()) {
             AppUser appUserIter = appUserIterator.next();
@@ -362,11 +342,19 @@ public class AppUserServiceImpl implements AppUserService {
         }
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
-        List<AppUserResponse> subAppUserResponses = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndStatusNotOrderByDateCreatedDesc(
-            startDate, endDate, appUser.get(), APPLICATION_STATUS.DELETE).stream()
+        List<AppUserResponse> subAppUserResponses = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndOrgIdAndStatusNotOrderByDateCreatedDesc(
+            startDate, endDate, appUser.get(), appUser.get().getOrganization(), APPLICATION_STATUS.DELETE).stream()
             .map(subAppUser -> {
                 AppUserResponse appUserResponse = this.getAppUserDetail(subAppUser);
-                appUserResponse.setTotalSubUser(subAppUser.getSubAppUsers().size());
+                if (!BarcoUtil.isNull(subAppUser.getAccountType())) {
+                    appUserResponse.setAccountType(GLookup.getGLookup(
+                        this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+                            ACCOUNT_TYPE.getName(), Long.valueOf(subAppUser.getAccountType().ordinal()))));
+                }
+                if (!BarcoUtil.isNull(subAppUser.getSubAppUsers())) {
+                    appUserResponse.setTotalSubUser(subAppUser.getSubAppUsers().stream()
+                        .filter(subAppUser1 -> !subAppUser1.getStatus().equals(APPLICATION_STATUS.DELETE)).count());
+                }
                 appUserResponse.setCreatedBy(getActionUser(subAppUser.getCreatedBy()));
                 appUserResponse.setUpdatedBy(getActionUser(subAppUser.getUpdatedBy()));
                 appUserResponse.setDateCreated(subAppUser.getDateCreated());

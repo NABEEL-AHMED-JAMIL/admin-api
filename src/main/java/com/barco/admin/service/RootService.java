@@ -298,30 +298,6 @@ public interface RootService {
         return sourceTaskTypeLinkFormResponse;
     }
 
-
-    /**
-     * Method use to wrap the auth response
-     * @param authResponse
-     * @param userDetails
-     * @return AuthResponse
-     * */
-    public default AuthResponse getAuthResponseDetail(AuthResponse authResponse, UserSessionDetail userDetails) {
-        authResponse.setId(userDetails.getId());
-        authResponse.setFirstName(userDetails.getFirstName());
-        authResponse.setLastName(userDetails.getLastName());
-        authResponse.setEmail(userDetails.getEmail());
-        authResponse.setUsername(userDetails.getUsername());
-        authResponse.setProfileImage(userDetails.getProfileImage());
-        authResponse.setIpAddress(userDetails.getIpAddress());
-        authResponse.setRoles(userDetails.getAuthorities().stream()
-            .map(grantedAuthority -> grantedAuthority.getAuthority())
-            .collect(Collectors.toList()));
-        if (!BarcoUtil.isNull(userDetails.getProfile())) {
-            authResponse.setProfile(this.getProfilePermissionResponse(userDetails.getProfile()));
-        }
-        return authResponse;
-    }
-
     /**
      * getAppUserDetail method use to convert entity to dto
      * @param appUser
@@ -355,10 +331,13 @@ public interface RootService {
         organizationResponse.setEmail(organization.getEmail());
         organizationResponse.setPhone(organization.getPhone());
         organizationResponse.setAddress(organization.getAddress());
-        organizationResponse.setCountry(new ETLCountryResponse(
-            organization.getCountry().getCountryCode(),
-            organization.getCountry().getCountryName(),
-            organization.getCountry().getCode()));
+        organizationResponse.setCountry(new ETLCountryResponse(organization.getCountry().getCountryCode(),
+             organization.getCountry().getCountryName(), organization.getCountry().getCode()));
+        organizationResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(organization.getStatus().getLookupType()));
+        organizationResponse.setCreatedBy(getActionUser(organization.getCreatedBy()));
+        organizationResponse.setUpdatedBy(getActionUser(organization.getUpdatedBy()));
+        organizationResponse.setDateUpdated(organization.getDateUpdated());
+        organizationResponse.setDateCreated(organization.getDateCreated());
         return organizationResponse;
     }
 
@@ -437,8 +416,8 @@ public interface RootService {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(
                 LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatusNot(
-                REGISTER_USER.name(), APPLICATION_STATUS.INACTIVE);
+            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(
+                REGISTER_USER.name(), APPLICATION_STATUS.ACTIVE);
             if (!templateReg.isPresent()) {
                 logger.info("No Template Found With %s", REGISTER_USER.name());
                 return false;
@@ -477,9 +456,9 @@ public interface RootService {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
             Optional<TemplateReg> templateReg;
             if (appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
-                templateReg = templateRegRepository.findFirstByTemplateNameAndStatusNot(ACTIVE_USER_ACCOUNT.name(), APPLICATION_STATUS.INACTIVE);
+                templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(ACTIVE_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
             } else {
-                templateReg = templateRegRepository.findFirstByTemplateNameAndStatusNot(BLOCK_USER_ACCOUNT.name(), APPLICATION_STATUS.INACTIVE);
+                templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(BLOCK_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
             }
             if (!templateReg.isPresent()) {
                 logger.info("No Template Found With %s", (appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE) ?
@@ -520,7 +499,7 @@ public interface RootService {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
             LookupDataResponse forgotPasswordUrl = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.RESET_PASSWORD_LINK);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatusNot(FORGOT_USER_PASSWORD.name(), APPLICATION_STATUS.INACTIVE);
+            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(FORGOT_USER_PASSWORD.name(), APPLICATION_STATUS.ACTIVE);
             if (!templateReg.isPresent()) {
                 logger.info("No Template Found With %s", FORGOT_USER_PASSWORD.name());
                 return false;
@@ -563,8 +542,8 @@ public interface RootService {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(
                 LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatusNot(
-                RESET_USER_PASSWORD.name(), APPLICATION_STATUS.INACTIVE);
+            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(
+                RESET_USER_PASSWORD.name(), APPLICATION_STATUS.ACTIVE);
             if (!templateReg.isPresent()) {
                 logger.info("No Template Found With %s", RESET_USER_PASSWORD.name());
                 return false;
@@ -601,8 +580,8 @@ public interface RootService {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(
                 LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatusNot(
-                CLOSE_USER_ACCOUNT.name(), APPLICATION_STATUS.INACTIVE);
+            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(
+                DELETE_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
             if (!templateReg.isPresent()) {
                 logger.info("No Template Found With %s", RESET_USER_PASSWORD.name());
                 return false;

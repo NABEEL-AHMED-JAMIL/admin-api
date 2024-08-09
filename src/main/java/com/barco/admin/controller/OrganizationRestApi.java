@@ -4,10 +4,8 @@ import com.barco.admin.service.OrganizationService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.common.utility.excel.ExcelUtil;
-import com.barco.model.dto.request.FileUploadRequest;
 import com.barco.model.dto.request.OrganizationRequest;
 import com.barco.model.dto.response.AppResponse;
-import com.barco.model.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -172,25 +170,6 @@ public class OrganizationRestApi {
             return ResponseEntity.ok().headers(headers).body(this.organizationService.downloadOrg(payload).toByteArray());
         } catch (Exception ex) {
             logger.error("An error occurred while downloadOrg ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- uploadOrg
-     * @apiNote :- Api use to upload the Org
-     * @return ResponseEntity<?> uploadOrg
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value = "/uploadOrg", method = RequestMethod.POST)
-    public ResponseEntity<?> uploadOrg(FileUploadRequest payload) {
-        try {
-            if (!BarcoUtil.isNull(payload.getFile())) {
-                return new ResponseEntity<>(this.organizationService.uploadOrg(payload), HttpStatus.OK);
-            }
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.DATA_NOT_FOUND), HttpStatus.BAD_REQUEST);
-        } catch (Exception ex) {
-            logger.error("An error occurred while uploadOrg ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

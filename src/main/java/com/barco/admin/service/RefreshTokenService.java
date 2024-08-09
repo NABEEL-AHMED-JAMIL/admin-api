@@ -10,6 +10,8 @@ import java.util.Optional;
  */
 public interface RefreshTokenService extends RootService {
 
+    public AppResponse fetchSessionStatistics() throws Exception;
+
     public AppResponse fetchByAllRefreshToken(TokenRefreshRequest payload) throws Exception;
 
     public Optional<RefreshToken> findByToken(String token) throws Exception;

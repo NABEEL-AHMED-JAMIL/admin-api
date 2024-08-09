@@ -15,6 +15,7 @@ import com.barco.model.util.lookup.APPLICATION_STATUS;
 import com.barco.model.util.lookup.GLookup;
 import com.barco.model.util.lookup.LookupUtil;
 import org.slf4j.Logger;
+import com.barco.model.util.lookup.EVENT_BRIDGE_TYPE;
 import org.slf4j.LoggerFactory;
 import com.barco.model.dto.response.AppResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Nabeel Ahmed
@@ -89,8 +93,7 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken refreshToken = this.refreshTokenService.createRefreshToken(userDetails.getId(), payload.getIpAddress());
         AuthResponse authResponse = new AuthResponse(jwtToken, refreshToken.getToken());
         authResponse.setIpAddress(payload.getIpAddress());
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.USER_SUCCESSFULLY_AUTHENTICATE,
-            this.getAuthResponseDetail(authResponse, userDetails));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.USER_SUCCESSFULLY_AUTHENTICATE, this.getAuthResponseDetail(authResponse, userDetails));
     }
 
     /**
@@ -141,8 +144,7 @@ public class AuthServiceImpl implements AuthService {
         }
         // register user will get the default profile USER
         Optional<Profile> userProfile = this.profileRepository.findProfileByProfileName(
-            this.lookupDataCacheService.getParentLookupDataByParentLookupType(
-               LookupUtil.DEFAULT_PROFILE).getLookupValue());
+            this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.DEFAULT_PROFILE).getLookupValue());
         if (userProfile.isPresent()) {
             appUser.setProfile(userProfile.get());
         }
@@ -150,19 +152,32 @@ public class AuthServiceImpl implements AuthService {
         appUser.setAccountType(ACCOUNT_TYPE.NORMAL);
         this.appUserRepository.save(appUser);
         // notification & register email
-        Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(this.lookupDataCacheService
-            .getParentLookupDataByParentLookupType(LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
+            this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
         if (superAdmin.isPresent()) {
-            appUser.setCreatedBy(superAdmin.get());
-            appUser.setUpdatedBy(superAdmin.get());
+            // linking all env variable to the user
+            List<EnvVariables> envVariablesList = this.envVariablesRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
+                superAdmin.get(), APPLICATION_STATUS.DELETE);
+            for (EnvVariables envVariables : envVariablesList) {
+                this.appUserEnvRepository.save(getAppUserEnv(superAdmin.get(), appUser, envVariables));
+            }
+            // event bridge only receiver event bridge if exist and create by the main user
+            List<EventBridge> eventBridges = this.eventBridgeRepository.findAllByBridgeTypeInAndCreatedByAndStatusNotOrderByDateCreatedDesc(
+                Arrays.asList(EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVE, EVENT_BRIDGE_TYPE.REPORT_API_SEND), superAdmin.get(), APPLICATION_STATUS.DELETE);
+            for (EventBridge eventBridge : eventBridges) {
+                LinkEBURequest linkEBURequest = new LinkEBURequest();
+                linkEBURequest.setId(eventBridge.getId());
+                linkEBURequest.setAppUserId(appUser.getId());
+                linkEBURequest.setLinked(Boolean.TRUE);
+                linkEBURequest.setSessionUser(new SessionUser(appUser.getUsername()));
+                this.eventBridgeService.linkEventBridgeWithUser(linkEBURequest);
+            }
+            this.sendNotification(superAdmin.get().getUsername(), MessageUtil.REQUESTED_FOR_NEW_ACCOUNT,
+                String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()),
+                superAdmin.get(), this.lookupDataCacheService, this.notificationService);
         }
-        this.sendRegisterUserEmail(appUser, this.lookupDataCacheService,
-             this.templateRegRepository, this.emailMessagesFactory);
-        this.sendNotification(superAdmin.get().getUsername(), MessageUtil.REQUESTED_FOR_NEW_ACCOUNT,
-            String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()),
-            superAdmin.get(), this.lookupDataCacheService, this.notificationService);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.USER_SUCCESSFULLY_REGISTER,
-             appUser.getUsername()), payload);
+        this.sendRegisterUserEmail(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.USER_SUCCESSFULLY_REGISTER, appUser.getUsername()), payload);
     }
 
     /**
@@ -176,14 +191,13 @@ public class AuthServiceImpl implements AuthService {
         if (BarcoUtil.isNull(payload.getEmail())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EMAIL_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(payload.getEmail(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(
+            payload.getEmail(), APPLICATION_STATUS.ACTIVE);
         if (appUser.isPresent()) {
             // email and notification
-            this.sendForgotPasswordEmail(appUser.get(), this.lookupDataCacheService,
-                this.templateRegRepository, this.emailMessagesFactory, this.jwtUtils);
-            this.sendNotification(appUser.get().getUsername(), MessageUtil.FORGOT_PASSWORD,
-                MessageUtil.FORGOT_EMAIL_SEND_TO_YOUR_EMAIL, appUser.get(),
-                this.lookupDataCacheService, this.notificationService);
+            this.sendForgotPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory, this.jwtUtils);
+            this.sendNotification(appUser.get().getUsername(), MessageUtil.FORGOT_PASSWORD, MessageUtil.FORGOT_EMAIL_SEND_TO_YOUR_EMAIL, appUser.get(),
+                 this.lookupDataCacheService, this.notificationService);
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.EMAIL_SEND_SUCCESSFULLY);
         }
         return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACCOUNT_NOT_EXIST);
@@ -203,15 +217,12 @@ public class AuthServiceImpl implements AuthService {
         } else if (BarcoUtil.isNull(payload.getNewPassword())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.PASSWORD_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(
-            payload.getSessionUser().getEmail(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(payload.getSessionUser().getEmail(), APPLICATION_STATUS.ACTIVE);
         if (appUser.isPresent()) {
             appUser.get().setPassword(this.passwordEncoder.encode(payload.getNewPassword()));
             this.appUserRepository.save(appUser.get());
-            this.sendResetPasswordEmail(appUser.get(), this.lookupDataCacheService,
-                this.templateRegRepository, this.emailMessagesFactory);
-            this.sendNotification(appUser.get().getUsername(), MessageUtil.RESET_PASSWORD,
-                MessageUtil.RESET_EMAIL_SEND_TO_YOUR_EMAIL, appUser.get(),
+            this.sendResetPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
+            this.sendNotification(appUser.get().getUsername(), MessageUtil.RESET_PASSWORD, MessageUtil.RESET_EMAIL_SEND_TO_YOUR_EMAIL, appUser.get(),
                 this.lookupDataCacheService, this.notificationService);
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.EMAIL_SEND_SUCCESSFULLY);
         }
@@ -246,6 +257,40 @@ public class AuthServiceImpl implements AuthService {
     public AppResponse logoutAppUser(TokenRefreshRequest payload) throws Exception {
         logger.info("Request logoutAppUser :- " + payload);
         return this.refreshTokenService.deleteRefreshToken(payload);
+    }
+
+    /**
+     * Method use to wrap the auth response
+     * @param authResponse
+     * @param userDetails
+     * @return AuthResponse
+     * */
+    public AuthResponse getAuthResponseDetail(AuthResponse authResponse, UserSessionDetail userDetails) throws Exception {
+        authResponse.setId(userDetails.getId());
+        authResponse.setFirstName(userDetails.getFirstName());
+        authResponse.setLastName(userDetails.getLastName());
+        authResponse.setEmail(userDetails.getEmail());
+        authResponse.setUsername(userDetails.getUsername());
+        authResponse.setProfileImage(userDetails.getProfileImage());
+        authResponse.setIpAddress(userDetails.getIpAddress());
+        authResponse.setRoles(userDetails.getAuthorities().stream()
+            .map(grantedAuthority -> grantedAuthority.getAuthority())
+            .collect(Collectors.toList()));
+        if (!BarcoUtil.isNull(userDetails.getProfile())) {
+            authResponse.setProfile(this.getProfilePermissionResponse(userDetails.getProfile()));
+        }
+        // account type
+        if (!BarcoUtil.isNull(userDetails.getAccountType())) {
+            GLookup accountType = GLookup.getGLookup(this.lookupDataCacheService
+                .getChildLookupDataByParentLookupTypeAndChildLookupCode(ACCOUNT_TYPE.getName(),
+                    Long.valueOf(userDetails.getAccountType().ordinal())));
+            authResponse.setAccountType(accountType);
+        }
+        // organization
+        if (!BarcoUtil.isNull(userDetails.getOrganization())) {
+            authResponse.setOrganization(this.getOrganizationResponse(userDetails.getOrganization()));
+        }
+        return authResponse;
     }
 
 }

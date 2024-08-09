@@ -69,6 +69,8 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
+        } else if (!BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         }
         Optional<TemplateReg> templateRegOpt = this.templateRegRepository.findByIdAndUsername(
             payload.getId(), payload.getSessionUser().getUsername());
@@ -112,8 +114,8 @@ public class TemplateRegServiceImpl implements TemplateRegService {
             return validationResponse;
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(payload.getSessionUser().getUsername()).stream()
-                .map(this::getTemplateRegResponse).collect(Collectors.toList()));
+            this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(payload.getSessionUser().getUsername())
+                .stream().map(this::getTemplateRegResponse).collect(Collectors.toList()));
     }
 
     /**
