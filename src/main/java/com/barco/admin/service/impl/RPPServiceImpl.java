@@ -1043,16 +1043,15 @@ public class RPPServiceImpl implements RPPService {
     }
 
     /**
-     * Method use to fetch role with root user
+     * Method use to fetch role with user
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchLinkRoleWithRootUser(LinkRURequest payload) throws Exception {
-        logger.info("Request fetchLinkRoleWithRootUser :- " + payload);
+    public AppResponse fetchLinkRoleWithUser(LinkRURequest payload) throws Exception {
+        logger.info("Request fetchLinkRoleWithUser :- " + payload);
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            this.lookupDataCacheService.getParentLookupDataByParentLookupType(
-                 LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
+            this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getRoleId())) {
@@ -1062,8 +1061,7 @@ public class RPPServiceImpl implements RPPService {
         if (!role.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ROLE_NOT_FOUND_WITH_ID, payload.getRoleId()), payload);
         }
-        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_ROLE_WITH_ROOT_USER,
-            role.get().getId(), appUser.get().getId(), appUser.get().getId()));
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_ROLE_WITH_USER, role.get().getId()));
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -1074,13 +1072,13 @@ public class RPPServiceImpl implements RPPService {
     }
 
     /**
-     * Method use to link role with root user
+     * Method use to link role with user
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse linkRoleWithRootUser(LinkRURequest payload) throws Exception {
-        logger.info("Request linkRoleWithRootUser :- " + payload);
+    public AppResponse linkRoleWithUser(LinkRURequest payload) throws Exception {
+        logger.info("Request linkRoleWithUser :- " + payload);
         Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!superAdmin.isPresent()) {
@@ -1112,16 +1110,15 @@ public class RPPServiceImpl implements RPPService {
     }
 
     /**
-     * Method use to fetch role with root user
+     * Method use to fetch role with user
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchLinkProfileWithRootUser(LinkPURequest payload) throws Exception {
-        logger.info("Request fetchLinkProfileWithRootUser :- " + payload);
+    public AppResponse fetchLinkProfileWithUser(LinkPURequest payload) throws Exception {
+        logger.info("Request fetchLinkProfileWithUser :- " + payload);
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            this.lookupDataCacheService.getParentLookupDataByParentLookupType(
-                LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
+            this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getProfileId())) {
@@ -1131,8 +1128,7 @@ public class RPPServiceImpl implements RPPService {
         if (!profile.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.PROFILE_NOT_FOUND_WITH_ID, payload.getProfileId()), payload);
         }
-        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_PROFILE_WITH_ROOT_USER,
-            profile.get().getId(), appUser.get().getId(), appUser.get().getId()));
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_PROFILE_WITH_USER, profile.get().getId()));
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -1143,13 +1139,13 @@ public class RPPServiceImpl implements RPPService {
     }
 
     /**
-     * Method use to fetch profile with root user
+     * Method use to fetch profile with user
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse linkProfileWithRootUser(LinkPURequest payload) throws Exception {
-        logger.info("Request linkProfileWithRootUser :- " + payload);
+    public AppResponse linkProfileWithUser(LinkPURequest payload) throws Exception {
+        logger.info("Request linkProfileWithUser :- " + payload);
         Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!superAdmin.isPresent()) {
