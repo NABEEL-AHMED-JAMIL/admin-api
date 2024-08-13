@@ -19,8 +19,6 @@ public interface AppUserService extends RootService {
 
     public AppResponse deleteAllAppUserAccount(AppUserRequest payload) throws Exception;
 
-    public ByteArrayOutputStream downloadAppUserAccountTemplateFile() throws Exception;
-
     public ByteArrayOutputStream downloadAppUserAccount(AppUserRequest payload) throws Exception;
 
     public AppResponse fetchAllAppUserAccount(AppUserRequest payload) throws Exception;

@@ -118,26 +118,6 @@ public class AppUserRestApi {
     }
 
     /**
-     * @apiName :- downloadAppUserAccountTemplateFile
-     * @apiNote :- Api use to download app user account template file
-     * @return ResponseEntity<?> downloadAppUserAccountTemplateFile
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
-    @RequestMapping(value = "/downloadAppUserAccountTemplateFile", method = RequestMethod.GET)
-    public ResponseEntity<?> downloadAppUserAccountTemplateFile() {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
-            String fileName = "BatchAppUserAccountDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
-            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
-            return ResponseEntity.ok().headers(headers).body(this.appUserService.downloadAppUserAccountTemplateFile().toByteArray());
-        } catch (Exception ex) {
-            logger.error("An error occurred while downloadAppUserAccountTemplateFile xlsx file", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
      * @apiName :- downloadAppUserAccount
      * @apiNote :- Api use to download app user account
      * @return ResponseEntity<?> AppUserRequest

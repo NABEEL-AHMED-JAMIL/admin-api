@@ -312,7 +312,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         List<FormResponse> formResponses = result.stream()
             .map(genForm -> {
-                FormResponse formResponse = getFormResponse(genForm);
+                FormResponse formResponse = this.getFormResponse(genForm);
                 formResponse.setTotalStt(this.genFormLinkSourceTaskTypeRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
                 formResponse.setTotalSection(this.genSectionLinkGenFormRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
                 return formResponse;

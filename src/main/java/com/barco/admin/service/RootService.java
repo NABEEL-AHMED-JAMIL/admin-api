@@ -313,8 +313,7 @@ public interface RootService {
         appUserResponse.setDateCreated(appUser.getDateCreated());
         appUserResponse.setDateUpdated(appUser.getDateUpdated());
         appUserResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(appUser.getStatus().getLookupType()));
-        appUserResponse.setRoles(appUser.getAppUserRoles().stream()
-            .map(role -> role.getName()).collect(Collectors.toList()));
+        appUserResponse.setRoles(appUser.getAppUserRoles().stream().map(role -> role.getName()).collect(Collectors.toList()));
         if (!BarcoUtil.isNull(appUser.getProfile())) {
             appUserResponse.setProfile(this.getProfilePermissionResponse(appUser.getProfile()));
         }
@@ -377,8 +376,8 @@ public interface RootService {
      * @param bulkExcel
      * @param sheetFiled
      * */
-    public default ByteArrayOutputStream downloadTemplateFile(
-        String tempStoreDirectory, BulkExcel bulkExcel, SheetFiled sheetFiled) throws Exception {
+    public default ByteArrayOutputStream downloadTemplateFile(String tempStoreDirectory,
+        BulkExcel bulkExcel, SheetFiled sheetFiled) throws Exception {
         String basePath = tempStoreDirectory + File.separator;
         ClassLoader cl = this.getClass().getClassLoader();
         InputStream inputStream = cl.getResourceAsStream(bulkExcel.BATCH);
@@ -416,10 +415,8 @@ public interface RootService {
     public default boolean sendRegisterUserEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
         try {
-            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(
-                LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(
-                REGISTER_USER.name(), APPLICATION_STATUS.ACTIVE);
+            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
+            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(REGISTER_USER.name(), APPLICATION_STATUS.ACTIVE);
             if (!templateReg.isPresent()) {
                 logger.info("No Template Found With %s", REGISTER_USER.name());
                 return false;
@@ -427,8 +424,7 @@ public interface RootService {
             Map<String, Object> metaData = new HashMap<>();
             metaData.put(EmailUtil.USERNAME, appUser.getUsername());
             metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream()
-                .map(role -> role.getName()).collect(Collectors.joining(",")));
+            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream().map(role -> role.getName()).collect(Collectors.joining(",")));
             metaData.put(EmailUtil.PROFILE, appUser.getProfile().getProfileName());
             // email send request
             EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
@@ -463,22 +459,19 @@ public interface RootService {
                 templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(BLOCK_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
             }
             if (!templateReg.isPresent()) {
-                logger.info("No Template Found With %s", (appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE) ?
-                    ACTIVE_USER_ACCOUNT.name() : BLOCK_USER_ACCOUNT.name()));
+                logger.info("No Template Found With %s", (appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE) ? ACTIVE_USER_ACCOUNT.name() : BLOCK_USER_ACCOUNT.name()));
                 return false;
             }
             Map<String, Object> metaData = new HashMap<>();
             metaData.put(EmailUtil.USERNAME, appUser.getUsername());
             metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream()
-                .map(role -> role.getName()).collect(Collectors.joining(",")));
+            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream().map(role -> role.getName()).collect(Collectors.joining(",")));
             metaData.put(EmailUtil.PROFILE, appUser.getProfile().getProfileName());
             // email send request
             EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
             emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
             emailMessageRequest.setRecipients(appUser.getEmail());
-            emailMessageRequest.setSubject(appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE) ?
-                EmailUtil.YOUR_ACCOUNT_IS_NOW_ACTIVE : EmailUtil.YOUR_ACCOUNT_HAS_BEEN_BLOCKED);
+            emailMessageRequest.setSubject(appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE) ? EmailUtil.YOUR_ACCOUNT_IS_NOW_ACTIVE : EmailUtil.YOUR_ACCOUNT_HAS_BEEN_BLOCKED);
             emailMessageRequest.setBodyMap(metaData);
             emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
             logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
@@ -515,8 +508,7 @@ public interface RootService {
             Map<String, Object> metaData = new HashMap<>();
             metaData.put(EmailUtil.USERNAME, appUser.getUsername());
             metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.FORGOT_PASSWORD_URL, forgotPasswordUrl.getLookupValue()
-                +"?token="+ jwtUtils.generateTokenFromUsernameResetPassword(forgotPasswordRequest.toString()));
+            metaData.put(EmailUtil.FORGOT_PASSWORD_URL, forgotPasswordUrl.getLookupValue() +"?token="+ jwtUtils.generateTokenFromUsernameResetPassword(forgotPasswordRequest.toString()));
             // email send request
             EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
             emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
@@ -542,10 +534,8 @@ public interface RootService {
     public default boolean sendResetPasswordEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
         try {
-            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(
-                LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(
-                RESET_USER_PASSWORD.name(), APPLICATION_STATUS.ACTIVE);
+            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
+            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(RESET_USER_PASSWORD.name(), APPLICATION_STATUS.ACTIVE);
             if (!templateReg.isPresent()) {
                 logger.info("No Template Found With %s", RESET_USER_PASSWORD.name());
                 return false;
@@ -580,10 +570,8 @@ public interface RootService {
     public default boolean sendCloseUserAccountEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
         try {
-            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(
-                LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(
-                DELETE_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
+            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
+            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(DELETE_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
             if (!templateReg.isPresent()) {
                 logger.info("No Template Found With %s", RESET_USER_PASSWORD.name());
                 return false;
@@ -626,7 +614,6 @@ public interface RootService {
 
     /**
      * Method use to send notification
-     * @param sendTo
      * @param title
      * @param message
      * @param appUser
@@ -687,8 +674,7 @@ public interface RootService {
         appUserRoleAccess.setRole(role);
         appUserRoleAccess.setAppUser(appUser);
         appUserRoleAccess.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (role.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
-            appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
+        if (role.getStatus().equals(APPLICATION_STATUS.INACTIVE) || appUser.getStatus().equals(APPLICATION_STATUS.INACTIVE)) {
             appUserRoleAccess.setStatus(APPLICATION_STATUS.INACTIVE);
         }
         return appUserRoleAccess;
@@ -708,8 +694,7 @@ public interface RootService {
         appUserRoleAccess.setProfile(profile);
         appUserRoleAccess.setAppUser(appUser);
         appUserRoleAccess.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (profile.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
-            appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
+        if (profile.getStatus().equals(APPLICATION_STATUS.INACTIVE) || appUser.getStatus().equals(APPLICATION_STATUS.INACTIVE)) {
             appUserRoleAccess.setStatus(APPLICATION_STATUS.INACTIVE);
         }
         return appUserRoleAccess;
@@ -753,7 +738,8 @@ public interface RootService {
      * @param apiTaskType
      * @return ApiTaskTypeResponse
      * */
-    public default ApiTaskTypeResponse getApiTaskTypeResponse(ApiTaskType apiTaskType, LookupDataCacheService lookupDataCacheService) {
+    public default ApiTaskTypeResponse getApiTaskTypeResponse(ApiTaskType apiTaskType,
+        LookupDataCacheService lookupDataCacheService) {
         ApiTaskTypeResponse apiTaskTypeResponse = new ApiTaskTypeResponse();
         apiTaskTypeResponse.setApiTaskTypeId(apiTaskType.getId());
         apiTaskTypeResponse.setApiUrl(apiTaskType.getApiUrl());
@@ -843,14 +829,12 @@ public interface RootService {
      * @param adminUser
      * */
     public default void enabledDisabledProfilePermissionsAccesses(AppUser appUser, AppUser adminUser) {
-        if (!BarcoUtil.isNull(appUser.getProfilePermissionsAccesses())
-                && appUser.getProfilePermissionsAccesses().size() > 0) {
-            appUser.getProfilePermissionsAccesses().stream()
-                .map(profileAccess -> {
-                    profileAccess.setStatus(appUser.getStatus());
-                    profileAccess.setUpdatedBy(adminUser);
-                    return profileAccess;
-                }).collect(Collectors.toList());
+        if (!BarcoUtil.isNull(appUser.getProfilePermissionsAccesses()) && appUser.getProfilePermissionsAccesses().size() > 0) {
+            appUser.getProfilePermissionsAccesses().stream().map(profileAccess -> {
+                profileAccess.setStatus(appUser.getStatus());
+                profileAccess.setUpdatedBy(adminUser);
+                return profileAccess;
+            }).collect(Collectors.toList());
         }
     }
 
@@ -861,12 +845,11 @@ public interface RootService {
      * */
     public default void enabledDisabledAppUserRoleAccesses(AppUser appUser, AppUser adminUser) {
         if (!BarcoUtil.isNull(appUser.getAppUserRoleAccesses()) && appUser.getAppUserRoleAccesses().size() > 0) {
-            appUser.getAppUserRoleAccesses().stream()
-                .map(appUserRoleAccess -> {
-                    appUserRoleAccess.setStatus(appUser.getStatus());
-                    appUserRoleAccess.setUpdatedBy(adminUser);
-                    return appUserRoleAccess;
-                }).collect(Collectors.toList());
+            appUser.getAppUserRoleAccesses().stream().map(appUserRoleAccess -> {
+                appUserRoleAccess.setStatus(appUser.getStatus());
+                appUserRoleAccess.setUpdatedBy(adminUser);
+                return appUserRoleAccess;
+            }).collect(Collectors.toList());
         }
     }
 
@@ -877,12 +860,11 @@ public interface RootService {
      * */
     public default void enabledDisabledAppUserEnvs(AppUser appUser, AppUser adminUser) {
         if (!BarcoUtil.isNull(appUser.getAppUserEnvs()) && appUser.getAppUserEnvs().size() > 0) {
-            appUser.getAppUserEnvs().stream()
-                .map(appUserEnv -> {
-                    appUserEnv.setStatus(appUser.getStatus());
-                    appUserEnv.setUpdatedBy(adminUser);
-                    return appUserEnv;
-                }).collect(Collectors.toList());
+            appUser.getAppUserEnvs().stream().map(appUserEnv -> {
+                appUserEnv.setStatus(appUser.getStatus());
+                appUserEnv.setUpdatedBy(adminUser);
+                return appUserEnv;
+            }).collect(Collectors.toList());
         }
     }
 
@@ -893,12 +875,11 @@ public interface RootService {
      * */
     public default void enabledDisabledAppUserEventBridges(AppUser appUser, AppUser adminUser) {
         if (!BarcoUtil.isNull(appUser.getAppUserEventBridges()) && appUser.getAppUserEventBridges().size() > 0) {
-            appUser.getAppUserEventBridges().stream()
-                .map(appUserEventBridge -> {
-                    appUserEventBridge.setStatus(appUser.getStatus());
-                    appUserEventBridge.setUpdatedBy(adminUser);
-                    return appUserEventBridge;
-                }).collect(Collectors.toList());
+            appUser.getAppUserEventBridges().stream().map(appUserEventBridge -> {
+                appUserEventBridge.setStatus(appUser.getStatus());
+                appUserEventBridge.setUpdatedBy(adminUser);
+                return appUserEventBridge;
+            }).collect(Collectors.toList());
         }
     }
 
@@ -921,15 +902,16 @@ public interface RootService {
      * @param appUser
      * @param envVariables
      * */
-    public default AppUserEnv getAppUserEnv(AppUser superAdmin, AppUser appUser, EnvVariables envVariables) {
+    public default AppUserEnv getAppUserEnv(AppUser superAdmin,
+        AppUser appUser, EnvVariables envVariables) {
         AppUserEnv appUserEnv = new AppUserEnv();
         appUserEnv.setCreatedBy(superAdmin);
         appUserEnv.setUpdatedBy(superAdmin);
         appUserEnv.setAppUser(appUser);
         appUserEnv.setEnvVariables(envVariables);
         appUserEnv.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (envVariables.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
-                appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
+        if (envVariables.getStatus().equals(APPLICATION_STATUS.INACTIVE)
+            || appUser.getStatus().equals(APPLICATION_STATUS.INACTIVE)) {
             appUserEnv.setStatus(APPLICATION_STATUS.INACTIVE);
         }
         return appUserEnv;
@@ -941,7 +923,8 @@ public interface RootService {
      * @param appUser
      * @param eventBridge
      * */
-    public default AppUserEventBridge getAppUserEventBridge(AppUser superAdmin, AppUser appUser, EventBridge eventBridge) {
+    public default AppUserEventBridge getAppUserEventBridge(AppUser superAdmin,
+        AppUser appUser, EventBridge eventBridge) {
         AppUserEventBridge appUserEventBridge = new AppUserEventBridge();
         appUserEventBridge.setCreatedBy(superAdmin);
         appUserEventBridge.setUpdatedBy(superAdmin);
@@ -949,8 +932,8 @@ public interface RootService {
         appUserEventBridge.setEventBridge(eventBridge);
         appUserEventBridge.setTokenId(UUID.randomUUID().toString());
         appUserEventBridge.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (eventBridge.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType()) ||
-            appUser.getStatus().getLookupType().equals(APPLICATION_STATUS.INACTIVE.getLookupType())) {
+        if (eventBridge.getStatus().equals(APPLICATION_STATUS.INACTIVE)
+            || appUser.getStatus().equals(APPLICATION_STATUS.INACTIVE)) {
             appUserEventBridge.setStatus(APPLICATION_STATUS.INACTIVE);
         }
         return appUserEventBridge;
@@ -989,6 +972,11 @@ public interface RootService {
         return enVariables;
     }
 
+    /**
+     * Method use to get teh event bridge response
+     * @param appUserEventBridge
+     * @return EventBridgeResponse
+     * */
     public default EventBridgeResponse getEventBridgeResponse(AppUserEventBridge appUserEventBridge) {
         EventBridgeResponse eventBridgeResponse = new EventBridgeResponse();
         eventBridgeResponse.setTokenId(appUserEventBridge.getTokenId());
@@ -1053,7 +1041,7 @@ public interface RootService {
         } else if (BarcoUtil.isNull(payload.getLinked())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.LINKED_MISSING);
         }
-        return null;
+        return (AppResponse) BarcoUtil.NULL;
     }
 
     /**
@@ -1084,28 +1072,22 @@ public interface RootService {
      * */
     public default Integer getLinkEventBridgeCount(EventBridge eventBridge) {
         Integer totalCount = 0;
-        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings())
-            && eventBridge.getReportPdfBridgeSettings().size() > 0) {
+        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings()) && eventBridge.getReportPdfBridgeSettings().size() > 0) {
             totalCount += eventBridge.getReportPdfBridgeSettings().size();
         }
-        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings())
-            && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
+        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings()) && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
             totalCount += eventBridge.getReportXlsxBridgeSettings().size();
         }
-        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings())
-            && eventBridge.getReportCsvBridgeSettings().size() > 0) {
+        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings()) && eventBridge.getReportCsvBridgeSettings().size() > 0) {
             totalCount += eventBridge.getReportCsvBridgeSettings().size();
         }
-        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings())
-            && eventBridge.getReportDataBridgeSettings().size() > 0) {
+        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings()) && eventBridge.getReportDataBridgeSettings().size() > 0) {
             totalCount += eventBridge.getReportDataBridgeSettings().size();
         }
-        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings())
-            && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
+        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings()) && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
             totalCount += eventBridge.getReportFistDimBridgeSettings().size();
         }
-        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings())
-            && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
+        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings()) && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
             totalCount += eventBridge.getReportSecDimBridgeSettings().size();
         }
         return totalCount;
@@ -1117,58 +1099,46 @@ public interface RootService {
      * */
     public default void nullifyReportSettingReferences(EventBridge eventBridge) {
         // null all event id for pdf
-        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings())
-            && eventBridge.getReportPdfBridgeSettings().size() > 0) {
-            eventBridge.getReportPdfBridgeSettings()
-                .stream().map(reportSetting -> {
-                    reportSetting.setPdfBridge(null);
-                    return reportSetting;
-                }).collect(Collectors.toList());
+        if (!BarcoUtil.isNull(eventBridge.getReportPdfBridgeSettings()) && eventBridge.getReportPdfBridgeSettings().size() > 0) {
+            eventBridge.getReportPdfBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setPdfBridge((EventBridge) BarcoUtil.NULL);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
         // null all event id for xlsx
-        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings()) &&
-            eventBridge.getReportXlsxBridgeSettings().size() > 0) {
-            eventBridge.getReportXlsxBridgeSettings()
-                .stream().map(reportSetting -> {
-                    reportSetting.setXlsxBridge(null);
-                    return reportSetting;
-                }).collect(Collectors.toList());
+        if (!BarcoUtil.isNull(eventBridge.getReportXlsxBridgeSettings()) && eventBridge.getReportXlsxBridgeSettings().size() > 0) {
+            eventBridge.getReportXlsxBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setXlsxBridge((EventBridge) BarcoUtil.NULL);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
         // null all event id for csv
-        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings())
-            && eventBridge.getReportCsvBridgeSettings().size() > 0) {
-            eventBridge.getReportCsvBridgeSettings()
-                .stream().map(reportSetting -> {
-                    reportSetting.setCsvBridge(null);
-                    return reportSetting;
-                }).collect(Collectors.toList());
+        if (!BarcoUtil.isNull(eventBridge.getReportCsvBridgeSettings()) && eventBridge.getReportCsvBridgeSettings().size() > 0) {
+            eventBridge.getReportCsvBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setCsvBridge((EventBridge) BarcoUtil.NULL);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
         // null all event id for data
-        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings())
-            && eventBridge.getReportDataBridgeSettings().size() > 0) {
-            eventBridge.getReportDataBridgeSettings()
-                .stream().map(reportSetting -> {
-                    reportSetting.setDataBridge(null);
-                    return reportSetting;
-                }).collect(Collectors.toList());
+        if (!BarcoUtil.isNull(eventBridge.getReportDataBridgeSettings()) && eventBridge.getReportDataBridgeSettings().size() > 0) {
+            eventBridge.getReportDataBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setDataBridge((EventBridge) BarcoUtil.NULL);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
         // null all event id for fist dim
-        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings())
-            && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
-            eventBridge.getReportFistDimBridgeSettings()
-                .stream().map(reportSetting -> {
-                    reportSetting.setFirstDimensionBridge(null);
-                    return reportSetting;
-                }).collect(Collectors.toList());
+        if (!BarcoUtil.isNull(eventBridge.getReportFistDimBridgeSettings()) && eventBridge.getReportFistDimBridgeSettings().size() > 0) {
+            eventBridge.getReportFistDimBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setFirstDimensionBridge((EventBridge) BarcoUtil.NULL);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
         // null all event id for sec dim
-        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings())
-            && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
-            eventBridge.getReportSecDimBridgeSettings()
-                .stream().map(reportSetting -> {
-                    reportSetting.setSecondDimensionBridge(null);
-                    return reportSetting;
-                }).collect(Collectors.toList());
+        if (!BarcoUtil.isNull(eventBridge.getReportSecDimBridgeSettings()) && eventBridge.getReportSecDimBridgeSettings().size() > 0) {
+            eventBridge.getReportSecDimBridgeSettings().stream().map(reportSetting -> {
+                reportSetting.setSecondDimensionBridge((EventBridge) BarcoUtil.NULL);
+                return reportSetting;
+            }).collect(Collectors.toList());
         }
     }
 

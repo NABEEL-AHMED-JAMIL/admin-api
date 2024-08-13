@@ -262,17 +262,6 @@ public class AppUserServiceImpl implements AppUserService {
     }
 
     /**
-     * Method use to download app user account template
-     * @return ByteArrayOutputStream
-     * */
-    @Override
-    public ByteArrayOutputStream downloadAppUserAccountTemplateFile() throws Exception {
-        logger.info("Request downloadAppUserAccountTemplateFile ");
-        return this.downloadTemplateFile(this.tempStoreDirectory, this.bulkExcel,
-            this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.APP_USER));
-    }
-
-    /**
      * Method use to download app user account
      * @param payload
      * @return ByteArrayOutputStream
@@ -298,12 +287,22 @@ public class AppUserServiceImpl implements AppUserService {
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
         Iterator<AppUser> appUserIterator;
-        if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
-            appUserIterator = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndOrgIdAndAppUserIdInAndStatusNotOrderByDateCreatedDesc(
-                startDate, endDate, appUser.get(), appUser.get().getOrganization(), payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
+        if (!payload.isStandalone()) {
+            if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+                appUserIterator = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndOrgIdAndAppUserIdInAndStatusNotOrderByDateCreatedDesc(
+                    startDate, endDate, appUser.get(), appUser.get().getOrganization(), payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
+            } else {
+                appUserIterator = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndOrgIdAndStatusNotOrderByDateCreatedDesc(
+                    startDate, endDate, appUser.get(), appUser.get().getOrganization(), APPLICATION_STATUS.DELETE).iterator();
+            }
         } else {
-            appUserIterator = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserParentAndOrgIdAndStatusNotOrderByDateCreatedDesc(
-                startDate, endDate, appUser.get(), appUser.get().getOrganization(), APPLICATION_STATUS.DELETE).iterator();
+            if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+                appUserIterator = this.appUserRepository.findAllByDateCreatedBetweenAndAppUserIdInAndStatusNotOrderByDateCreatedDesc(
+                    startDate, endDate, payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
+            } else {
+                appUserIterator = this.appUserRepository.findAllByDateCreatedBetweenAndStatusNotOrderByDateCreatedDesc(
+                    startDate, endDate, APPLICATION_STATUS.DELETE).iterator();
+            }
         }
         while (appUserIterator.hasNext()) {
             AppUser appUserIter = appUserIterator.next();
