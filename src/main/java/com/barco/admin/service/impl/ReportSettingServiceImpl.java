@@ -202,8 +202,8 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         }
         List<ReportSetting> reportSettings;
         if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
-            Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-            Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+            Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+            Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
             reportSettings = this.reportSettingRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(
                 startDate, endDate, payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
         } else {
@@ -257,8 +257,8 @@ public class ReportSettingServiceImpl implements ReportSettingService {
         }
         List<ReportSetting> reportSettings;
         if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
-            Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-            Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+            Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+            Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
             reportSettings = this.reportSettingRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(
                 startDate, endDate, payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
         } else {

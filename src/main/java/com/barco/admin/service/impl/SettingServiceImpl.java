@@ -4,6 +4,7 @@ import com.barco.admin.service.SettingService;
 import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.response.QueryResponse;
 import com.barco.model.pojo.AppUser;
+import com.barco.model.repository.ETLCountryRepository;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -44,6 +45,8 @@ public class SettingServiceImpl implements SettingService {
     @Autowired
     private AppUserRepository appUserRepository;
     @Autowired
+    private ETLCountryRepository etlCountryRepository;
+    @Autowired
     private AuthenticationManager authenticationManager;
 
     public SettingServiceImpl() {}
@@ -78,6 +81,26 @@ public class SettingServiceImpl implements SettingService {
         settingDashboard.put(SESSION_COUNT_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.SESSION_COUNT_STATISTICS, appUser.get().getId())));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, settingDashboard);
+    }
+
+    /**
+     * Method use to fetch the detail for country
+     * @param sessionUser
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchCountryData(SessionUser sessionUser) throws Exception {
+        logger.info("Request fetchCountryData :- " + sessionUser);
+        if (BarcoUtil.isNull(sessionUser.getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
+            sessionUser.getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUser.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+            this.etlCountryRepository.findAll());
     }
 
     /**

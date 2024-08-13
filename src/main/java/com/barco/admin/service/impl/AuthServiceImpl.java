@@ -26,7 +26,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -85,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
         logger.info("Request signInAppUser :- " + payload);
         // spring auth manager will call user detail service
         Authentication authentication = this.authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(payload.getUsername(), payload.getPassword()));
+             new UsernamePasswordAuthenticationToken(payload.getUsername(), payload.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         // get the user detail from authentication
         UserSessionDetail userDetails = (UserSessionDetail) authentication.getPrincipal();
@@ -137,8 +136,7 @@ public class AuthServiceImpl implements AuthService {
          * **/
         // register user will get the default role USER
         Optional<Role> userRole = this.roleRepository.findByNameAndStatus(
-            this.lookupDataCacheService.getParentLookupDataByParentLookupType(
-                LookupUtil.DEFAULT_ROLE).getLookupValue(), APPLICATION_STATUS.ACTIVE);
+            this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.DEFAULT_ROLE).getLookupValue(), APPLICATION_STATUS.ACTIVE);
         if (userRole.isPresent()) {
             appUser.setAppUserRoles(Set.of(userRole.get()));
         }
@@ -155,25 +153,22 @@ public class AuthServiceImpl implements AuthService {
         Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
             this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
         if (superAdmin.isPresent()) {
-            // linking all env variable to the user
-            List<EnvVariables> envVariablesList = this.envVariablesRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
-                superAdmin.get(), APPLICATION_STATUS.DELETE);
-            for (EnvVariables envVariables : envVariablesList) {
-                this.appUserEnvRepository.save(getAppUserEnv(superAdmin.get(), appUser, envVariables));
+            // linking all env variable to the user give by the system
+            for (EnvVariables envVariables : this.envVariablesRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
+                superAdmin.get(), APPLICATION_STATUS.DELETE)) {
+                this.appUserEnvRepository.save(this.getAppUserEnv(superAdmin.get(), appUser, envVariables));
             }
             // event bridge only receiver event bridge if exist and create by the main user
-            List<EventBridge> eventBridges = this.eventBridgeRepository.findAllByBridgeTypeInAndCreatedByAndStatusNotOrderByDateCreatedDesc(
-                Arrays.asList(EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVE, EVENT_BRIDGE_TYPE.REPORT_API_SEND), superAdmin.get(), APPLICATION_STATUS.DELETE);
-            for (EventBridge eventBridge : eventBridges) {
+            for (EventBridge eventBridge : this.eventBridgeRepository.findAllByBridgeTypeInAndCreatedByAndStatusNotOrderByDateCreatedDesc(
+                Arrays.asList(EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVE), superAdmin.get(), APPLICATION_STATUS.DELETE)) {
                 LinkEBURequest linkEBURequest = new LinkEBURequest();
                 linkEBURequest.setId(eventBridge.getId());
                 linkEBURequest.setAppUserId(appUser.getId());
                 linkEBURequest.setLinked(Boolean.TRUE);
-                linkEBURequest.setSessionUser(new SessionUser(appUser.getUsername()));
+                linkEBURequest.setSessionUser(new SessionUser(superAdmin.get().getUsername()));
                 this.eventBridgeService.linkEventBridgeWithUser(linkEBURequest);
             }
-            this.sendNotification(superAdmin.get().getUsername(), MessageUtil.REQUESTED_FOR_NEW_ACCOUNT,
-                String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()),
+            this.sendNotification(MessageUtil.REQUESTED_FOR_NEW_ACCOUNT, String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()),
                 superAdmin.get(), this.lookupDataCacheService, this.notificationService);
         }
         this.sendRegisterUserEmail(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
@@ -196,8 +191,7 @@ public class AuthServiceImpl implements AuthService {
         if (appUser.isPresent()) {
             // email and notification
             this.sendForgotPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory, this.jwtUtils);
-            this.sendNotification(appUser.get().getUsername(), MessageUtil.FORGOT_PASSWORD, MessageUtil.FORGOT_EMAIL_SEND_TO_YOUR_EMAIL, appUser.get(),
-                 this.lookupDataCacheService, this.notificationService);
+            this.sendNotification(MessageUtil.FORGOT_PASSWORD, MessageUtil.FORGOT_EMAIL_SEND_TO_YOUR_EMAIL, appUser.get(), this.lookupDataCacheService, this.notificationService);
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.EMAIL_SEND_SUCCESSFULLY);
         }
         return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACCOUNT_NOT_EXIST);
@@ -222,8 +216,7 @@ public class AuthServiceImpl implements AuthService {
             appUser.get().setPassword(this.passwordEncoder.encode(payload.getNewPassword()));
             this.appUserRepository.save(appUser.get());
             this.sendResetPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
-            this.sendNotification(appUser.get().getUsername(), MessageUtil.RESET_PASSWORD, MessageUtil.RESET_EMAIL_SEND_TO_YOUR_EMAIL, appUser.get(),
-                this.lookupDataCacheService, this.notificationService);
+            this.sendNotification(MessageUtil.RESET_PASSWORD, MessageUtil.RESET_EMAIL_SEND_TO_YOUR_EMAIL, appUser.get(), this.lookupDataCacheService, this.notificationService);
             return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.EMAIL_SEND_SUCCESSFULLY);
         }
         return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACCOUNT_NOT_EXIST);
@@ -265,7 +258,7 @@ public class AuthServiceImpl implements AuthService {
      * @param userDetails
      * @return AuthResponse
      * */
-    public AuthResponse getAuthResponseDetail(AuthResponse authResponse, UserSessionDetail userDetails) throws Exception {
+    private AuthResponse getAuthResponseDetail(AuthResponse authResponse, UserSessionDetail userDetails) throws Exception {
         authResponse.setId(userDetails.getId());
         authResponse.setFirstName(userDetails.getFirstName());
         authResponse.setLastName(userDetails.getLastName());
@@ -274,16 +267,14 @@ public class AuthServiceImpl implements AuthService {
         authResponse.setProfileImage(userDetails.getProfileImage());
         authResponse.setIpAddress(userDetails.getIpAddress());
         authResponse.setRoles(userDetails.getAuthorities().stream()
-            .map(grantedAuthority -> grantedAuthority.getAuthority())
-            .collect(Collectors.toList()));
+           .map(grantedAuthority -> grantedAuthority.getAuthority()).collect(Collectors.toList()));
         if (!BarcoUtil.isNull(userDetails.getProfile())) {
             authResponse.setProfile(this.getProfilePermissionResponse(userDetails.getProfile()));
         }
         // account type
         if (!BarcoUtil.isNull(userDetails.getAccountType())) {
-            GLookup accountType = GLookup.getGLookup(this.lookupDataCacheService
-                .getChildLookupDataByParentLookupTypeAndChildLookupCode(ACCOUNT_TYPE.getName(),
-                    Long.valueOf(userDetails.getAccountType().ordinal())));
+            GLookup accountType = GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+                ACCOUNT_TYPE.getName(), Long.valueOf(userDetails.getAccountType().ordinal())));
             authResponse.setAccountType(accountType);
         }
         // organization

@@ -13,7 +13,6 @@ import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.*;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.TemplateRegRepository;
-import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.ModelUtil;
 import com.barco.model.util.lookup.*;
@@ -311,6 +310,9 @@ public interface RootService {
         appUserResponse.setUsername(appUser.getUsername());
         appUserResponse.setProfileImg(appUser.getImg());
         appUserResponse.setIpAddress(appUser.getIpAddress());
+        appUserResponse.setDateCreated(appUser.getDateCreated());
+        appUserResponse.setDateUpdated(appUser.getDateUpdated());
+        appUserResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(appUser.getStatus().getLookupType()));
         appUserResponse.setRoles(appUser.getAppUserRoles().stream()
             .map(role -> role.getName()).collect(Collectors.toList()));
         if (!BarcoUtil.isNull(appUser.getProfile())) {
@@ -631,10 +633,10 @@ public interface RootService {
      * @throws Exception
      * @throws Exception
      * */
-    public default void sendNotification(String sendTo, String title, String message, AppUser appUser,
+    public default void sendNotification(String title, String message, AppUser appUser,
         LookupDataCacheService lookupDataCacheService, NotificationService notificationService) throws Exception {
         LookupDataResponse notificationTime = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NOTIFICATION_DISAPPEAR_TIME);
-        notificationService.addNotification(new NotificationRequest(sendTo, new MessageRequest(title, message),
+        notificationService.addNotification(new NotificationRequest(new MessageRequest(title, message),
             NOTIFICATION_TYPE.USER_NOTIFICATION.getLookupCode(), ModelUtil.addDays(new Timestamp(System.currentTimeMillis()),
             Long.valueOf(notificationTime.getLookupValue())), NOTIFICATION_STATUS.UNREAD.getLookupCode()), appUser);
     }

@@ -63,10 +63,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     public AppResponse fetchByAllRefreshToken(TokenRefreshRequest payload) throws Exception {
         logger.info("Request fetchByAllRefreshToken" + payload);
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
-        List<RefreshTokenResponse> tokenResponseList = this.appTokenRepository.findByDateCreatedBetweenAndStatusNotOrderByDateCreatedDesc(
-            startDate, endDate, APPLICATION_STATUS.DELETE).stream()
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
+        List<RefreshTokenResponse> tokenResponseList = this.appTokenRepository.findByDateCreatedBetweenOrderByDateCreatedDesc(
+            startDate, endDate).stream()
             .map(refreshToken -> getRefreshTokenResponse(refreshToken))
             .collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, tokenResponseList);

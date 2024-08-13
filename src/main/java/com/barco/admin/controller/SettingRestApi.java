@@ -51,6 +51,21 @@ public class SettingRestApi {
         }
     }
 
+    /**
+     * @apiName :- fetchCountryData
+     * @apiName :- Api use to fetch the country for admin section
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(value="/fetchCountryData", method=RequestMethod.POST)
+    public ResponseEntity<?> fetchCountryData(@RequestBody SessionUser sessionUser) {
+        try {
+            return new ResponseEntity<>(this.settingService.fetchCountryData(sessionUser), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchCountryData ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
 
     /**
      * @apiName :- dynamicQueryResponse

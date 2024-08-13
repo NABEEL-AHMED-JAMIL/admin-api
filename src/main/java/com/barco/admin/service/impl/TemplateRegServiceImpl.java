@@ -69,7 +69,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
-        } else if (!BarcoUtil.isNull(payload.getId())) {
+        } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         }
         Optional<TemplateReg> templateRegOpt = this.templateRegRepository.findByIdAndUsername(

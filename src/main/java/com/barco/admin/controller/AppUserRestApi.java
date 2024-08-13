@@ -89,7 +89,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/deleteAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> deleteAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
@@ -106,7 +106,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(path="/deleteAllAppUserAccount", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
@@ -122,7 +122,7 @@ public class AppUserRestApi {
      * @apiNote :- Api use to download app user account template file
      * @return ResponseEntity<?> downloadAppUserAccountTemplateFile
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/downloadAppUserAccountTemplateFile", method = RequestMethod.GET)
     public ResponseEntity<?> downloadAppUserAccountTemplateFile() {
         try {
@@ -142,7 +142,7 @@ public class AppUserRestApi {
      * @apiNote :- Api use to download app user account
      * @return ResponseEntity<?> AppUserRequest
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/downloadAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> downloadAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
@@ -163,7 +163,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/fetchAllAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
@@ -180,7 +180,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/addAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> addAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
@@ -200,7 +200,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/editAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> editAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
@@ -220,7 +220,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/enabledDisabledAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> enabledDisabledAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
