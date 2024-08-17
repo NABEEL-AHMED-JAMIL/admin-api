@@ -106,7 +106,7 @@ public class NotificationServiceImpl implements NotificationService {
         LookupDataResponse notificationTime = this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NOTIFICATION_DISAPPEAR_TIME);
         Page<NotificationAudit> notificationAuditPage = this.notificationAuditRepository.findAll(
             new NotificationSpecification(appUser.get(), Long.valueOf(notificationTime.getLookupValue())),
-            PageRequest.of(0, 5000, Sort.by(Sort.Order.asc(NOTIFY_ID))));
+                PageRequest.of(0, 5000, Sort.by(Sort.Order.asc(NOTIFY_ID))));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             notificationAuditPage.map(notificationAudit -> (this.getNotificationResponse(notificationAudit))).getContent());
     }

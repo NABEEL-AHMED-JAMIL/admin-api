@@ -79,13 +79,13 @@ public class SourceTaskServiceImpl implements SourceTaskService {
     }
 
     /***
-     * Method use to edit new source task
+     * Method use to update new source task
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse editSourceTask(SourceTaskRequest payload) throws Exception {
-        logger.info("Request editSourceTask :- " + payload);
+    public AppResponse updateSourceTask(SourceTaskRequest payload) throws Exception {
+        logger.info("Request updateSourceTask :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -218,8 +218,8 @@ public class SourceTaskServiceImpl implements SourceTaskService {
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
         List<SourceTask> result = this.sourceTaskRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
             startDate, endDate, appUser.get(), APPLICATION_STATUS.DELETE);
         if (result.isEmpty()) {

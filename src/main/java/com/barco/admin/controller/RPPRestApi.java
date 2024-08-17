@@ -537,7 +537,7 @@ public class RPPRestApi {
 
     /**
      * @apiName :- updateLinkProfilePermission
-     * @apiNote :- Api use to add/edit link-> profile & permission
+     * @apiNote :- Api use to update link-> profile & permission
      * @return ResponseEntity<?> updateLinkProfilePermission
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
@@ -552,77 +552,77 @@ public class RPPRestApi {
     }
 
     /**
-     * @apiName :- fetchLinkRoleWithRootUser
-     * @apiNote :- Api use to fetch the role with root user
+     * @apiName :- fetchLinkRoleWithUser
+     * @apiNote :- Api use to fetch the role with user
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
-    @RequestMapping(path="/fetchLinkRoleWithRootUser", method=RequestMethod.POST)
-    public ResponseEntity<?> fetchLinkRoleWithRootUser(@RequestBody LinkRURequest payload) {
+    @RequestMapping(path="/fetchLinkRoleWithUser", method=RequestMethod.POST)
+    public ResponseEntity<?> fetchLinkRoleWithUser(@RequestBody LinkRURequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
-            return new ResponseEntity<>(this.rppService.fetchLinkRoleWithRootUser(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.rppService.fetchLinkRoleWithUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while fetchLinkRoleWithRootUser ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while fetchLinkRoleWithUser ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- fetchLinkRoleWithRootUser
+     * @apiName :- linkRoleWithUser
      * @apiNote :- Api use to link the role with root user
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
-    @RequestMapping(path="/linkRoleWithRootUser", method=RequestMethod.POST)
-    public ResponseEntity<?> linkRoleWithRootUser(@RequestBody LinkRURequest payload) {
+    @RequestMapping(path="/linkRoleWithUser", method=RequestMethod.POST)
+    public ResponseEntity<?> linkRoleWithUser(@RequestBody LinkRURequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
-            return new ResponseEntity<>(this.rppService.linkRoleWithRootUser(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.rppService.linkRoleWithUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while linkRoleWithRootUser ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while linkRoleWithUser ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- fetchLinkProfileWithRootUser
+     * @apiName :- fetchLinkProfileWithUser
      * @apiNote :- Api use to fetch the profile with root user
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
-    @RequestMapping(path="/fetchLinkProfileWithRootUser", method=RequestMethod.POST)
-    public ResponseEntity<?> fetchLinkProfileWithRootUser(@RequestBody LinkPURequest payload) {
+    @RequestMapping(path="/fetchLinkProfileWithUser", method=RequestMethod.POST)
+    public ResponseEntity<?> fetchLinkProfileWithUser(@RequestBody LinkPURequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
-            return new ResponseEntity<>(this.rppService.fetchLinkProfileWithRootUser(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.rppService.fetchLinkProfileWithUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while fetchLinkProfileWithRootUser ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while fetchLinkProfileWithUser ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- linkProfileWithRootUser
-     * @apiNote :- Api use to link the profile with root user
+     * @apiName :- linkProfileWithUser
+     * @apiNote :- Api use to link the profile with user
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
-    @RequestMapping(path="/linkProfileWithRootUser", method=RequestMethod.POST)
-    public ResponseEntity<?> linkProfileWithRootUser(@RequestBody LinkPURequest payload) {
+    @RequestMapping(path="/linkProfileWithUser", method=RequestMethod.POST)
+    public ResponseEntity<?> linkProfileWithUser(@RequestBody LinkPURequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
-            return new ResponseEntity<>(this.rppService.linkProfileWithRootUser(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.rppService.linkProfileWithUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while linkProfileWithRootUser ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while linkProfileWithUser ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
@@ -633,7 +633,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(path="/fetchProfileWithUser", method=RequestMethod.POST)
     public ResponseEntity<?> fetchProfileWithUser(@RequestBody LinkPURequest payload) {
         try {
@@ -652,7 +652,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(path="/fetchRoleWithUser", method=RequestMethod.POST)
     public ResponseEntity<?> fetchRoleWithUser(@RequestBody LinkRURequest payload) {
         try {

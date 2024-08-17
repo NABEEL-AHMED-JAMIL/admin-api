@@ -36,11 +36,24 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private Long refreshTokenDurationMs;
 
     @Autowired
+    private QueryService queryService;
+    @Autowired
     private AppUserRepository appUserRepository;
     @Autowired
     private AppTokenRepository appTokenRepository;
 
     public RefreshTokenServiceImpl() {}
+
+    /**
+     * Method use to fetch refresh token statistics
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchSessionStatistics() throws Exception {
+        logger.info("Request fetchSessionStatistics");
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+            this.queryService.executeQueryResponse(QueryService.SESSION_STATISTICS));
+    }
 
     /**
      * Method use to fetch all refresh token
@@ -49,11 +62,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * */
     @Override
     public AppResponse fetchByAllRefreshToken(TokenRefreshRequest payload) throws Exception {
-        logger.info("Request fetchByAllRefreshToken");
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
-        List<RefreshTokenResponse> tokenResponseList = this.appTokenRepository.findByDateCreatedBetweenAndStatusNotOrderByDateCreatedDesc(
-            startDate, endDate, APPLICATION_STATUS.DELETE).stream()
+        logger.info("Request fetchByAllRefreshToken" + payload);
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
+        List<RefreshTokenResponse> tokenResponseList = this.appTokenRepository.findByDateCreatedBetweenOrderByDateCreatedDesc(
+            startDate, endDate).stream()
             .map(refreshToken -> getRefreshTokenResponse(refreshToken))
             .collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, tokenResponseList);

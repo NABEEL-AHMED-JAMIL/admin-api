@@ -27,6 +27,23 @@ public class RefreshTokenRestApi {
     @Autowired
     private RefreshTokenService refreshTokenService;
 
+
+    /**
+     * @apiName :- fetchSessionStatistics
+     * @apiNote :- Method use to fetch the session statistics
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @RequestMapping(value="/fetchSessionStatistics", method=RequestMethod.GET)
+    public ResponseEntity<?> fetchSessionStatistics() {
+        try {
+            return new ResponseEntity<>(this.refreshTokenService.fetchSessionStatistics(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchSessionStatistics ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     /**
      * @apiName :- fetchByAllRefreshToken
      * @apiNote :- Method use to fetch the data

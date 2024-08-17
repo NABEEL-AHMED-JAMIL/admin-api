@@ -150,8 +150,8 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         }
         List<DashboardSetting> dashboardSettings;
         if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
-            Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-            Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+            Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+            Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
             dashboardSettings = this.dashboardSettingRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(
                 startDate, endDate, payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
         } else {
@@ -205,8 +205,8 @@ public class DashboardSettingServiceImpl implements DashboardSettingService {
         }
         List<DashboardSetting> dashboardSettings;
         if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
-            Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-            Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+            Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+            Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
             dashboardSettings = this.dashboardSettingRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(
                 startDate, endDate, payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
         } else {

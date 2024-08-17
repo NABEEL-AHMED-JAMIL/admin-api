@@ -49,8 +49,8 @@ public class PlayGroundServiceImpl extends DynamicFormService implements PlayGro
         if (!adminUser.isPresent()) {
             throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         }
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             this.genFormRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
                startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE).stream()

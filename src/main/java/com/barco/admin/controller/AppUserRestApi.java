@@ -52,22 +52,6 @@ public class AppUserRestApi {
     }
 
     /**
-     * @apiName :- updateAppUserProfile
-     * @apiNote :- Api use to update app user profile
-     * @param payload
-     * @return ResponseEntity<?>
-     * */
-    @RequestMapping(value = "/updateAppUserProfile", method = RequestMethod.POST)
-    public ResponseEntity<?> updateAppUserProfile(@RequestBody UpdateUserProfileRequest payload) {
-        try {
-            return new ResponseEntity<>(this.appUserService.updateAppUserProfile(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while updateAppUserProfile ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
      * @apiName :- updateAppUserEnvVariable
      * @apiNote :- Api use to update app user env variable
      * @param payload
@@ -100,15 +84,16 @@ public class AppUserRestApi {
     }
 
     /**
-     * @apiName :- closeAppUserAccount
-     * @apiNote :- Api use to close app user account
+     * @apiName :- deleteAppUserAccount
+     * @apiNote :- Api use to delete app user account
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @RequestMapping(value = "/closeAppUserAccount", method = RequestMethod.POST)
-    public ResponseEntity<?> closeAppUserAccount(@RequestBody AppUserRequest payload) {
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
+    @RequestMapping(value = "/deleteAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> deleteAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
-            return new ResponseEntity<>(this.appUserService.closeAppUserAccount(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.appUserService.deleteAppUserAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while closeAppUserAccount ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
@@ -121,7 +106,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(path="/deleteAllAppUserAccount", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
@@ -133,31 +118,11 @@ public class AppUserRestApi {
     }
 
     /**
-     * @apiName :- downloadAppUserAccountTemplateFile
-     * @apiNote :- Api use to download app user account template file
-     * @return ResponseEntity<?> downloadAppUserAccountTemplateFile
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
-    @RequestMapping(value = "/downloadAppUserAccountTemplateFile", method = RequestMethod.GET)
-    public ResponseEntity<?> downloadAppUserAccountTemplateFile() {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
-            String fileName = "BatchAppUserAccountDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
-            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
-            return ResponseEntity.ok().headers(headers).body(this.appUserService.downloadAppUserAccountTemplateFile().toByteArray());
-        } catch (Exception ex) {
-            logger.error("An error occurred while downloadAppUserAccountTemplateFile xlsx file", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
      * @apiName :- downloadAppUserAccount
      * @apiNote :- Api use to download app user account
      * @return ResponseEntity<?> AppUserRequest
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/downloadAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> downloadAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
@@ -178,7 +143,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/fetchAllAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
@@ -195,7 +160,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/addAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> addAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
@@ -210,21 +175,21 @@ public class AppUserRestApi {
     }
 
     /**
-     * @apiName :- editAppUserAccount
-     * @apiNote :- Api use to edit the app user account
+     * @apiName :- updateAppUserAccount
+     * @apiNote :- Api use to update the app user account
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
-    @RequestMapping(value = "/editAppUserAccount", method = RequestMethod.POST)
-    public ResponseEntity<?> editAppUserAccount(@RequestBody AppUserRequest payload) {
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
+    @RequestMapping(value = "/updateAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> updateAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
             // user session detail
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
-            return new ResponseEntity<>(this.appUserService.editAppUserAccount(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.appUserService.updateAppUserAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while editAppUserAccount ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while updateAppUserAccount ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
@@ -235,7 +200,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/enabledDisabledAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> enabledDisabledAppUserAccount(@RequestBody AppUserRequest payload) {
         try {

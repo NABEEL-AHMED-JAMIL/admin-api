@@ -45,18 +45,18 @@ public class TemplateRegRestApi {
     }
 
     /**
-     * @apiName :- editTemplateReg
+     * @apiName :- updateTemplateReg
      * @apiName :- Api use to edit templateReg
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('DEV')")
-    @RequestMapping(path="/editTemplateReg", method=RequestMethod.POST)
-    public ResponseEntity<?> editTemplateReg(@RequestBody TemplateRegRequest payload) {
+    @RequestMapping(path="/updateTemplateReg", method=RequestMethod.POST)
+    public ResponseEntity<?> updateTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
-            return new ResponseEntity<>(this.templateRegService.editTemplateReg(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.templateRegService.updateTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while editTemplateReg ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while updateTemplateReg ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

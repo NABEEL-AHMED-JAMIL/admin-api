@@ -3,6 +3,7 @@ package com.barco.admin.controller;
 import com.barco.admin.service.SettingService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
+import com.barco.model.dto.request.QueryInquiryRequest;
 import com.barco.model.dto.request.QueryRequest;
 import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.response.AppResponse;
@@ -51,6 +52,21 @@ public class SettingRestApi {
         }
     }
 
+    /**
+     * @apiName :- fetchCountryData
+     * @apiName :- Api use to fetch the country for admin section
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(value="/fetchCountryData", method=RequestMethod.POST)
+    public ResponseEntity<?> fetchCountryData(@RequestBody SessionUser sessionUser) {
+        try {
+            return new ResponseEntity<>(this.settingService.fetchCountryData(sessionUser), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchCountryData ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
 
     /**
      * @apiName :- dynamicQueryResponse
@@ -93,6 +109,108 @@ public class SettingRestApi {
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.SQL_GRAMMAR_EXCEPTION), HttpStatus.BAD_REQUEST);
         } catch (Exception ex) {
             logger.error("An error occurred while downloadDynamicQueryFile xlsx file", ExceptionUtil.getRootCauseMessage(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- addQueryInquiry
+     * @apiNote :- Api use to add the query inquiry
+     * @param payload
+     * @return ResponseEntity<?> addQueryInquiry
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(value = "/addQueryInquiry", method = RequestMethod.POST)
+    public ResponseEntity<?> addQueryInquiry(@RequestBody QueryInquiryRequest payload) {
+        try {
+            return new ResponseEntity<>(this.settingService.addQueryInquiry(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while addQueryInquiry ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- updateQueryInquiry
+     * @apiNote :- Api use to edit the QueryInquiry data
+     * @param payload
+     * @return ResponseEntity<?> updateQueryInquiry
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(value = "/updateQueryInquiry", method = RequestMethod.POST)
+    public ResponseEntity<?> updateQueryInquiry(@RequestBody QueryInquiryRequest payload) {
+        try {
+            return new ResponseEntity<>(this.settingService.updateQueryInquiry(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while updateQueryInquiry ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- fetchQueryInquiryById
+     * @apiNote :- Api use to fetch the QueryInquiry by QueryInquiry id
+     * @param payload
+     * @return ResponseEntity<?> fetchQueryInquiryById
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(value = "/fetchQueryInquiryById", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchQueryInquiryById(@RequestBody QueryInquiryRequest payload) {
+        try {
+            return new ResponseEntity<>(this.settingService.fetchQueryInquiryById(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchQueryInquiryById ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- fetchAllQueryInquiry
+     * @apiNote :- Api use to fetch the QueryInquiry data
+     * @param payload
+     * @return ResponseEntity<?> fetchAllQueryInquiry
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(value = "/fetchAllQueryInquiry", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllQueryInquiry(@RequestBody QueryInquiryRequest payload) {
+        try {
+            return new ResponseEntity<>(this.settingService.fetchAllQueryInquiry(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllQueryInquiry ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- deleteQueryInquiry
+     * @apiNote :- Api use to delete the queryInquiry
+     * @param payload
+     * @return ResponseEntity<?> deleteQueryInquiry
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(value = "/deleteQueryInquiryById", method = RequestMethod.PUT)
+    public ResponseEntity<?> deleteQueryInquiryById(@RequestBody QueryInquiryRequest payload) {
+        try {
+            return new ResponseEntity<>(this.settingService.deleteQueryInquiryById(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while deleteQueryInquiryById ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- deleteAllQueryInquiry
+     * @apiNote :- Api use to delete queryInquiry
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @PreAuthorize("hasRole('DEV')")
+    @RequestMapping(path="/deleteAllQueryInquiry", method=RequestMethod.POST)
+    public ResponseEntity<?> deleteAllQueryInquiry(@RequestBody QueryInquiryRequest payload) {
+        try {
+            return new ResponseEntity<>(this.settingService.deleteAllQueryInquiry(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while deleteAllQueryInquiry ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

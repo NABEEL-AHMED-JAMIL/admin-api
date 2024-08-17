@@ -140,13 +140,13 @@ public class FormSettingServiceImpl implements FormSettingService {
     }
 
     /**
-     * Method use to edit the form
+     * Method use to update the form
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse editForm(FormRequest payload) throws Exception {
-        logger.info("Request editForm :- " + payload);
+    public AppResponse updateForm(FormRequest payload) throws Exception {
+        logger.info("Request updateForm :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -303,8 +303,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
         List<GenForm> result = this.genFormRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
             startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE);
         if (result.isEmpty()) {
@@ -312,7 +312,7 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         List<FormResponse> formResponses = result.stream()
             .map(genForm -> {
-                FormResponse formResponse = getFormResponse(genForm);
+                FormResponse formResponse = this.getFormResponse(genForm);
                 formResponse.setTotalStt(this.genFormLinkSourceTaskTypeRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
                 formResponse.setTotalSection(this.genSectionLinkGenFormRepository.countByGenFormAndStatusNot(genForm, APPLICATION_STATUS.DELETE));
                 return formResponse;
@@ -645,13 +645,13 @@ public class FormSettingServiceImpl implements FormSettingService {
     }
 
     /**
-     * Method use to edit section
+     * Method use to update section
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse editSection(SectionRequest payload) throws Exception {
-        logger.info("Request editSection :- " + payload);
+    public AppResponse updateSection(SectionRequest payload) throws Exception {
+        logger.info("Request updateSection :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -765,8 +765,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         }
         List<GenSection> result;
         if (BarcoUtil.isNull(payload.getStartDate()) && BarcoUtil.isNull(payload.getEndDate())) {
-            Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-            Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+            Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+            Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
             result = this.genSectionRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
                 startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE);
         } else {
@@ -1152,8 +1152,8 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse editControl(ControlRequest payload) throws Exception {
-        logger.info("Request editControl :- " + payload);
+    public AppResponse updateControl(ControlRequest payload) throws Exception {
+        logger.info("Request updateControl :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getId())) {
@@ -1290,8 +1290,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
         List<ControlResponse> controlResponses = this.genControlRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNotOrderByDateCreatedDesc(
             startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE).stream()
             .map(genControl -> {
@@ -1504,8 +1504,8 @@ public class FormSettingServiceImpl implements FormSettingService {
         if (!adminUser.isPresent()) {
             throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         }
-        Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-        Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+        Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+        Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
         if (payload.getDownloadType().equals(this.bulkExcel.STT_FORM)) {
             List<GenForm> getForms;
             if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {

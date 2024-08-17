@@ -96,7 +96,7 @@ public class CredentialRestApi {
 
     /**
      * @apiName :- fetchCredentialByCredentialId
-     * @apiNote :- Api use to fetch the Credential by Credential id
+     * @apiNote :- Api use to fetch the credential by credential id
      * @param payload
      * @return ResponseEntity<?> fetchCredentialByCredentialId
      * */
@@ -113,7 +113,7 @@ public class CredentialRestApi {
 
     /**
      * @apiName :- deleteCredential
-     * @apiNote :- Api use to delete the lookup data
+     * @apiNote :- Api use to delete the credential
      * @param payload
      * @return ResponseEntity<?> deleteCredential
      * */
@@ -130,7 +130,7 @@ public class CredentialRestApi {
 
     /**
      * @apiName :- deleteAllCredential
-     * @apiNote :- Api use to delete templateReg
+     * @apiNote :- Api use to delete credential
      * @param payload
      * @return ResponseEntity<?>
      * */
@@ -144,4 +144,5 @@ public class CredentialRestApi {
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
+
 }

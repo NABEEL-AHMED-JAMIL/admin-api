@@ -59,23 +59,25 @@ public class TemplateRegServiceImpl implements TemplateRegService {
     }
 
     /**
-     * Method use to edit the template
+     * Method use to update the template
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse editTemplateReg(TemplateRegRequest payload) throws Exception {
-        logger.info("Request editTemplateReg :- " + payload);
+    public AppResponse updateTemplateReg(TemplateRegRequest payload) throws Exception {
+        logger.info("Request updateTemplateReg :- " + payload);
         AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
+        } else if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         }
         Optional<TemplateReg> templateRegOpt = this.templateRegRepository.findByIdAndUsername(
             payload.getId(), payload.getSessionUser().getUsername());
         if (!templateRegOpt.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
-        this.templateRegRepository.save(this.updateTemplateRegFromPayload(templateRegOpt.get(), payload));
+        this.templateRegRepository.save(this.updateTemplateRegPayload(templateRegOpt.get(), payload));
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()), payload);
     }
 
@@ -96,7 +98,8 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         if (!templateRegOpt.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getTemplateRegResponse(templateRegOpt.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+            this.getTemplateRegResponse(templateRegOpt.get()));
     }
 
     /**
@@ -112,8 +115,8 @@ public class TemplateRegServiceImpl implements TemplateRegService {
             return validationResponse;
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(payload.getSessionUser().getUsername()).stream()
-                .map(this::getTemplateRegResponse).collect(Collectors.toList()));
+            this.templateRegRepository.findAllByUsernameOrderByDateCreatedDesc(payload.getSessionUser().getUsername())
+                .stream().map(this::getTemplateRegResponse).collect(Collectors.toList()));
     }
 
     /**
@@ -237,7 +240,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * @param payload
      * @return TemplateReg
      * */
-    private TemplateReg updateTemplateRegFromPayload(TemplateReg templateReg, TemplateRegRequest payload) throws Exception {
+    private TemplateReg updateTemplateRegPayload(TemplateReg templateReg, TemplateRegRequest payload) throws Exception {
         if (!BarcoUtil.isNull(payload.getTemplateName())) {
             templateReg.setTemplateName(payload.getTemplateName());
         }

@@ -46,18 +46,18 @@ public class SourceTaskRestApi {
     }
 
     /**
-     * @apiName :- editSourceTask
+     * @apiName :- updateSourceTask
      * @apiNote :- Api use to edit the source task
      * @param payload
-     * @return ResponseEntity<?> editSourceTask
+     * @return ResponseEntity<?> updateSourceTask
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value = "/editSourceTask", method = RequestMethod.POST)
-    public ResponseEntity<?> editSourceTask(@RequestBody SourceTaskRequest payload) {
+    @RequestMapping(value = "/updateSourceTask", method = RequestMethod.POST)
+    public ResponseEntity<?> updateSourceTask(@RequestBody SourceTaskRequest payload) {
         try {
-            return new ResponseEntity<>(this.sourceTaskService.editSourceTask(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.sourceTaskService.updateSourceTask(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while editSourceTask ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while updateSourceTask ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

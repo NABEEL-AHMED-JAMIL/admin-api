@@ -145,8 +145,8 @@ public class CredentialServiceImpl implements CredentialService {
         Boolean readFull;
         if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
             readFull = true;
-            Timestamp startDate = Timestamp.valueOf(payload.getStartDate() + BarcoUtil.START_DATE);
-            Timestamp endDate = Timestamp.valueOf(payload.getEndDate() + BarcoUtil.END_DATE);
+            Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+            Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
             credentials = this.credentialRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(
                 startDate, endDate, payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
         } else {
