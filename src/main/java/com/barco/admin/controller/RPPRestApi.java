@@ -537,7 +537,7 @@ public class RPPRestApi {
 
     /**
      * @apiName :- updateLinkProfilePermission
-     * @apiNote :- Api use to add/edit link-> profile & permission
+     * @apiNote :- Api use to update link-> profile & permission
      * @return ResponseEntity<?> updateLinkProfilePermission
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")

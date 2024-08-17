@@ -25,7 +25,7 @@ public interface AppUserService extends RootService {
 
     public AppResponse addAppUserAccount(AppUserRequest payload) throws Exception;
 
-    public AppResponse editAppUserAccount(AppUserRequest payload) throws Exception;
+    public AppResponse updateAppUserAccount(AppUserRequest payload) throws Exception;
 
     public AppResponse enabledDisabledAppUserAccount(AppUserRequest payload) throws Exception;
 

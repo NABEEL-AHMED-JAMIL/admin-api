@@ -11,7 +11,7 @@ public interface SourceTaskService extends RootService {
 
     public AppResponse addSourceTask(SourceTaskRequest payload) throws Exception;
 
-    public AppResponse editSourceTask(SourceTaskRequest payload) throws Exception;
+    public AppResponse updateSourceTask(SourceTaskRequest payload) throws Exception;
 
     public AppResponse deleteSourceTask(SourceTaskRequest payload) throws Exception;
 

@@ -10,7 +10,7 @@ public interface SourceTaskTypeService extends RootService {
 
     public AppResponse addSTT(STTRequest payload) throws Exception;
 
-    public AppResponse editSTT(STTRequest payload) throws Exception;
+    public AppResponse updateSTT(STTRequest payload) throws Exception;
 
     public AppResponse deleteSTT(STTRequest payload) throws Exception;
 

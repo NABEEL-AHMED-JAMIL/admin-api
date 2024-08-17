@@ -1,10 +1,13 @@
 package com.barco.admin.service.impl;
 
 import com.barco.admin.service.SettingService;
+import com.barco.model.dto.request.QueryInquiryRequest;
 import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.response.QueryResponse;
 import com.barco.model.pojo.AppUser;
+import com.barco.model.pojo.QueryInquiry;
 import com.barco.model.repository.ETLCountryRepository;
+import com.barco.model.repository.QueryInquiryRepository;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * @author Nabeel Ahmed
@@ -47,23 +51,25 @@ public class SettingServiceImpl implements SettingService {
     @Autowired
     private ETLCountryRepository etlCountryRepository;
     @Autowired
+    private QueryInquiryRepository queryInquiryRepository;
+    @Autowired
     private AuthenticationManager authenticationManager;
 
     public SettingServiceImpl() {}
 
     /**
      * Method use to fetch the detail for dashboard
-     * @param sessionUser
+     * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchSettingDashboard(SessionUser sessionUser) throws Exception {
-        logger.info("Request dynamicQueryResponse :- " + sessionUser);
-        if (BarcoUtil.isNull(sessionUser.getUsername())) {
+    public AppResponse fetchSettingDashboard(SessionUser payload) throws Exception {
+        logger.info("Request dynamicQueryResponse :- " + payload);
+        if (BarcoUtil.isNull(payload.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            sessionUser.getUsername(), APPLICATION_STATUS.ACTIVE);
+            payload.getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!appUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
@@ -85,19 +91,15 @@ public class SettingServiceImpl implements SettingService {
 
     /**
      * Method use to fetch the detail for country
-     * @param sessionUser
+     * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchCountryData(SessionUser sessionUser) throws Exception {
-        logger.info("Request fetchCountryData :- " + sessionUser);
-        if (BarcoUtil.isNull(sessionUser.getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            sessionUser.getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+    public AppResponse fetchCountryData(SessionUser payload) throws Exception {
+        logger.info("Request fetchCountryData :- " + payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             this.etlCountryRepository.findAll());
@@ -155,4 +157,225 @@ public class SettingServiceImpl implements SettingService {
         workbook.write(outStream);
         return outStream;
     }
+
+    /**
+     * Method use to add the query inquiry
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse addQueryInquiry(QueryInquiryRequest payload) throws Exception {
+        logger.info("Request addQueryInquiry :- " + payload);
+        AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
+        }
+        QueryInquiry queryInquiry = this.createQueryInquiry(payload);
+        this.queryInquiryRepository.save(queryInquiry);
+        payload.setId(queryInquiry.getId());
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId().toString()));
+    }
+
+    /**
+     * Method use to update the query inquiry
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse updateQueryInquiry(QueryInquiryRequest payload) throws Exception {
+        logger.info("Request updateQueryInquiry :- " + payload);
+        AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
+        } else if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
+        }
+        Optional<QueryInquiry> queryInquiry = this.queryInquiryRepository.findByIdAndUsernameAndStatusNot(
+            payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
+        if (!queryInquiry.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_NOT_FOUND);
+        }
+        this.queryInquiryRepository.save(this.updateQueryInquiryPayload(queryInquiry.get(), payload));
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()), payload);
+    }
+
+    /**
+     * Method use to fetch by id the query inquiry
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchQueryInquiryById(QueryInquiryRequest payload) throws Exception {
+        logger.info("Request fetchQueryInquiryById :- " + payload);
+        AppResponse usernameExist = this.isUsernameExist(payload);
+        if (!BarcoUtil.isNull(usernameExist)) {
+            return usernameExist;
+        }
+        Optional<QueryInquiry> queryInquiry = this.queryInquiryRepository.findByIdAndUsernameAndStatusNot(
+            payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
+        if (!queryInquiry.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_NOT_FOUND);
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getQueryInquiryResponse(queryInquiry.get()));
+    }
+
+    /**
+     * Method use to fetch all the query inquiry
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse fetchAllQueryInquiry(QueryInquiryRequest payload) throws Exception {
+        logger.info("Request fetchAllQueryInquiry :- " + payload);
+        AppResponse validationResponse = this.validateUsername(payload.getSessionUser());
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+            this.queryInquiryRepository.findAllByUsernameOrderByDateCreatedDesc(payload.getSessionUser().getUsername())
+                .stream().map(this::getQueryInquiryResponse).collect(Collectors.toList()));
+
+    }
+
+    /**
+     * Method use to delete by id the query inquiry
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse deleteQueryInquiryById(QueryInquiryRequest payload) throws Exception {
+        logger.info("Request deleteQueryInquiryById :- " + payload);
+        AppResponse usernameExist = this.isUsernameExist(payload);
+        if (!BarcoUtil.isNull(usernameExist)) {
+            return usernameExist;
+        }
+        Optional<QueryInquiry> queryInquiry = this.queryInquiryRepository.findByIdAndUsername(
+            payload.getId(), payload.getSessionUser().getUsername());
+        if (!queryInquiry.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_NOT_FOUND);
+        }
+        this.queryInquiryRepository.delete(queryInquiry.get());
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
+    }
+
+    /**
+     * Method use to delete all the query inquiry
+     * @param payload
+     * @return AppResponse
+     * */
+    @Override
+    public AppResponse deleteAllQueryInquiry(QueryInquiryRequest payload) throws Exception {
+        logger.info("Request deleteAllQueryInquiry :- " + payload);
+        AppResponse validationResponse = this.validateUsername(payload.getSessionUser());
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
+        } else if (BarcoUtil.isNull(payload.getIds())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
+        }
+        this.queryInquiryRepository.deleteAll(this.queryInquiryRepository.findAllByIdIn(payload.getIds()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
+    }
+
+    /**
+     * Method use to create the queryInquiry reg
+     * @param payload
+     * @return QueryInquiry
+     * */
+    private QueryInquiry createQueryInquiry(QueryInquiryRequest payload) throws Exception {
+        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        QueryInquiry queryInquiry = new QueryInquiry();
+        if (appUserOpt.isPresent()) {
+            AppUser appUser = appUserOpt.get();
+            queryInquiry.setName(payload.getName());
+            queryInquiry.setDescription(payload.getDescription());
+            queryInquiry.setQuery(payload.getQuery());
+            queryInquiry.setCreatedBy(appUser);
+            queryInquiry.setUpdatedBy(appUser);
+            queryInquiry.setStatus(APPLICATION_STATUS.ACTIVE);
+        }
+        return queryInquiry;
+    }
+
+    /**
+     * Method use to update the queryInquiry reg
+     * @param queryInquiry
+     * @param payload
+     * @return QueryInquiry
+     * */
+    private QueryInquiry updateQueryInquiryPayload(QueryInquiry queryInquiry,
+        QueryInquiryRequest payload) throws Exception {
+        if (!BarcoUtil.isNull(payload.getName())) {
+            queryInquiry.setName(payload.getName());
+        }
+        if (!BarcoUtil.isNull(payload.getDescription())) {
+            queryInquiry.setDescription(payload.getDescription());
+        }
+        if (!BarcoUtil.isNull(payload.getQuery())) {
+            queryInquiry.setQuery(payload.getQuery());
+        }
+        if (!BarcoUtil.isNull(payload.getStatus())) {
+            queryInquiry.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+        }
+        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (appUserOpt.isPresent()) {
+            queryInquiry.setUpdatedBy(appUserOpt.get());
+        }
+        return queryInquiry;
+    }
+
+    /**
+     * Method use to validate the payload
+     * @param payload
+     * @return AppResponse
+     * */
+    private AppResponse validateAddOrUpdatePayload(QueryInquiryRequest payload) throws Exception {
+        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        }
+        Optional<AppUser> appUserOpt = appUserRepository.findByUsernameAndStatus(
+            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (!appUserOpt.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        } else if (BarcoUtil.isNull(payload.getName())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_NAME_MISSING);
+        } else if (BarcoUtil.isNull(payload.getDescription())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_DESCRIPTION_MISSING);
+        } else if (BarcoUtil.isNull(payload.getQuery())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_QUERY_MISSING);
+        }
+        return (AppResponse) BarcoUtil.NULL;
+    }
+
+    /**
+     * Method use to get the valid username
+     * check user exist or not
+     * @param payload
+     * @return AppResponse
+     * */
+    private AppResponse isUsernameExist(QueryInquiryRequest payload) throws Exception {
+        AppResponse validationResponse = this.validateUsername(payload.getSessionUser());
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
+        } else if (BarcoUtil.isNull(payload.getId())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
+        }
+        return (AppResponse) BarcoUtil.NULL;
+    }
+
+    /**
+     * Method use to validate the username
+     * @param payload
+     * @return AppResponse
+     * */
+    private AppResponse validateUsername(SessionUser payload) throws Exception {
+        if (BarcoUtil.isNull(payload.getUsername())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        } else if (!this.appUserRepository.findByUsernameAndStatus(payload.getUsername(), APPLICATION_STATUS.ACTIVE).isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        return (AppResponse) BarcoUtil.NULL;
+    }
+
 }

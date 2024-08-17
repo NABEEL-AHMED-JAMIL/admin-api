@@ -1,6 +1,7 @@
 package com.barco.admin.filter;
 
 import com.barco.common.security.JwtUtils;
+import com.barco.common.utility.BarcoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith(BEARER)) {
             return headerAuth.substring(7, headerAuth.length());
         }
-        return null;
+        return (String) BarcoUtil.NULL;
     }
 
 }

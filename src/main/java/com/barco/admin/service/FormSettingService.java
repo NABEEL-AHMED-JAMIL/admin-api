@@ -11,7 +11,7 @@ public interface FormSettingService extends RootService {
 
     public AppResponse addForm(FormRequest payload) throws Exception;
 
-    public AppResponse editForm(FormRequest payload) throws Exception;
+    public AppResponse updateForm(FormRequest payload) throws Exception;
 
     public AppResponse deleteFormById(FormRequest payload) throws Exception;
 
@@ -35,7 +35,7 @@ public interface FormSettingService extends RootService {
 
     public AppResponse addSection(SectionRequest payload) throws Exception;
 
-    public AppResponse editSection(SectionRequest payload) throws Exception;
+    public AppResponse updateSection(SectionRequest payload) throws Exception;
 
     public AppResponse deleteSectionById(SectionRequest payload) throws Exception;
 
@@ -59,7 +59,7 @@ public interface FormSettingService extends RootService {
 
     public AppResponse addControl(ControlRequest payload) throws Exception;
 
-    public AppResponse editControl(ControlRequest payload) throws Exception;
+    public AppResponse updateControl(ControlRequest payload) throws Exception;
 
     public AppResponse deleteControlById(ControlRequest payload) throws Exception;
 

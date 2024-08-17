@@ -67,6 +67,9 @@ public interface RootService {
         if (data.containsKey(QueryService.PROFILE_IMG) && !BarcoUtil.isNull(data.get(QueryService.PROFILE_IMG))) {
             linkRPUResponse.setProfileImg(data.get(QueryService.PROFILE_IMG).toString());
         }
+        if (data.containsKey(QueryService.LINK_ID) && !BarcoUtil.isNull(data.get(QueryService.LINK_ID))) {
+            linkRPUResponse.setLinkId(Long.valueOf(data.get(QueryService.LINK_ID).toString()));
+        }
         if (data.containsKey(QueryService.LINK_DATA) && !BarcoUtil.isNull(data.get(QueryService.LINK_DATA))) {
             linkRPUResponse.setLinkData(data.get(QueryService.LINK_DATA).toString());
         }
@@ -658,6 +661,25 @@ public interface RootService {
         templateRegResponse.setDateUpdated(templateReg.getDateUpdated());
         templateRegResponse.setDateCreated(templateReg.getDateCreated());
         return templateRegResponse;
+    }
+
+    /**
+     * Method use to get the queryInquiry response
+     * @param queryInquiry
+     * @return QueryInquiryResponse
+     * */
+    public default QueryInquiryResponse getQueryInquiryResponse(QueryInquiry queryInquiry) {
+        QueryInquiryResponse queryInquiryResponse = new QueryInquiryResponse();
+        queryInquiryResponse.setId(queryInquiry.getId());
+        queryInquiryResponse.setName(queryInquiry.getName());
+        queryInquiryResponse.setDescription(queryInquiry.getDescription());
+        queryInquiryResponse.setQuery(queryInquiry.getQuery());
+        queryInquiryResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(queryInquiry.getStatus().getLookupType()));
+        queryInquiryResponse.setCreatedBy(getActionUser(queryInquiry.getCreatedBy()));
+        queryInquiryResponse.setUpdatedBy(getActionUser(queryInquiry.getUpdatedBy()));
+        queryInquiryResponse.setDateUpdated(queryInquiry.getDateUpdated());
+        queryInquiryResponse.setDateCreated(queryInquiry.getDateCreated());
+        return queryInquiryResponse;
     }
 
     /**

@@ -10,7 +10,7 @@ public interface TemplateRegService extends RootService {
 
 	public AppResponse addTemplateReg(TemplateRegRequest payload) throws Exception;
 
-	public AppResponse editTemplateReg(TemplateRegRequest payload) throws Exception;
+	public AppResponse updateTemplateReg(TemplateRegRequest payload) throws Exception;
 
 	public AppResponse findTemplateRegByTemplateId(TemplateRegRequest payload) throws Exception;
 

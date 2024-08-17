@@ -54,18 +54,18 @@ public class FormSettingRestApi {
     }
 
     /**
-     * @apiName :- editForm
-     * @apiNote :- Api use to edit form(source form)
+     * @apiName :- updateForm
+     * @apiNote :- Api use to update form(source form)
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value = "/editForm", method = RequestMethod.POST)
-    public ResponseEntity<?> editForm(@RequestBody FormRequest payload) {
+    @RequestMapping(value = "/updateForm", method = RequestMethod.POST)
+    public ResponseEntity<?> updateForm(@RequestBody FormRequest payload) {
         try {
-            return new ResponseEntity<>(this.formSettingService.editForm(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.formSettingService.updateForm(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while editForm ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while updateForm ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
@@ -258,18 +258,18 @@ public class FormSettingRestApi {
     }
 
     /**
-     * @apiName :- editSection
-     * @apiNote :- Api use to edit section(form section)
+     * @apiName :- updateSection
+     * @apiNote :- Api use to update section(form section)
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value = "/editSection", method = RequestMethod.POST)
-    public ResponseEntity<?> editSection(@RequestBody SectionRequest payload) {
+    @RequestMapping(value = "/updateSection", method = RequestMethod.POST)
+    public ResponseEntity<?> updateSection(@RequestBody SectionRequest payload) {
         try {
-            return new ResponseEntity<>(this.formSettingService.editSection(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.formSettingService.updateSection(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while editSection ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while updateSection ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
@@ -462,18 +462,18 @@ public class FormSettingRestApi {
     }
 
     /**
-     * @apiName :- editControl
-     * @apiNote :- Api use to edit
+     * @apiName :- updateControl
+     * @apiNote :- Api use to update
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value = "/editControl", method = RequestMethod.POST)
-    public ResponseEntity<?> editControl(@RequestBody ControlRequest payload) {
+    @RequestMapping(value = "/updateControl", method = RequestMethod.POST)
+    public ResponseEntity<?> updateControl(@RequestBody ControlRequest payload) {
         try {
-            return new ResponseEntity<>(this.formSettingService.editControl(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.formSettingService.updateControl(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while editControl ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while updateControl ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

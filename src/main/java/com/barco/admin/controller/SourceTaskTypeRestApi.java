@@ -44,18 +44,18 @@ public class SourceTaskTypeRestApi {
     }
 
     /**
-     * @apiName :- editSTT
+     * @apiName :- updateSTT
      * @apiNote :- Api use to update stt (source task type)
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('USER')")
-    @RequestMapping(value = "/editSTT", method = RequestMethod.POST)
-    public ResponseEntity<?> editSTT(@RequestBody STTRequest payload) {
+    @RequestMapping(value = "/updateSTT", method = RequestMethod.POST)
+    public ResponseEntity<?> updateSTT(@RequestBody STTRequest payload) {
         try {
-            return new ResponseEntity<>(this.sourceTaskTypeService.editSTT(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.sourceTaskTypeService.updateSTT(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while editSTT ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while updateSTT ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

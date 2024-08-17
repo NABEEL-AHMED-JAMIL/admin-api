@@ -97,31 +97,31 @@ public class AppUserServiceImpl implements AppUserService {
         if (!BarcoUtil.isNull(appUser.get().getAppUserEnvs())) {
             appUserResponse.setEnVariables(appUser.get().getAppUserEnvs().stream()
                 .filter(appUserEnv -> appUserEnv.getStatus().equals(APPLICATION_STATUS.ACTIVE))
-                .map(appUserEnv -> this.getEnVariablesResponse(appUserEnv)).collect(Collectors.toList()));
+                .map(appUserEnv -> this.getEnVariablesResponse(appUserEnv))
+                .collect(Collectors.toList()));
         }
         // app user web hook
         if (!BarcoUtil.isNull(appUser.get().getAppUserEventBridges())) {
-            appUserResponse.setEventBridge(
-                appUser.get().getAppUserEventBridges().stream()
-                    .filter(appUserEventBridge -> appUserEventBridge.getStatus().equals(APPLICATION_STATUS.ACTIVE))
-                    .map(appUserEventBridge -> {
-                        EventBridgeResponse eventBridgeResponse = this.getEventBridgeResponse(appUserEventBridge);
-                        // event-bridge type
-                        if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getBridgeType())) {
-                            GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService
-                                .getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
-                                    appUserEventBridge.getEventBridge().getBridgeType().getLookupCode()));
-                            eventBridgeResponse.setBridgeType(bridgeType);
-                        }
-                        // http method
-                        if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getHttpMethod())) {
-                            GLookup httpMethod = GLookup.getGLookup(this.lookupDataCacheService
-                                .getChildLookupDataByParentLookupTypeAndChildLookupCode(REQUEST_METHOD.getName(),
-                                    Long.valueOf(appUserEventBridge.getEventBridge().getHttpMethod().ordinal())));
-                            eventBridgeResponse.setHttpMethod(httpMethod);
-                        }
-                        return eventBridgeResponse;
-                    }).collect(Collectors.toList()));
+            appUserResponse.setEventBridge(appUser.get().getAppUserEventBridges().stream()
+                .filter(appUserEventBridge -> appUserEventBridge.getStatus().equals(APPLICATION_STATUS.ACTIVE))
+                .map(appUserEventBridge -> {
+                    EventBridgeResponse eventBridgeResponse = this.getEventBridgeResponse(appUserEventBridge);
+                    // event-bridge type
+                    if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getBridgeType())) {
+                        GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService
+                            .getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
+                                appUserEventBridge.getEventBridge().getBridgeType().getLookupCode()));
+                        eventBridgeResponse.setBridgeType(bridgeType);
+                    }
+                    // http method
+                    if (!BarcoUtil.isNull(appUserEventBridge.getEventBridge().getHttpMethod())) {
+                        GLookup httpMethod = GLookup.getGLookup(this.lookupDataCacheService
+                            .getChildLookupDataByParentLookupTypeAndChildLookupCode(REQUEST_METHOD.getName(),
+                                Long.valueOf(appUserEventBridge.getEventBridge().getHttpMethod().ordinal())));
+                        eventBridgeResponse.setHttpMethod(httpMethod);
+                    }
+                    return eventBridgeResponse;
+                }).collect(Collectors.toList()));
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, appUserResponse);
     }
@@ -219,8 +219,8 @@ public class AppUserServiceImpl implements AppUserService {
         // email to user
         this.sendCloseUserAccountEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         // notification to admin
-        this.sendNotification(MessageUtil.ACCOUNT_STATUS, String.format(MessageUtil.ACCOUNT_DELETE_DETAIL,
-            appUser.get().getUsername()), adminUser.get(), this.lookupDataCacheService, this.notificationService);
+        this.sendNotification(MessageUtil.ACCOUNT_STATUS, String.format(MessageUtil.ACCOUNT_DELETE_DETAIL, appUser.get().getUsername()),
+            adminUser.get(), this.lookupDataCacheService, this.notificationService);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, appUser.get().getUsername()), payload);
     }
 
@@ -248,8 +248,8 @@ public class AppUserServiceImpl implements AppUserService {
             appUser.setUpdatedBy(adminUser.get());
             appUser.setStatus(APPLICATION_STATUS.DELETE);
             this.enabledDisabledAppUserEnvs(appUser, adminUser.get());
-            this.enabledDisabledAppUserRoleAccesses(appUser, adminUser.get());
             this.enabledDisabledAppUserEventBridges(appUser, adminUser.get());
+            this.enabledDisabledAppUserRoleAccesses(appUser, adminUser.get());
             this.enabledDisabledProfilePermissionsAccesses(appUser, adminUser.get());
             this.appUserRepository.save(appUser);
             // email to user
@@ -483,8 +483,8 @@ public class AppUserServiceImpl implements AppUserService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse editAppUserAccount(AppUserRequest payload) throws Exception {
-        logger.info("Request editAppUserAccount :- " + payload);
+    public AppResponse updateAppUserAccount(AppUserRequest payload) throws Exception {
+        logger.info("Request updateAppUserAccount :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -585,8 +585,8 @@ public class AppUserServiceImpl implements AppUserService {
             appUser.get().setUpdatedBy(adminUser.get());
             appUser.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
             this.enabledDisabledAppUserEnvs(appUser.get(), adminUser.get());
-            this.enabledDisabledAppUserRoleAccesses(appUser.get(), adminUser.get());
             this.enabledDisabledAppUserEventBridges(appUser.get(), adminUser.get());
+            this.enabledDisabledAppUserRoleAccesses(appUser.get(), adminUser.get());
             this.enabledDisabledProfilePermissionsAccesses(appUser.get(), adminUser.get());
         }
         this.appUserRepository.save(appUser.get());
@@ -594,8 +594,8 @@ public class AppUserServiceImpl implements AppUserService {
         this.sendEnabledDisabledRegisterUserEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         // notification to admin
         this.sendNotification(MessageUtil.ACCOUNT_STATUS, (appUser.get().getStatus().equals(APPLICATION_STATUS.ACTIVE) ?
-            String.format(MessageUtil.ACCOUNT_ENABLED, appUser.get().getUsername()) : String.format(MessageUtil.ACCOUNT_DISABLED, appUser.get().getUsername())),
-            adminUser.get(), this.lookupDataCacheService, this.notificationService);
+            String.format(MessageUtil.ACCOUNT_ENABLED, appUser.get().getUsername()) : String.format(MessageUtil.ACCOUNT_DISABLED,
+                appUser.get().getUsername())), adminUser.get(), this.lookupDataCacheService, this.notificationService);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, appUser.get().getUsername()), payload);
     }
 

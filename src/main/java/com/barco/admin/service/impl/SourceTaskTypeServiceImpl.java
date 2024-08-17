@@ -148,13 +148,13 @@ public class SourceTaskTypeServiceImpl implements SourceTaskTypeService {
     }
 
     /**
-     * Method use to edit the stt
+     * Method use to update the stt
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse editSTT(STTRequest payload) throws Exception {
-        logger.info("Request editSTT :- " + payload);
+    public AppResponse updateSTT(STTRequest payload) throws Exception {
+        logger.info("Request updateSTT :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }

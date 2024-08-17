@@ -79,13 +79,13 @@ public class SourceTaskServiceImpl implements SourceTaskService {
     }
 
     /***
-     * Method use to edit new source task
+     * Method use to update new source task
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse editSourceTask(SourceTaskRequest payload) throws Exception {
-        logger.info("Request editSourceTask :- " + payload);
+    public AppResponse updateSourceTask(SourceTaskRequest payload) throws Exception {
+        logger.info("Request updateSourceTask :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }

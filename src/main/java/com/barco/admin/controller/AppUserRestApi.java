@@ -175,21 +175,21 @@ public class AppUserRestApi {
     }
 
     /**
-     * @apiName :- editAppUserAccount
-     * @apiNote :- Api use to edit the app user account
+     * @apiName :- updateAppUserAccount
+     * @apiNote :- Api use to update the app user account
      * @param payload
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
-    @RequestMapping(value = "/editAppUserAccount", method = RequestMethod.POST)
-    public ResponseEntity<?> editAppUserAccount(@RequestBody AppUserRequest payload) {
+    @RequestMapping(value = "/updateAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> updateAppUserAccount(@RequestBody AppUserRequest payload) {
         try {
             // user session detail
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
-            return new ResponseEntity<>(this.appUserService.editAppUserAccount(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.appUserService.updateAppUserAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while editAppUserAccount ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while updateAppUserAccount ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

@@ -140,13 +140,13 @@ public class FormSettingServiceImpl implements FormSettingService {
     }
 
     /**
-     * Method use to edit the form
+     * Method use to update the form
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse editForm(FormRequest payload) throws Exception {
-        logger.info("Request editForm :- " + payload);
+    public AppResponse updateForm(FormRequest payload) throws Exception {
+        logger.info("Request updateForm :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -645,13 +645,13 @@ public class FormSettingServiceImpl implements FormSettingService {
     }
 
     /**
-     * Method use to edit section
+     * Method use to update section
      * @param payload
      * @return AppResponse
      * */
     @Override
-    public AppResponse editSection(SectionRequest payload) throws Exception {
-        logger.info("Request editSection :- " + payload);
+    public AppResponse updateSection(SectionRequest payload) throws Exception {
+        logger.info("Request updateSection :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -1152,8 +1152,8 @@ public class FormSettingServiceImpl implements FormSettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse editControl(ControlRequest payload) throws Exception {
-        logger.info("Request editControl :- " + payload);
+    public AppResponse updateControl(ControlRequest payload) throws Exception {
+        logger.info("Request updateControl :- " + payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getId())) {

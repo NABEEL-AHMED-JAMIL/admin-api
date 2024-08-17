@@ -34,7 +34,7 @@ public class OrganizationRestApi {
 
     /**
      * @apiName :- addOrg
-     * @apiNote :- Method use to edit org
+     * @apiNote :- Method use to add org
      * @param payload
      * @return ResponseEntity
      * */
