@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.io.ByteArrayOutputStream;
 import java.util.Optional;
 
 /**
@@ -124,7 +123,17 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     public AppResponse deleteOrgById(OrganizationRequest payload) throws Exception {
         logger.info("Request deleteOrgById :- " + payload);
-        return null;
+        AppResponse usernameExist = this.isUsernameExist(payload);
+        if (!BarcoUtil.isNull(usernameExist)) {
+            return usernameExist;
+        }
+        Optional<Organization> organization = this.organizationRepository.findByIdAndUsername(
+            payload.getId(), payload.getSessionUser().getUsername());
+        if (!organization.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ORG_NOT_FOUND);
+        }
+        // delete the org and delete the all user and delete the all setting and resource as well
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
     }
 
     /**
@@ -135,28 +144,14 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     public AppResponse deleteAllOrg(OrganizationRequest payload) throws Exception {
         logger.info("Request deleteAllOrg :- " + payload);
-        return null;
-    }
-
-    /**
-     * Method use to download org template
-     * @return AppResponse
-     * */
-    @Override
-    public ByteArrayOutputStream downloadOrgTemplateFile() throws Exception {
-        logger.info("Request downloadOrgTemplateFile ");
-        return null;
-    }
-
-    /**
-     * Method use to download org's
-     * @param payload
-     * @return AppResponse
-     * */
-    @Override
-    public ByteArrayOutputStream downloadOrg(OrganizationRequest payload) throws Exception {
-        logger.info("Request downloadOrg :- " + payload);
-        return null;
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
+        } else if (BarcoUtil.isNull(payload.getIds())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
+        }
+        // delete the org and delete the all user and delete the all setting and resource as well
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
     /**
@@ -228,7 +223,6 @@ public class OrganizationServiceImpl implements OrganizationService {
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         Organization organization = new Organization();
         organization.setName(payload.getName());
-        organization.setEmail(payload.getEmail());
         organization.setPhone(payload.getPhone());
         organization.setAddress(payload.getAddress());
         organization.setCountry(this.etlCountryRepository.findByCountryCode(payload.getCountryCode()).get());
@@ -248,9 +242,6 @@ public class OrganizationServiceImpl implements OrganizationService {
         OrganizationRequest payload) throws Exception {
         if (!BarcoUtil.isNull(payload.getName())) {
             organization.setName(payload.getName());
-        }
-        if (!BarcoUtil.isNull(payload.getEmail())) {
-            organization.setEmail(payload.getEmail());
         }
         if (!BarcoUtil.isNull(payload.getPhone())) {
             organization.setPhone(payload.getPhone());

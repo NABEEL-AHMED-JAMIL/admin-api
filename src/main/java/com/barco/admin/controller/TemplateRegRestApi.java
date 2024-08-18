@@ -119,12 +119,12 @@ public class TemplateRegRestApi {
      * @return ResponseEntity<?>
      * */
     @PreAuthorize("hasRole('DEV')")
-    @RequestMapping(path="/deleteAllCredential", method=RequestMethod.POST)
-    public ResponseEntity<?> deleteAllCredential(@RequestBody TemplateRegRequest payload) {
+    @RequestMapping(path="/deleteAllTemplateReg", method=RequestMethod.POST)
+    public ResponseEntity<?> deleteAllTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
             return new ResponseEntity<>(this.templateRegService.deleteAllTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while deleteAllCredential ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while deleteAllTemplateReg ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

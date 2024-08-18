@@ -332,11 +332,10 @@ public interface RootService {
         OrganizationResponse organizationResponse = new OrganizationResponse();
         organizationResponse.setId(organization.getId());
         organizationResponse.setName(organization.getName());
-        organizationResponse.setEmail(organization.getEmail());
         organizationResponse.setPhone(organization.getPhone());
         organizationResponse.setAddress(organization.getAddress());
         organizationResponse.setCountry(new ETLCountryResponse(organization.getCountry().getCountryCode(),
-             organization.getCountry().getCountryName(), organization.getCountry().getCode()));
+            organization.getCountry().getCountryName(), organization.getCountry().getCode()));
         organizationResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(organization.getStatus().getLookupType()));
         organizationResponse.setCreatedBy(getActionUser(organization.getCreatedBy()));
         organizationResponse.setUpdatedBy(getActionUser(organization.getUpdatedBy()));
@@ -421,7 +420,7 @@ public interface RootService {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
             Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(REGISTER_USER.name(), APPLICATION_STATUS.ACTIVE);
             if (!templateReg.isPresent()) {
-                logger.info("No Template Found With %s", REGISTER_USER.name());
+                logger.error("No Template Found With %s", REGISTER_USER.name());
                 return false;
             }
             Map<String, Object> metaData = new HashMap<>();
@@ -462,7 +461,7 @@ public interface RootService {
                 templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(BLOCK_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
             }
             if (!templateReg.isPresent()) {
-                logger.info("No Template Found With %s", (appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE) ? ACTIVE_USER_ACCOUNT.name() : BLOCK_USER_ACCOUNT.name()));
+                logger.error("No Template Found With %s", (appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE) ? ACTIVE_USER_ACCOUNT.name() : BLOCK_USER_ACCOUNT.name()));
                 return false;
             }
             Map<String, Object> metaData = new HashMap<>();
@@ -499,7 +498,7 @@ public interface RootService {
             LookupDataResponse forgotPasswordUrl = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.RESET_PASSWORD_LINK);
             Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(FORGOT_USER_PASSWORD.name(), APPLICATION_STATUS.ACTIVE);
             if (!templateReg.isPresent()) {
-                logger.info("No Template Found With %s", FORGOT_USER_PASSWORD.name());
+                logger.error("No Template Found With %s", FORGOT_USER_PASSWORD.name());
                 return false;
             }
             // forgot password
@@ -511,7 +510,8 @@ public interface RootService {
             Map<String, Object> metaData = new HashMap<>();
             metaData.put(EmailUtil.USERNAME, appUser.getUsername());
             metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.FORGOT_PASSWORD_URL, forgotPasswordUrl.getLookupValue() +"?token="+ jwtUtils.generateTokenFromUsernameResetPassword(forgotPasswordRequest.toString()));
+            metaData.put(EmailUtil.FORGOT_PASSWORD_URL, forgotPasswordUrl.getLookupValue().concat("?token=")
+                .concat(jwtUtils.generateTokenFromUsernameResetPassword(forgotPasswordRequest.toString())));
             // email send request
             EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
             emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
@@ -543,7 +543,7 @@ public interface RootService {
                 logger.info("No Template Found With %s", RESET_USER_PASSWORD.name());
                 return false;
             }
-            // meta data
+            // metadata
             Map<String, Object> metaData = new HashMap<>();
             metaData.put(EmailUtil.USERNAME, appUser.getUsername());
             metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
@@ -641,7 +641,7 @@ public interface RootService {
             return new GLookup(lookupData.get().getLookupType(),
                 lookupData.get().getLookupCode(), lookupData.get().getLookupValue());
         }
-        return null;
+        return (GLookup) BarcoUtil.NULL;
     }
 
     /**
@@ -945,8 +945,7 @@ public interface RootService {
      * @param appUser
      * @param eventBridge
      * */
-    public default AppUserEventBridge getAppUserEventBridge(AppUser superAdmin,
-        AppUser appUser, EventBridge eventBridge) {
+    public default AppUserEventBridge getAppUserEventBridge(AppUser superAdmin, AppUser appUser, EventBridge eventBridge) {
         AppUserEventBridge appUserEventBridge = new AppUserEventBridge();
         appUserEventBridge.setCreatedBy(superAdmin);
         appUserEventBridge.setUpdatedBy(superAdmin);
@@ -1383,7 +1382,7 @@ public interface RootService {
             credential.getSourceTaskTypes().stream()
                 .filter(sourceTaskTypes -> !sourceTaskTypes.getStatus().equals(APPLICATION_STATUS.DELETE))
                 .map(sourceTaskTypes -> {
-                    sourceTaskTypes.setCredential(null);
+                    sourceTaskTypes.setCredential((Credential) BarcoUtil.NULL);
                     return sourceTaskTypes;
                 }).collect(Collectors.toList());
         }

@@ -22,8 +22,4 @@ public interface OrganizationService extends RootService {
 
     public AppResponse deleteAllOrg(OrganizationRequest payload) throws Exception;
 
-    public ByteArrayOutputStream downloadOrgTemplateFile() throws Exception;
-
-    public ByteArrayOutputStream downloadOrg(OrganizationRequest payload) throws Exception;
-
 }

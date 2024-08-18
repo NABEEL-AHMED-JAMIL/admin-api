@@ -188,7 +188,7 @@ public class SettingRestApi {
      * @return ResponseEntity<?> deleteQueryInquiry
      * */
     @PreAuthorize("hasRole('DEV')")
-    @RequestMapping(value = "/deleteQueryInquiryById", method = RequestMethod.PUT)
+    @RequestMapping(value = "/deleteQueryInquiryById", method = RequestMethod.POST)
     public ResponseEntity<?> deleteQueryInquiryById(@RequestBody QueryInquiryRequest payload) {
         try {
             return new ResponseEntity<>(this.settingService.deleteQueryInquiryById(payload), HttpStatus.OK);

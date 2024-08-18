@@ -3,6 +3,7 @@ package com.barco.admin.service.impl;
 import com.barco.admin.service.SettingService;
 import com.barco.model.dto.request.QueryInquiryRequest;
 import com.barco.model.dto.request.SessionUser;
+import com.barco.model.dto.response.QueryInquiryResponse;
 import com.barco.model.dto.response.QueryResponse;
 import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.QueryInquiry;
@@ -22,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.ByteArrayOutputStream;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -101,8 +103,7 @@ public class SettingServiceImpl implements SettingService {
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.etlCountryRepository.findAll());
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.etlCountryRepository.findAll());
     }
 
     /**
@@ -196,7 +197,7 @@ public class SettingServiceImpl implements SettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_NOT_FOUND);
         }
         this.queryInquiryRepository.save(this.updateQueryInquiryPayload(queryInquiry.get(), payload));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
     /**
@@ -231,10 +232,25 @@ public class SettingServiceImpl implements SettingService {
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.queryInquiryRepository.findAllByUsernameOrderByDateCreatedDesc(payload.getSessionUser().getUsername())
-                .stream().map(this::getQueryInquiryResponse).collect(Collectors.toList()));
-
+        if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
+            Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
+            Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
+            return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+                this.queryInquiryRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(startDate, endDate,
+                    payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE)
+                    .stream().map(this::getQueryInquiryResponse).collect(Collectors.toList()));
+        } else {
+            return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+                this.queryInquiryRepository.findAllByUsernameAndStatusNotInOrderByDateCreatedDesc(payload.getSessionUser().getUsername(),
+                    Arrays.asList(APPLICATION_STATUS.DELETE, APPLICATION_STATUS.INACTIVE))
+                    .stream().map(queryInquiry -> {
+                        QueryInquiryResponse queryInquiryResponse = new QueryInquiryResponse();
+                        queryInquiryResponse.setId(queryInquiry.getId());
+                        queryInquiryResponse.setName(queryInquiry.getName());
+                        queryInquiryResponse.setQuery(queryInquiry.getQuery());
+                        return queryInquiryResponse;
+                    }).collect(Collectors.toList()));
+        }
     }
 
     /**
@@ -372,7 +388,8 @@ public class SettingServiceImpl implements SettingService {
     private AppResponse validateUsername(SessionUser payload) throws Exception {
         if (BarcoUtil.isNull(payload.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        } else if (!this.appUserRepository.findByUsernameAndStatus(payload.getUsername(), APPLICATION_STATUS.ACTIVE).isPresent()) {
+        } else if (!this.appUserRepository.findByUsernameAndStatus(
+            payload.getUsername(), APPLICATION_STATUS.ACTIVE).isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         return (AppResponse) BarcoUtil.NULL;

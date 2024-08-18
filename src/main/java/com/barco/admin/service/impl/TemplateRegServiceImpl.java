@@ -78,7 +78,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
         this.templateRegRepository.save(this.updateTemplateRegPayload(templateRegOpt.get(), payload));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
     /**
@@ -93,13 +93,11 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         if (!BarcoUtil.isNull(usernameExist)) {
             return usernameExist;
         }
-        Optional<TemplateReg> templateRegOpt = this.templateRegRepository.findByIdAndUsername(
-            payload.getId(), payload.getSessionUser().getUsername());
-        if (!templateRegOpt.isPresent()) {
+        Optional<TemplateReg> templateReg = this.templateRegRepository.findByIdAndUsername(payload.getId(), payload.getSessionUser().getUsername());
+        if (!templateReg.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.getTemplateRegResponse(templateRegOpt.get()));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getTemplateRegResponse(templateReg.get()));
     }
 
     /**
@@ -131,12 +129,11 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         if (!BarcoUtil.isNull(usernameExist)) {
             return usernameExist;
         }
-        Optional<TemplateReg> templateRegOpt = this.templateRegRepository.findByIdAndUsername(
-            payload.getId(), payload.getSessionUser().getUsername());
-        if (!templateRegOpt.isPresent()) {
+        Optional<TemplateReg> templateReg = this.templateRegRepository.findByIdAndUsername(payload.getId(), payload.getSessionUser().getUsername());
+        if (!templateReg.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
-        this.templateRegRepository.delete(templateRegOpt.get());
+        this.templateRegRepository.delete(templateReg.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
     }
 

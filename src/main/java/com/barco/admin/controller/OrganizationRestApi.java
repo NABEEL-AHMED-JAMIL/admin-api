@@ -134,44 +134,4 @@ public class OrganizationRestApi {
         }
     }
 
-    /**
-     * @apiName :- downloadOrgTemplateFile
-     * @apiNote :- Api use to download Org template
-     * @return ResponseEntity<?> downloadOrgTemplateFile
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value = "/downloadOrgTemplateFile", method = RequestMethod.GET)
-    public ResponseEntity<?> downloadOrgTemplateFile() {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
-            String fileName = "BatchOrgDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
-            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
-            return ResponseEntity.ok().headers(headers).body(this.organizationService.downloadOrgTemplateFile().toByteArray());
-        } catch (Exception ex) {
-            logger.error("An error occurred while downloadOrgTemplateFile xlsx file", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- downloadOrg
-     * @apiNote :- Api use to download the Org
-     * @return ResponseEntity<?> downloadOrg
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value = "/downloadOrg", method = RequestMethod.POST)
-    public ResponseEntity<?> downloadOrg(@RequestBody OrganizationRequest payload) {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
-            String fileName = "BatchOrgDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
-            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
-            return ResponseEntity.ok().headers(headers).body(this.organizationService.downloadOrg(payload).toByteArray());
-        } catch (Exception ex) {
-            logger.error("An error occurred while downloadOrg ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
 }
