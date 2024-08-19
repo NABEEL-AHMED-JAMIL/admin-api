@@ -66,8 +66,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
         List<RefreshTokenResponse> tokenResponseList = this.appTokenRepository.findByDateCreatedBetweenOrderByDateCreatedDesc(
-            startDate, endDate).stream()
-            .map(refreshToken -> getRefreshTokenResponse(refreshToken))
+            startDate, endDate).stream().map(refreshToken -> this.getRefreshTokenResponse(refreshToken))
             .collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, tokenResponseList);
     }
@@ -96,9 +95,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         refreshToken.setStatus(APPLICATION_STATUS.ACTIVE);
         AppUser appUser = this.appUserRepository.findById(appUserId)
             .orElseThrow(() -> new NullPointerException(MessageUtil.APPUSER_NOT_FOUND));
+        refreshToken.setExpiryDate(Instant.now().plusMillis(this.refreshTokenDurationMs));
         refreshToken.setCreatedBy(appUser);
         refreshToken.setUpdatedBy(appUser);
-        refreshToken.setExpiryDate(Instant.now().plusMillis(this.refreshTokenDurationMs));
         return this.appTokenRepository.save(refreshToken);
     }
 

@@ -2,8 +2,6 @@ package com.barco.admin.service;
 
 import com.barco.model.dto.request.OrganizationRequest;
 import com.barco.model.dto.response.AppResponse;
-import java.io.ByteArrayOutputStream;
-
 
 /**
  * @author Nabeel Ahmed
