@@ -2,7 +2,6 @@ package com.barco.admin.service.impl;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,12 +61,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * */
     @Override
     public AppResponse fetchByAllRefreshToken(TokenRefreshRequest payload) throws Exception {
-        logger.info("Request fetchByAllRefreshToken" + payload);
+        logger.info("Request fetchByAllRefreshToken{}.", payload);
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
         List<RefreshTokenResponse> tokenResponseList = this.appTokenRepository.findByDateCreatedBetweenOrderByDateCreatedDesc(
-            startDate, endDate).stream().map(refreshToken -> this.getRefreshTokenResponse(refreshToken))
-            .collect(Collectors.toList());
+            startDate, endDate).stream().map(this::getRefreshTokenResponse).collect(Collectors.toList());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, tokenResponseList);
     }
 
@@ -77,7 +75,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * @return Optional<RefreshToken>
      * */
     public Optional<RefreshToken> findByToken(String token) throws Exception {
-        logger.info("Request findByToken :- " + token);
+        logger.info("Request findByToken :- {}.", token);
         return this.appTokenRepository.findByTokenAndStatus(token, APPLICATION_STATUS.ACTIVE);
     }
 
@@ -88,13 +86,12 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * @return RefreshToken
      * */
     public RefreshToken createRefreshToken(Long appUserId, String ip) throws Exception {
-        logger.info("Request createRefreshToken :- " + appUserId + " IP :- " + ip);
+        logger.info("Request createRefreshToken :- {} IP :- {}.", appUserId, ip);
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setIpAddress(ip);
         refreshToken.setToken(UUID.randomUUID().toString());
         refreshToken.setStatus(APPLICATION_STATUS.ACTIVE);
-        AppUser appUser = this.appUserRepository.findById(appUserId)
-            .orElseThrow(() -> new NullPointerException(MessageUtil.APPUSER_NOT_FOUND));
+        AppUser appUser = this.appUserRepository.findById(appUserId).orElseThrow(() -> new NullPointerException(MessageUtil.APPUSER_NOT_FOUND));
         refreshToken.setExpiryDate(Instant.now().plusMillis(this.refreshTokenDurationMs));
         refreshToken.setCreatedBy(appUser);
         refreshToken.setUpdatedBy(appUser);
@@ -121,7 +118,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * @return AppResponse
      * */
     public AppResponse deleteRefreshToken(TokenRefreshRequest payload) throws Exception {
-        logger.info("Request deleteRefreshToken :- " + payload);
+        logger.info("Request deleteRefreshToken :- {}.", payload);
         Optional<RefreshToken> refreshToken = this.findByToken(payload.getRefreshToken());
         if (refreshToken.isPresent()) {
             refreshToken.get().setStatus(APPLICATION_STATUS.DELETE);
@@ -137,13 +134,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * */
     @Override
     public AppResponse deleteAllRefreshToken(TokenRefreshRequest payload) throws Exception {
-        logger.info("Request deleteAllRefreshToken :- " + payload);
+        logger.info("Request deleteAllRefreshToken :- {}.", payload);
         if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REFRESH_TOKEN_IDS_MISSING);
         }
-        Iterator<RefreshToken> refreshTokenIterator = this.appTokenRepository.findAllById(payload.getIds()).iterator();
-        while (refreshTokenIterator.hasNext()) {
-            RefreshToken refreshToken = refreshTokenIterator.next();
+        for (RefreshToken refreshToken : this.appTokenRepository.findAllById(payload.getIds())) {
             refreshToken.setStatus(APPLICATION_STATUS.DELETE);
             this.appTokenRepository.save(refreshToken);
         }

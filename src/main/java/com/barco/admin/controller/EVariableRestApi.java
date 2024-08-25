@@ -8,6 +8,8 @@ import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.MessageUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,8 @@ import java.util.UUID;
 @RestController
 @CrossOrigin(origins="*")
 @RequestMapping(value="/eVariable.json")
+@Api(value = "E-Variable Rest Api",
+    description = "E-Variable Service : Service related to the [Environment Variable] for user.")
 public class EVariableRestApi {
 
     private Logger logger = LoggerFactory.getLogger(EVariableRestApi.class);
@@ -42,7 +46,8 @@ public class EVariableRestApi {
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to add new environment variable.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/addEnVariable", method= RequestMethod.POST)
     public ResponseEntity<?> addEnVariable(@RequestBody EnVariablesRequest payload) {
         try {
@@ -59,7 +64,8 @@ public class EVariableRestApi {
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to update environment variable.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/updateEnVariable", method= RequestMethod.POST)
     public ResponseEntity<?> updateEnVariable(@RequestBody EnVariablesRequest payload) {
         try {
@@ -76,7 +82,8 @@ public class EVariableRestApi {
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to fetch all environment variable.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/fetchAllEnVariable", method= RequestMethod.POST)
     public ResponseEntity<?> fetchAllEnVariable(@RequestBody EnVariablesRequest payload) {
         try {
@@ -93,7 +100,8 @@ public class EVariableRestApi {
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to fetch environment variable by id.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/fetchEnVariableById", method= RequestMethod.POST)
     public ResponseEntity<?> fetchEnVariableById(@RequestBody EnVariablesRequest payload) {
         try {
@@ -110,6 +118,7 @@ public class EVariableRestApi {
      * @param payload
      * @return ResponseEntity
      * */
+    @ApiOperation(value = "Api use to fetch environment variable link with user.", response = ResponseEntity.class)
     @RequestMapping(value="/fetchUserEnvByEnvKey", method= RequestMethod.POST)
     public ResponseEntity<?> fetchUserEnvByEnvKey(@RequestBody EnVariablesRequest payload) {
         try {
@@ -126,7 +135,8 @@ public class EVariableRestApi {
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to delete environment variable by id.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/deleteEnVariableById", method= RequestMethod.POST)
     public ResponseEntity<?> deleteEnVariableById(@RequestBody EnVariablesRequest payload) {
         try {
@@ -143,7 +153,8 @@ public class EVariableRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to delete all environment variables.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/deleteAllEnVariable", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllEnVariable(@RequestBody EnVariablesRequest payload) {
         try {
@@ -159,7 +170,8 @@ public class EVariableRestApi {
      * @apiNote :- Api use to download en-variable template
      * @return ResponseEntity<?> downloadEnVariableTemplateFile
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to download template for environment variables.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/downloadEnVariableTemplateFile", method = RequestMethod.GET)
     public ResponseEntity<?> downloadEnVariableTemplateFile() {
         try {
@@ -179,7 +191,8 @@ public class EVariableRestApi {
      * @apiNote :- Api use to download the en-variable
      * @return ResponseEntity<?> downloadEnVariable
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to download environment variables.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/downloadEnVariable", method = RequestMethod.POST)
     public ResponseEntity<?> downloadEnVariable(@RequestBody EnVariablesRequest payload) {
         try {
@@ -199,7 +212,8 @@ public class EVariableRestApi {
      * @apiNote :- Api use to upload the en-variable
      * @return ResponseEntity<?> uploadEnVariable
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to upload environment variables.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/uploadEnVariable", method = RequestMethod.POST)
     public ResponseEntity<?> uploadEnVariable(FileUploadRequest payload) {
         try {
@@ -218,7 +232,8 @@ public class EVariableRestApi {
      * @apiNote :- Api use to fetch e-variable with root user
      * @return ResponseEntity<?> fetchLinkEVariableWitUser
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to fetch link environment variables with user.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/fetchLinkEVariableWitUser", method = RequestMethod.POST)
     public ResponseEntity<?> fetchLinkEVariableWitUser(@RequestBody LinkEURequest payload) {
         try {
@@ -234,7 +249,8 @@ public class EVariableRestApi {
      * @apiNote :- Api use to link e-variable with root user
      * @return ResponseEntity<?> linkEVariableWithUser
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to link environment variables with user.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/linkEVariableWithUser", method = RequestMethod.POST)
     public ResponseEntity<?> linkEVariableWithUser(@RequestBody LinkEURequest payload) {
         try {

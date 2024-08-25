@@ -11,7 +11,7 @@ import java.io.ByteArrayOutputStream;
  */
 public interface SettingService extends RootService {
 
-    public AppResponse fetchSettingDashboard(SessionUser payload) throws Exception;
+    public AppResponse fetchStatisticsDashboard(SessionUser payload) throws Exception;
 
     public AppResponse fetchCountryData(SessionUser payload) throws Exception;
 

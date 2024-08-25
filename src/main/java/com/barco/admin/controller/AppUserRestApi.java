@@ -7,6 +7,8 @@ import com.barco.common.utility.excel.ExcelUtil;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.security.UserSessionDetail;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,8 @@ import java.util.UUID;
 @RestController
 @CrossOrigin(origins="*")
 @RequestMapping(value = "/appUser.json")
+@Api(value = "App Rest Api",
+   description = "AppUser Service : Service related to the user management. ")
 public class AppUserRestApi {
 
     private Logger logger = LoggerFactory.getLogger(AppUserRestApi.class);
@@ -41,6 +45,7 @@ public class AppUserRestApi {
      * @param username
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch the app user profile.", response = ResponseEntity.class)
     @RequestMapping(value = "/fetchAppUserProfile", method = RequestMethod.GET)
     public ResponseEntity<?> fetchAppUserProfile(@RequestParam String username) {
         try {
@@ -57,6 +62,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to update the app user env variable value.", response = ResponseEntity.class)
     @RequestMapping(value = "/updateAppUserEnvVariable", method = RequestMethod.POST)
     public ResponseEntity<?> updateAppUserEnvVariable(@RequestBody EnVariablesRequest payload) {
         try {
@@ -73,6 +79,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to update the app user password.", response = ResponseEntity.class)
     @RequestMapping(value = "/updateAppUserPassword", method = RequestMethod.POST)
     public ResponseEntity<?> updateAppUserPassword(@RequestBody UpdateUserProfileRequest payload) {
         try {
@@ -89,6 +96,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to use to delete app user account.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/deleteAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> deleteAppUserAccount(@RequestBody AppUserRequest payload) {
@@ -106,6 +114,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to use to delete all app user accounts.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(path="/deleteAllAppUserAccount", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllAppUserAccount(@RequestBody AppUserRequest payload) {
@@ -122,6 +131,7 @@ public class AppUserRestApi {
      * @apiNote :- Api use to download app user account
      * @return ResponseEntity<?> AppUserRequest
      * */
+    @ApiOperation(value = "Api use to download app user accounts.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/downloadAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> downloadAppUserAccount(@RequestBody AppUserRequest payload) {
@@ -143,6 +153,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch app user account.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/fetchAllAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllAppUserAccount(@RequestBody AppUserRequest payload) {
@@ -160,6 +171,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to add new app user account.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/addAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> addAppUserAccount(@RequestBody AppUserRequest payload) {
@@ -180,6 +192,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to update new app user account.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/updateAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> updateAppUserAccount(@RequestBody AppUserRequest payload) {
@@ -200,6 +213,7 @@ public class AppUserRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to enabled and disabled app user account.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(value = "/enabledDisabledAppUserAccount", method = RequestMethod.POST)
     public ResponseEntity<?> enabledDisabledAppUserAccount(@RequestBody AppUserRequest payload) {

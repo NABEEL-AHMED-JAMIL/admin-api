@@ -11,13 +11,13 @@ import com.barco.model.repository.ETLCountryRepository;
 import com.barco.model.repository.QueryInquiryRepository;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.APPLICATION_STATUS;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.stereotype.Service;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.excel.BulkExcel;
 import com.barco.model.dto.request.QueryRequest;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.repository.AppUserRepository;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.stereotype.Service;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,13 +36,6 @@ import java.util.stream.Collectors;
 public class SettingServiceImpl implements SettingService {
 
     private Logger logger = LoggerFactory.getLogger(SettingServiceImpl.class);
-
-    private String APP_SETTING_STATISTICS = "APP_SETTING_STATISTICS";
-    private String PROFILE_SETTING_STATISTICS = "PROFILE_SETTING_STATISTICS";
-    private String FORM_SETTING_STATISTICS = "FORM_SETTING_STATISTICS";
-    private String DASHBOARD_AND_REPORT_SETTING_STATISTICS = "DASHBOARD_AND_REPORT_SETTING_STATISTICS";
-    private String SERVICE_SETTING_STATISTICS = "SERVICE_SETTING_STATISTICS";
-    private String SESSION_COUNT_STATISTICS = "SESSION_COUNT_STATISTICS";
 
     @Autowired
     private BulkExcel bulkExcel;
@@ -65,27 +58,33 @@ public class SettingServiceImpl implements SettingService {
      * @return AppResponse
      * */
     @Override
-    public AppResponse fetchSettingDashboard(SessionUser payload) throws Exception {
-        logger.info("Request dynamicQueryResponse :- " + payload);
+    public AppResponse fetchStatisticsDashboard(SessionUser payload) throws Exception {
+        logger.info("Request fetchStatisticsDashboard :- {}", payload);
         if (BarcoUtil.isNull(payload.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
             payload.getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
+        if (appUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         Map<String, Object> settingDashboard = new HashMap<>();
+        String APP_SETTING_STATISTICS = "APP_SETTING_STATISTICS";
         settingDashboard.put(APP_SETTING_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.APP_SETTING_STATISTICS, appUser.get().getId())));
+        String PROFILE_SETTING_STATISTICS = "PROFILE_SETTING_STATISTICS";
         settingDashboard.put(PROFILE_SETTING_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.PROFILE_SETTING_STATISTICS, appUser.get().getId())));
+        String FORM_SETTING_STATISTICS = "FORM_SETTING_STATISTICS";
         settingDashboard.put(FORM_SETTING_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.FORM_SETTING_STATISTICS, appUser.get().getId())));
+        String DASHBOARD_AND_REPORT_SETTING_STATISTICS = "DASHBOARD_AND_REPORT_SETTING_STATISTICS";
         settingDashboard.put(DASHBOARD_AND_REPORT_SETTING_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.DASHBOARD_AND_REPORT_SETTING_STATISTICS, appUser.get().getId())));
+        String SERVICE_SETTING_STATISTICS = "SERVICE_SETTING_STATISTICS";
         settingDashboard.put(SERVICE_SETTING_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.SERVICE_SETTING_STATISTICS, appUser.get().getId())));
+        String SESSION_COUNT_STATISTICS = "SESSION_COUNT_STATISTICS";
         settingDashboard.put(SESSION_COUNT_STATISTICS, this.queryService.executeQueryResponse(
             String.format(QueryService.SESSION_COUNT_STATISTICS, appUser.get().getId())));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, settingDashboard);
@@ -98,7 +97,7 @@ public class SettingServiceImpl implements SettingService {
      * */
     @Override
     public AppResponse fetchCountryData(SessionUser payload) throws Exception {
-        logger.info("Request fetchCountryData :- " + payload);
+        logger.info("Request fetchCountryData :- {}", payload);
         AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -113,7 +112,7 @@ public class SettingServiceImpl implements SettingService {
      * */
     @Override
     public AppResponse dynamicQueryResponse(QueryRequest payload) throws Exception {
-        logger.info("Request dynamicQueryResponse :- " + payload);
+        logger.info("Request dynamicQueryResponse :- {}", payload);
         if (BarcoUtil.isNull(payload.getQuery())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_MISSING);
         }
@@ -132,7 +131,7 @@ public class SettingServiceImpl implements SettingService {
      * */
     @Override
     public ByteArrayOutputStream downloadDynamicQueryFile(QueryRequest payload) throws Exception {
-        logger.info("Request downloadDynamicQueryFile :- " + payload);
+        logger.info("Request downloadDynamicQueryFile :- {}", payload);
         if (BarcoUtil.isNull(payload.getQuery())) {
             throw new Exception(MessageUtil.QUERY_MISSING);
         }
@@ -166,7 +165,7 @@ public class SettingServiceImpl implements SettingService {
      * */
     @Override
     public AppResponse addQueryInquiry(QueryInquiryRequest payload) throws Exception {
-        logger.info("Request addQueryInquiry :- " + payload);
+        logger.info("Request addQueryInquiry :- {}", payload);
         AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -184,7 +183,7 @@ public class SettingServiceImpl implements SettingService {
      * */
     @Override
     public AppResponse updateQueryInquiry(QueryInquiryRequest payload) throws Exception {
-        logger.info("Request updateQueryInquiry :- " + payload);
+        logger.info("Request updateQueryInquiry :- {}", payload);
         AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -193,7 +192,7 @@ public class SettingServiceImpl implements SettingService {
         }
         Optional<QueryInquiry> queryInquiry = this.queryInquiryRepository.findByIdAndUsernameAndStatusNot(
             payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
-        if (!queryInquiry.isPresent()) {
+        if (queryInquiry.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_NOT_FOUND);
         }
         this.queryInquiryRepository.save(this.updateQueryInquiryPayload(queryInquiry.get(), payload));
@@ -207,17 +206,14 @@ public class SettingServiceImpl implements SettingService {
      * */
     @Override
     public AppResponse fetchQueryInquiryById(QueryInquiryRequest payload) throws Exception {
-        logger.info("Request fetchQueryInquiryById :- " + payload);
+        logger.info("Request fetchQueryInquiryById :- {}", payload);
         AppResponse usernameExist = this.isUsernameExist(payload);
         if (!BarcoUtil.isNull(usernameExist)) {
             return usernameExist;
         }
-        Optional<QueryInquiry> queryInquiry = this.queryInquiryRepository.findByIdAndUsernameAndStatusNot(
-            payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
-        if (!queryInquiry.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_NOT_FOUND);
-        }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getQueryInquiryResponse(queryInquiry.get()));
+        return this.queryInquiryRepository.findByIdAndUsernameAndStatusNot(payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE)
+            .map(inquiry -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getQueryInquiryResponse(inquiry)))
+            .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_NOT_FOUND));
     }
 
     /**
@@ -227,7 +223,7 @@ public class SettingServiceImpl implements SettingService {
      * */
     @Override
     public AppResponse fetchAllQueryInquiry(QueryInquiryRequest payload) throws Exception {
-        logger.info("Request fetchAllQueryInquiry :- " + payload);
+        logger.info("Request fetchAllQueryInquiry :- {}", payload);
         AppResponse validationResponse = this.validateUsername(payload.getSessionUser());
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -260,14 +256,13 @@ public class SettingServiceImpl implements SettingService {
      * */
     @Override
     public AppResponse deleteQueryInquiryById(QueryInquiryRequest payload) throws Exception {
-        logger.info("Request deleteQueryInquiryById :- " + payload);
+        logger.info("Request deleteQueryInquiryById :- {}", payload);
         AppResponse usernameExist = this.isUsernameExist(payload);
         if (!BarcoUtil.isNull(usernameExist)) {
             return usernameExist;
         }
-        Optional<QueryInquiry> queryInquiry = this.queryInquiryRepository.findByIdAndUsername(
-            payload.getId(), payload.getSessionUser().getUsername());
-        if (!queryInquiry.isPresent()) {
+        Optional<QueryInquiry> queryInquiry = this.queryInquiryRepository.findByIdAndUsername(payload.getId(), payload.getSessionUser().getUsername());
+        if (queryInquiry.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_NOT_FOUND);
         }
         this.queryInquiryRepository.delete(queryInquiry.get());
@@ -281,7 +276,7 @@ public class SettingServiceImpl implements SettingService {
      * */
     @Override
     public AppResponse deleteAllQueryInquiry(QueryInquiryRequest payload) throws Exception {
-        logger.info("Request deleteAllQueryInquiry :- " + payload);
+        logger.info("Request deleteAllQueryInquiry :- {}", payload);
         AppResponse validationResponse = this.validateUsername(payload.getSessionUser());
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -335,9 +330,7 @@ public class SettingServiceImpl implements SettingService {
         }
         Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (appUserOpt.isPresent()) {
-            queryInquiry.setUpdatedBy(appUserOpt.get());
-        }
+        appUserOpt.ifPresent(queryInquiry::setUpdatedBy);
         return queryInquiry;
     }
 
@@ -352,7 +345,7 @@ public class SettingServiceImpl implements SettingService {
         }
         Optional<AppUser> appUserOpt = appUserRepository.findByUsernameAndStatus(
             payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUserOpt.isPresent()) {
+        if (appUserOpt.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_NAME_MISSING);
@@ -388,8 +381,7 @@ public class SettingServiceImpl implements SettingService {
     private AppResponse validateUsername(SessionUser payload) throws Exception {
         if (BarcoUtil.isNull(payload.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        } else if (!this.appUserRepository.findByUsernameAndStatus(
-            payload.getUsername(), APPLICATION_STATUS.ACTIVE).isPresent()) {
+        } else if (this.appUserRepository.findByUsernameAndStatus(payload.getUsername(), APPLICATION_STATUS.ACTIVE).isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         return (AppResponse) BarcoUtil.NULL;

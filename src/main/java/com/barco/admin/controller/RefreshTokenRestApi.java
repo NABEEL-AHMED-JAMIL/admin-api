@@ -5,6 +5,8 @@ import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.request.TokenRefreshRequest;
 import com.barco.model.dto.response.AppResponse;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @CrossOrigin(origins="*")
 @RequestMapping(value="/refreshToken.json")
+@Api(value = "Refresh Token Rest Api",
+    description = "Refresh Token Service : Service related to the [Session & Token Regenerate] for user.")
 public class RefreshTokenRestApi {
 
     private Logger logger = LoggerFactory.getLogger(RefreshTokenRestApi.class);
@@ -33,7 +37,8 @@ public class RefreshTokenRestApi {
      * @apiNote :- Method use to fetch the session statistics
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @ApiOperation(value = "Api use to fetch session statistics for all user.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/fetchSessionStatistics", method=RequestMethod.GET)
     public ResponseEntity<?> fetchSessionStatistics() {
         try {
@@ -50,7 +55,8 @@ public class RefreshTokenRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @ApiOperation(value = "Api use to fetch all refresh token for all users.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/fetchByAllRefreshToken", method=RequestMethod.POST)
     public ResponseEntity<?> fetchByAllRefreshToken(@RequestBody TokenRefreshRequest payload) {
         try {
@@ -67,7 +73,8 @@ public class RefreshTokenRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @ApiOperation(value = "Api use to delete refresh token for user.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/deleteRefreshToken", method=RequestMethod.POST)
     public ResponseEntity<?> deleteRefreshToken(@RequestBody TokenRefreshRequest payload) {
         try {
@@ -84,7 +91,8 @@ public class RefreshTokenRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DEV')")
+    @ApiOperation(value = "Api use to delete all refresh token for users.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/deleteAllRefreshToken", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllRefreshToken(@RequestBody TokenRefreshRequest payload) {
         try {

@@ -5,6 +5,8 @@ import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.request.TemplateRegRequest;
 import com.barco.model.dto.response.AppResponse;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @CrossOrigin(origins="*")
 @RequestMapping(value="/templateReg.json")
+//@Api(value = "App Rest Api",
+//    description = "Template Service : Service related to the email template management.")
 public class TemplateRegRestApi {
 
     private Logger logger = LoggerFactory.getLogger(TemplateRegRestApi.class);
@@ -33,7 +37,8 @@ public class TemplateRegRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to add new template.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/addTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> addTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
@@ -50,7 +55,8 @@ public class TemplateRegRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to update existing template.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/updateTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> updateTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
@@ -67,7 +73,8 @@ public class TemplateRegRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to find existing template by id.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/findTemplateRegByTemplateId", method=RequestMethod.POST)
     public ResponseEntity<?> findTemplateRegByTemplateId(@RequestBody TemplateRegRequest payload) {
         try {
@@ -84,7 +91,8 @@ public class TemplateRegRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to fetch existing templates.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/fetchTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> fetchTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
@@ -101,7 +109,8 @@ public class TemplateRegRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to delete existing template by id.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/deleteTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> deleteTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
@@ -118,7 +127,8 @@ public class TemplateRegRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to delete existing templates by ids.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/deleteAllTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {

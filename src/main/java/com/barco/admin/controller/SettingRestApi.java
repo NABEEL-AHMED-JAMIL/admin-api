@@ -8,6 +8,8 @@ import com.barco.model.dto.request.QueryRequest;
 import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.util.MessageUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.hibernate.exception.SQLGrammarException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,8 @@ import java.util.UUID;
 @RestController
 @CrossOrigin(origins="*")
 @RequestMapping(value="/setting.json")
+@Api(value = "Setting Rest Api",
+    description = "Setting Service : Common service for different task like [Dashboard][Dynamic Query][XML|Json Generate].")
 public class SettingRestApi {
 
     private Logger logger = LoggerFactory.getLogger(SettingRestApi.class);
@@ -42,12 +46,13 @@ public class SettingRestApi {
      * @apiName :- Api use to fetch the dashboard for admin section
      * @return ResponseEntity<?>
      * */
-    @RequestMapping(value="/fetchSettingDashboard", method=RequestMethod.POST)
-    public ResponseEntity<?> fetchSettingDashboard(@RequestBody SessionUser sessionUser) {
+    @RequestMapping(value="/fetchStatisticsDashboard", method=RequestMethod.POST)
+    @ApiOperation(value = "Api use to fetch statistics for admin dashboard.", response = ResponseEntity.class)
+    public ResponseEntity<?> fetchStatisticsDashboard(@RequestBody SessionUser sessionUser) {
         try {
-            return new ResponseEntity<>(this.settingService.fetchSettingDashboard(sessionUser), HttpStatus.OK);
+            return new ResponseEntity<>(this.settingService.fetchStatisticsDashboard(sessionUser), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while fetchSettingDashboard ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while fetchStatisticsDashboard ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
@@ -57,7 +62,8 @@ public class SettingRestApi {
      * @apiName :- Api use to fetch the country for admin section
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to fetch country data.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/fetchCountryData", method=RequestMethod.POST)
     public ResponseEntity<?> fetchCountryData(@RequestBody SessionUser sessionUser) {
         try {
@@ -74,7 +80,8 @@ public class SettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to perform dynamic query response [xml|json].", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/dynamicQueryResponse", method=RequestMethod.POST)
     public ResponseEntity<?> dynamicQueryResponse(@RequestBody QueryRequest payload) {
         try {
@@ -94,7 +101,8 @@ public class SettingRestApi {
      * Api use to download dynamic query
      * @return ResponseEntity<?> downloadDynamicQueryFile
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to perform dynamic query response [xml|json] download.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value="/downloadDynamicQueryFile", method=RequestMethod.POST)
     public ResponseEntity<?> downloadDynamicQueryFile(@RequestBody QueryRequest payload) {
         try {
@@ -119,7 +127,8 @@ public class SettingRestApi {
      * @param payload
      * @return ResponseEntity<?> addQueryInquiry
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to add new the inquiry query.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/addQueryInquiry", method = RequestMethod.POST)
     public ResponseEntity<?> addQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
@@ -136,7 +145,8 @@ public class SettingRestApi {
      * @param payload
      * @return ResponseEntity<?> updateQueryInquiry
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to update the inquiry query.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/updateQueryInquiry", method = RequestMethod.POST)
     public ResponseEntity<?> updateQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
@@ -153,7 +163,8 @@ public class SettingRestApi {
      * @param payload
      * @return ResponseEntity<?> fetchQueryInquiryById
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to fetch the inquiry query by id.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/fetchQueryInquiryById", method = RequestMethod.POST)
     public ResponseEntity<?> fetchQueryInquiryById(@RequestBody QueryInquiryRequest payload) {
         try {
@@ -170,7 +181,8 @@ public class SettingRestApi {
      * @param payload
      * @return ResponseEntity<?> fetchAllQueryInquiry
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to fetch all the inquiry query.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/fetchAllQueryInquiry", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
@@ -187,7 +199,8 @@ public class SettingRestApi {
      * @param payload
      * @return ResponseEntity<?> deleteQueryInquiry
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to delete the inquiry query by id.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/deleteQueryInquiryById", method = RequestMethod.POST)
     public ResponseEntity<?> deleteQueryInquiryById(@RequestBody QueryInquiryRequest payload) {
         try {
@@ -204,7 +217,8 @@ public class SettingRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
-    @PreAuthorize("hasRole('DEV')")
+    @ApiOperation(value = "Api use to delete all the inquiry query by ids.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/deleteAllQueryInquiry", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {

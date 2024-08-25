@@ -6,6 +6,8 @@ import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.google.gson.Gson;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,8 @@ import java.util.stream.Collectors;
 @RestController
 @CrossOrigin(origins="*")
 @RequestMapping(value = "/auth.json")
+@Api(value = "Auth Rest Api",
+   description = "Auth Service : Use to perform the authentication and authorization. ")
 public class AuthRestApi {
 
     private Logger logger = LoggerFactory.getLogger(AuthRestApi.class);
@@ -36,6 +40,7 @@ public class AuthRestApi {
      * @param httpServletRequest
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to signIn the app user.", response = ResponseEntity.class)
     @RequestMapping(value="/signInAppUser", method=RequestMethod.POST)
     public ResponseEntity<?> signInAppUser(HttpServletRequest httpServletRequest) {
         try {
@@ -57,6 +62,7 @@ public class AuthRestApi {
      * @apiNote :- Api use support to forgot password
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to signUp the app user.", response = ResponseEntity.class)
     @RequestMapping(value="/signupAppUser", method=RequestMethod.POST)
     public ResponseEntity<?> signupAppUser(HttpServletRequest httpServletRequest) {
         try {
@@ -76,6 +82,7 @@ public class AuthRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to send forgot password email.", response = ResponseEntity.class)
     @RequestMapping(value="/forgotPassword", method=RequestMethod.POST)
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest payload) {
         try {
@@ -92,6 +99,7 @@ public class AuthRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to send reset password email.", response = ResponseEntity.class)
     @RequestMapping(value="/resetPassword", method=RequestMethod.POST)
     public ResponseEntity<?> resetPassword(@RequestBody PasswordResetRequest payload) {
         try {
@@ -108,6 +116,7 @@ public class AuthRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to clam the new token base on refresh token password email.", response = ResponseEntity.class)
     @RequestMapping(value="/authClamByRefreshToken", method=RequestMethod.POST)
     public ResponseEntity<?> authClamByRefreshToken(@RequestBody TokenRefreshRequest payload) {
         try {
@@ -124,6 +133,7 @@ public class AuthRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to logout the app user.", response = ResponseEntity.class)
     @RequestMapping(value="/logoutAppUser", method=RequestMethod.POST)
     public ResponseEntity<?> logoutAppUser(@RequestBody TokenRefreshRequest payload) {
         try {

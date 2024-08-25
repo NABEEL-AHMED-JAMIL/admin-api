@@ -5,7 +5,6 @@ import com.barco.admin.service.NotificationService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.model.dto.request.NotificationRequest;
 import com.barco.model.dto.response.AppResponse;
-import com.barco.model.dto.response.LookupDataResponse;
 import com.barco.model.dto.response.MessageResponse;
 import com.barco.model.dto.response.NotificationResponse;
 import com.barco.model.pojo.AppUser;
@@ -19,7 +18,6 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -54,7 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
      * */
     @Override
     public void addNotification(NotificationRequest payload, AppUser appUser) throws Exception {
-        logger.info("Request addNotification :- " + payload);
+        logger.info("Request addNotification :- {}", payload);
         NotificationAudit notificationAudit = new NotificationAudit();
         notificationAudit.setSendTo(appUser);
         notificationAudit.setMessage(payload.getBody().toString());
@@ -76,12 +74,12 @@ public class NotificationServiceImpl implements NotificationService {
      * */
     @Override
     public AppResponse updateNotification(NotificationRequest payload) throws Exception {
-        logger.info("Request updateNotification :- " + payload);
+        logger.info("Request updateNotification :- {}", payload);
         if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.NOTIFY_ID_MISSING);
         }
         Optional<NotificationAudit> notificationAudit = this.notificationAuditRepository.findById(payload.getId());
-        if (!notificationAudit.isPresent()) {
+        if (notificationAudit.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.NOTIFICATION_AUDIT_NOT_FOUND);
         }
         notificationAudit.get().setMessageStatus(NOTIFICATION_STATUS.READ);
@@ -95,52 +93,45 @@ public class NotificationServiceImpl implements NotificationService {
      * */
     @Override
     public AppResponse fetchAllNotification(String username) throws Exception {
-        logger.info("Request fetchAllNotification :- " + username);
+        logger.info("Request fetchAllNotification :- {}", username);
         if (BarcoUtil.isNull(username)) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(username, APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        LookupDataResponse notificationTime = this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NOTIFICATION_DISAPPEAR_TIME);
-        Page<NotificationAudit> notificationAuditPage = this.notificationAuditRepository.findAll(
-            new NotificationSpecification(appUser.get(), Long.valueOf(notificationTime.getLookupValue())),
-                PageRequest.of(0, 5000, Sort.by(Sort.Order.asc(NOTIFY_ID))));
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            notificationAuditPage.map(notificationAudit -> (this.getNotificationResponse(notificationAudit))).getContent());
+        return appUser.map(user -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+            this.notificationAuditRepository.findAll(new NotificationSpecification(user,
+                Long.valueOf(this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NOTIFICATION_DISAPPEAR_TIME).getLookupValue())),
+                PageRequest.of(0, 5000, Sort.by(Sort.Order.asc(NOTIFY_ID)))).map(this::getNotificationResponse).getContent()))
+                .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND));
     }
 
     /**
      * sendNotificationToSpecificUser method use to send the notification to specific user
-     * @param requestPayload
+     * @param payload
      * */
     @Override
-    public void sendNotificationToSpecificUser(NotificationResponse requestPayload) throws Exception {
-        logger.info("Request sendNotificationToSpecificUser :- " + requestPayload);
-        this.simpMessagingTemplate.convertAndSendToUser(requestPayload.getSendTo(), REPLAY, requestPayload);
+    public void sendNotificationToSpecificUser(NotificationResponse payload) throws Exception {
+        logger.info("Request sendNotificationToSpecificUser :- {}", payload);
+        this.simpMessagingTemplate.convertAndSendToUser(payload.getSendTo(), REPLAY, payload);
     }
 
     /**
      * Method use to add notification response
-     * @param notificationAudit
+     * @param payload
      * @return NotificationResponse
-     * @throws Exception
      * */
-    private NotificationResponse getNotificationResponse(NotificationAudit notificationAudit) {
+    private NotificationResponse getNotificationResponse(NotificationAudit payload) {
         NotificationResponse notificationResponse = new NotificationResponse();
-        notificationResponse.setId(notificationAudit.getId());
-        notificationResponse.setSendTo(notificationAudit.getSendTo().getUsername());
-        notificationResponse.setBody(new Gson().fromJson(notificationAudit.getMessage(), MessageResponse.class));
-        notificationResponse.setNotifyType(GLookup.getGLookup(
-            this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                NOTIFICATION_TYPE.getName(), notificationAudit.getNotifyType().getLookupCode())));
-        notificationResponse.setMessageStatus(GLookup.getGLookup(
-            this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                NOTIFICATION_STATUS.getName(), notificationAudit.getMessageStatus().getLookupCode())));
-        notificationResponse.setExpireTime(notificationAudit.getExpireTime());
-        notificationResponse.setDateCreated(notificationAudit.getDateCreated());
-        notificationResponse.setDateUpdated(notificationAudit.getDateCreated());
+        notificationResponse.setId(payload.getId());
+        notificationResponse.setSendTo(payload.getSendTo().getUsername());
+        notificationResponse.setBody(new Gson().fromJson(payload.getMessage(), MessageResponse.class));
+        notificationResponse.setNotifyType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+            NOTIFICATION_TYPE.getName(), payload.getNotifyType().getLookupCode())));
+        notificationResponse.setMessageStatus(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+            NOTIFICATION_STATUS.getName(), payload.getMessageStatus().getLookupCode())));
+        notificationResponse.setExpireTime(payload.getExpireTime());
+        notificationResponse.setDateCreated(payload.getDateCreated());
+        notificationResponse.setDateUpdated(payload.getDateCreated());
         return notificationResponse;
     }
 }
