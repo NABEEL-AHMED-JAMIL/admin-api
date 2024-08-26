@@ -158,6 +158,7 @@ public class QueryService {
         "LEFT JOIN STTF_LINK_STT SLS ON SLS.STT_ID = STT.ID AND SLS.FORM_ID = %d  AND SLS.STATUS != %2$d " +
         "WHERE STT.STATUS != %2$d AND STT.CREATED_BY_ID = %3$d " +
         "ORDER BY STT.DATE_CREATED DESC";
+
     public static String FETCH_ALL_FORM_LINK_STT = "SELECT GF.ID, GF.FORM_NAME, GF.SERVICE_ID, GF.FORM_TYPE, GF.STATUS, " +
         "CASE WHEN SLS.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
         "SLS.ID AS LINK_FORM_ID " +
@@ -255,10 +256,10 @@ public class QueryService {
      * @return Object
      * */
     public Object deleteQuery(String queryStr) {
-        logger.info("Execute Query :- {} ", queryStr);
+        logger.info("Execute Query :- {}.", queryStr);
         Query query = this._em.createNativeQuery(queryStr);
         int rowsDeleted = query.executeUpdate();
-        logger.info("Execute deleted :- {} ", rowsDeleted);
+        logger.info("Execute deleted :- {}.", rowsDeleted);
         return rowsDeleted;
     }
 
@@ -268,7 +269,7 @@ public class QueryService {
      * @return Object
      * */
     public Object executeQueryForSingleResult(String queryStr) {
-        logger.info("Execute Query :- {} ", queryStr);
+        logger.info("Execute Query :- {}.", queryStr);
         return this._em.createNativeQuery(queryStr).getSingleResult();
     }
 
@@ -279,7 +280,7 @@ public class QueryService {
      * @return List
      */
     public List executeQuery(String queryStr) {
-        logger.info("Execute Query :- {} ", queryStr);
+        logger.info("Execute Query :- {}.", queryStr);
         return this._em.createNativeQuery(queryStr).getResultList();
     }
 
@@ -290,7 +291,7 @@ public class QueryService {
      * @return List
      * **/
     public List executeQuery(String queryStr, Pageable paging) {
-        logger.info("Execute Query :- {} ", queryStr);
+        logger.info("Execute Query :- {}.", queryStr);
         Query query = this._em.createNativeQuery(queryStr);
         if (!BarcoUtil.isNull(paging)) {
             query.setFirstResult(paging.getPageNumber() * paging.getPageSize());
@@ -305,7 +306,7 @@ public class QueryService {
      * @return QueryResponse
      * */
     public QueryResponse executeQueryResponse(String queryStr) {
-        logger.info("Execute Query :- {} ", queryStr);
+        logger.info("Execute Query :- {}.", queryStr);
         Query query = this._em.createNativeQuery(queryStr);
         NativeQueryImpl nativeQuery = (NativeQueryImpl) query;
         nativeQuery.setResultTransformer(AliasToEntityMapResultTransformer.INSTANCE);

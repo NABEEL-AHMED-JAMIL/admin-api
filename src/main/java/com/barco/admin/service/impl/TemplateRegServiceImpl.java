@@ -41,10 +41,11 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * Method use to add the template
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse addTemplateReg(TemplateRegRequest payload) throws Exception {
-        logger.info("Request addTemplateReg :- {}", payload);
+        logger.info("Request addTemplateReg :- {}.", payload);
         AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -62,10 +63,11 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * Method use to update the template
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse updateTemplateReg(TemplateRegRequest payload) throws Exception {
-        logger.info("Request updateTemplateReg :- {}", payload);
+        logger.info("Request updateTemplateReg :- {}.", payload);
         AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -84,10 +86,11 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * Method use to fetch the template by id
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse findTemplateRegByTemplateId(TemplateRegRequest payload) throws Exception {
-        logger.info("Request findTemplateRegByTemplateId :- {}", payload);
+        logger.info("Request findTemplateRegByTemplateId :- {}.", payload);
         AppResponse usernameExist = this.isUsernameExist(payload);
         if (!BarcoUtil.isNull(usernameExist)) {
             return usernameExist;
@@ -101,10 +104,11 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * Method use to fetch the template
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse fetchTemplateReg(TemplateRegRequest payload) throws Exception {
-        logger.info("Request fetchTemplateReg :- {}", payload);
+        logger.info("Request fetchTemplateReg :- {}.", payload);
         AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -118,10 +122,11 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * Method use to delete the template
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse deleteTemplateReg(TemplateRegRequest payload) throws Exception {
-        logger.info("Request deleteTemplateReg :- {}", payload);
+        logger.info("Request deleteTemplateReg :- {}.", payload);
         AppResponse usernameExist = this.isUsernameExist(payload);
         if (!BarcoUtil.isNull(usernameExist)) {
             return usernameExist;
@@ -138,11 +143,12 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * Method use to delete the template
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     @Transactional
     public AppResponse deleteAllTemplateReg(TemplateRegRequest payload) throws Exception {
-        logger.info("Request deleteAllTemplateReg :- {}", payload);
+        logger.info("Request deleteAllTemplateReg :- {}.", payload);
         AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -157,6 +163,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * Method use to validate the payload
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     private AppResponse validateAddOrUpdatePayload(TemplateRegRequest payload) throws Exception {
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
@@ -180,6 +187,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * Method use to validate the username
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     private AppResponse validateUsername(TemplateRegRequest payload) throws Exception {
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
@@ -196,6 +204,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * check user exist or not
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     private AppResponse isUsernameExist(TemplateRegRequest payload) throws Exception {
         AppResponse validationResponse = this.validateUsername(payload);
@@ -211,10 +220,10 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * Method use to create the template reg
      * @param payload
      * @return TemplateReg
+     * @throws Exception
      * */
     private TemplateReg createTemplateReg(TemplateRegRequest payload) throws Exception {
-        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         TemplateReg templateReg = new TemplateReg();
         if (appUserOpt.isPresent()) {
             AppUser appUser = appUserOpt.get();
@@ -233,9 +242,9 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * @param templateReg
      * @param payload
      * @return TemplateReg
+     * @throws Exception
      * */
-    private TemplateReg updateTemplateRegPayload(TemplateReg templateReg,
-        TemplateRegRequest payload) throws Exception {
+    private TemplateReg updateTemplateRegPayload(TemplateReg templateReg, TemplateRegRequest payload) throws Exception {
         if (!BarcoUtil.isNull(payload.getTemplateName())) {
             templateReg.setTemplateName(payload.getTemplateName());
         }

@@ -448,6 +448,9 @@ public class EVariableServiceImpl implements EVariableService {
         } else if (payload instanceof LookupDataRequest) {
             LookupDataRequest lookupDataRequest = (LookupDataRequest) payload;
             sessionUser = lookupDataRequest.getSessionUser();
+        } else if (payload instanceof LinkEURequest) {
+            LinkEURequest linkEURequest = (LinkEURequest) payload;
+            sessionUser = linkEURequest.getSessionUser();
         } else {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.INVALID_PAYLOAD_TYPE);
         }

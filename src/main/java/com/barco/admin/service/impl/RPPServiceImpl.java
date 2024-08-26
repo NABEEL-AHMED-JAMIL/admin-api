@@ -70,7 +70,7 @@ public class RPPServiceImpl implements RPPService {
      * */
     @Override
     public AppResponse addRole(RoleRequest payload) throws Exception {
-        logger.info("Request addRole :- {}", payload);
+        logger.info("Request addRole :- {}.", payload);
         AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -81,8 +81,7 @@ public class RPPServiceImpl implements RPPService {
         } else if (this.roleRepository.findRoleByName(payload.getName()).isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ROLE_ALREADY_EXIST, payload);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         Role role = new Role();
         role.setName(payload.getName());
         role.setDescription(payload.getDescription());
@@ -162,7 +161,8 @@ public class RPPServiceImpl implements RPPService {
         if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ROLE_ID_MISSING, payload);
         }
-        return this.roleRepository.findById(payload.getId()).map(value -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.gateRoleResponse(value)))
+        return this.roleRepository.findById(payload.getId())
+            .map(value -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.gateRoleResponse(value)))
             .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ROLE_NOT_FOUND_WITH_ID, payload.getId()), payload));
     }
 
@@ -221,7 +221,7 @@ public class RPPServiceImpl implements RPPService {
      * */
     @Override
     public ByteArrayOutputStream downloadRole(RoleRequest payload) throws Exception {
-        logger.info("Request downloadRole :- {}", payload);
+        logger.info("Request downloadRole :- {}.", payload);
         AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
@@ -503,7 +503,7 @@ public class RPPServiceImpl implements RPPService {
      * */
     @Override
     public ByteArrayOutputStream downloadProfile(ProfileRequest payload) throws Exception {
-        logger.info("Request downloadProfile :- {}", payload);
+        logger.info("Request downloadProfile :- {}.", payload);
         AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             throw new Exception(MessageUtil.USERNAME_MISSING);
@@ -700,7 +700,7 @@ public class RPPServiceImpl implements RPPService {
      * */
     @Override
     public AppResponse fetchAllPermission(PermissionRequest payload) throws Exception {
-        logger.info("Request fetchAllPermission :- {} ", payload);
+        logger.info("Request fetchAllPermission :- {}.", payload);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             RoleRepository.asStream(this.permissionRepository.findAll().iterator()).map(this::gatePermissionResponse).collect(Collectors.toList()));
     }
@@ -713,14 +713,13 @@ public class RPPServiceImpl implements RPPService {
      * */
     @Override
     public AppResponse fetchPermissionById(PermissionRequest payload) throws Exception {
-        logger.info("Request fetchPermissionById :- {} ", payload);
+        logger.info("Request fetchPermissionById :- {}.", payload);
         if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.PERMISSION_ID_MISSING, payload);
         }
         return this.permissionRepository.findById(payload.getId())
-            .map(value -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-                this.gatePermissionResponse(value))).orElseGet(() -> new AppResponse(BarcoUtil.ERROR,
-                String.format(MessageUtil.PERMISSION_NOT_FOUND_WITH_ID, payload.getId()), payload));
+            .map(value -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.gatePermissionResponse(value)))
+            .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.PERMISSION_NOT_FOUND_WITH_ID, payload.getId()), payload));
     }
 
     /**
@@ -731,7 +730,7 @@ public class RPPServiceImpl implements RPPService {
      * */
     @Override
     public AppResponse deletePermissionById(PermissionRequest payload) throws Exception {
-        logger.info("Request deletePermissionById :- {}", payload);
+        logger.info("Request deletePermissionById :- {}.", payload);
         if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.PERMISSION_ID_MISSING, payload);
         }
@@ -752,7 +751,7 @@ public class RPPServiceImpl implements RPPService {
      * */
     @Override
     public AppResponse deleteAllPermission(PermissionRequest payload) throws Exception {
-        logger.info("Request deleteAllPermission :- {} ",payload);
+        logger.info("Request deleteAllPermission :- {}.",payload);
         if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
@@ -779,7 +778,7 @@ public class RPPServiceImpl implements RPPService {
      * */
     @Override
     public ByteArrayOutputStream downloadPermission(PermissionRequest payload) throws Exception {
-        logger.info("Request downloadPermission :- {}", payload);
+        logger.info("Request downloadPermission :- {}.", payload);
         AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             throw new Exception(MessageUtil.USERNAME_MISSING);
@@ -909,23 +908,13 @@ public class RPPServiceImpl implements RPPService {
         // profiles
         List<ProfileResponse> profileResponses = new ArrayList<>();
         this.profileRepository.findAll().forEach(profile -> {
-            ProfileResponse profileResponse = new ProfileResponse();
-            profileResponse.setId(profile.getId());
-            profileResponse.setProfileName(profile.getProfileName());
-            profileResponse.setDescription(profile.getDescription());
-            profileResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(profile.getStatus().getLookupType()));
-            profileResponses.add(profileResponse);
+            profileResponses.add(getProfileResponse(profile));
         });
         crossTabResponse.setRow(profileResponses);
         // permission
         List<PermissionResponse> permissionResponses = new ArrayList<>();
         this.permissionRepository.findAll().forEach(permission -> {
-            PermissionResponse permissionResponse = new PermissionResponse();
-            permissionResponse.setId(permission.getId());
-            permissionResponse.setPermissionName(permission.getPermissionName());
-            permissionResponse.setDescription(permission.getDescription());
-            permissionResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(permission.getStatus().getLookupType()));
-            permissionResponses.add(permissionResponse);
+            permissionResponses.add(getPermissionResponse(permission));
         });
         crossTabResponse.setCol(permissionResponses);
         // existing cross
@@ -1150,8 +1139,8 @@ public class RPPServiceImpl implements RPPService {
         if (!BarcoUtil.isNull(validationResponse)) {
             throw new Exception(MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_PROFILE_WITH_USER, superAdmin.get().getId(),
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_PROFILE_WITH_USER, appUser.get().getId(),
             APPLICATION_STATUS.ACTIVE.getLookupCode(), APPLICATION_STATUS.ACTIVE.getLookupCode()));
         List<ProfileResponse> profileResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
@@ -1172,29 +1161,55 @@ public class RPPServiceImpl implements RPPService {
     @Override
     public AppResponse fetchRoleWithUser(LinkRURequest payload) throws Exception {
         logger.info("Request fetchRoleWithUser :- {}.", payload);
-        Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (superAdmin.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            throw new Exception(MessageUtil.USERNAME_MISSING);
         }
-        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(
-            QueryService.FETCH_ROLE_WITH_USER, superAdmin.get().getId(),
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_ROLE_WITH_USER, appUser.get().getId(),
             APPLICATION_STATUS.ACTIVE.getLookupCode(), APPLICATION_STATUS.ACTIVE.getLookupCode()));
         List<RoleResponse> roleResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
                 roleResponses.add(new RoleResponse(Long.valueOf(data.get(QueryService.ID).toString()),
-                    data.get(QueryService.ROLE_NAME).toString(), data.get(QueryService.DESCRIPTION).toString()));
+                 data.get(QueryService.ROLE_NAME).toString(), data.get(QueryService.DESCRIPTION).toString()));
             }
         }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, roleResponses);
     }
 
     /**
+     * Method use to convert the profile to profile response
+     * @param profile
+     * @return ProfileResponse
+     * */
+    private ProfileResponse getProfileResponse(Profile profile) {
+        ProfileResponse profileResponse = new ProfileResponse();
+        profileResponse.setId(profile.getId());
+        profileResponse.setProfileName(profile.getProfileName());
+        profileResponse.setDescription(profile.getDescription());
+        profileResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(profile.getStatus().getLookupType()));
+        return profileResponse;
+    }
+
+    /**
+     * Method use to convert the permission to permission response
+     * @param permission
+     * @return ProfileResponse
+     * */
+    private PermissionResponse getPermissionResponse(Permission permission) {
+        PermissionResponse permissionResponse = new PermissionResponse();
+        permissionResponse.setId(permission.getId());
+        permissionResponse.setPermissionName(permission.getPermissionName());
+        permissionResponse.setDescription(permission.getDescription());
+        permissionResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(permission.getStatus().getLookupType()));
+        return permissionResponse;
+    }
+
+    /**
      * Method used to validate the username.
      * @param payload
      * @return AppResponse
-     * @throws Exception
      */
     private AppResponse validateUsername(Object payload) {
         SessionUser sessionUser = null;

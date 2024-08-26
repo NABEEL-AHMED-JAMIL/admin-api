@@ -79,13 +79,13 @@ public class AuthServiceImpl implements AuthService {
      * Method use for signIn appUser
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse signInAppUser(LoginRequest payload) throws Exception {
-        logger.info("Request signInAppUser :- " + payload);
+        logger.info("Request signInAppUser :- {}.", payload);
         // spring auth manager will call user detail service
-        Authentication authentication = this.authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(payload.getUsername(), payload.getPassword()));
+        Authentication authentication = this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(payload.getUsername(), payload.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         // get the user detail from authentication
         UserSessionDetail userDetails = (UserSessionDetail) authentication.getPrincipal();
@@ -99,10 +99,11 @@ public class AuthServiceImpl implements AuthService {
      * Method use for signUp appUser as user-customer
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse signupAppUser(SignupRequest payload) throws Exception {
-        logger.info("Request signupAppUser :- " + payload);
+        logger.info("Request signupAppUser :- {}.", payload);
         if (BarcoUtil.isNull(payload.getFirstName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.FIRST_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getLastName())) {
@@ -142,7 +143,7 @@ public class AuthServiceImpl implements AuthService {
         this.profileRepository.findProfileByProfileName(this.lookupDataCacheService.getParentLookupDataByParentLookupType(
            LookupUtil.DEFAULT_PROFILE).getLookupValue()).ifPresent(appUser::setProfile);
         // register user account type as 'Customer'
-        appUser.setAccountType(ACCOUNT_TYPE.NORMAL);
+        appUser.setAccountType(ACCOUNT_TYPE.CUSTOMER);
         this.appUserRepository.save(appUser);
         // notification & register email
         Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
@@ -153,7 +154,8 @@ public class AuthServiceImpl implements AuthService {
                 this.appUserEnvRepository.save(this.getAppUserEnv(superAdmin.get(), appUser, envVariables));
             }
             // event bridge only receiver event bridge if exist and create by the main user
-            for (EventBridge eventBridge : this.eventBridgeRepository.findAllByBridgeTypeInAndCreatedByAndStatusNotOrderByDateCreatedDesc(List.of(EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVE), superAdmin.get(), APPLICATION_STATUS.DELETE)) {
+            for (EventBridge eventBridge : this.eventBridgeRepository.findAllByBridgeTypeInAndCreatedByAndStatusNotOrderByDateCreatedDesc(
+                List.of(EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVE), superAdmin.get(), APPLICATION_STATUS.DELETE)) {
                 LinkEBURequest linkEBURequest = new LinkEBURequest();
                 linkEBURequest.setId(eventBridge.getId());
                 linkEBURequest.setAppUserId(appUser.getId());
@@ -172,15 +174,15 @@ public class AuthServiceImpl implements AuthService {
      * Method use to send email the forgot password
      * @param payload
      * @return AuthResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse forgotPassword(ForgotPasswordRequest payload) throws Exception {
-        logger.info("Request forgotPassword :- " + payload);
+        logger.info("Request forgotPassword :- {}.", payload);
         if (BarcoUtil.isNull(payload.getEmail())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EMAIL_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(
-            payload.getEmail(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByEmailAndStatus(payload.getEmail(), APPLICATION_STATUS.ACTIVE);
         if (appUser.isPresent()) {
             // email and notification
             this.sendForgotPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory, this.jwtUtils);
@@ -195,10 +197,11 @@ public class AuthServiceImpl implements AuthService {
      * Method use to reset app user password
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse resetPassword(PasswordResetRequest payload) throws Exception {
-        logger.info("Request resetPassword :- " + payload);
+        logger.info("Request resetPassword :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getEmail())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EMAIL_MISSING);
         } else if (BarcoUtil.isNull(payload.getNewPassword())) {
@@ -219,10 +222,11 @@ public class AuthServiceImpl implements AuthService {
      * Method generate new token base on refresh token
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse authClamByRefreshToken(TokenRefreshRequest payload) throws Exception {
-        logger.info("Request authClamByRefreshToken :- " + payload);
+        logger.info("Request authClamByRefreshToken :- {}.", payload);
         Optional<RefreshToken> refreshToken = this.refreshTokenService.findByToken(payload.getRefreshToken());
         if (refreshToken.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.DATA_NOT_FOUND, MessageUtil.REFRESH_TOKEN), payload);
@@ -238,10 +242,11 @@ public class AuthServiceImpl implements AuthService {
      * Method use to delete the token to log Out the session
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse logoutAppUser(TokenRefreshRequest payload) throws Exception {
-        logger.info("Request logoutAppUser :- " + payload);
+        logger.info("Request logoutAppUser :- {}.", payload);
         return this.refreshTokenService.deleteRefreshToken(payload);
     }
 
@@ -250,9 +255,9 @@ public class AuthServiceImpl implements AuthService {
      * @param authResponse
      * @param userDetails
      * @return AuthResponse
+     * @throws Exception
      * */
-    private AuthResponse getAuthResponseDetail(AuthResponse authResponse,
-        UserSessionDetail userDetails) throws Exception {
+    private AuthResponse getAuthResponseDetail(AuthResponse authResponse, UserSessionDetail userDetails) throws Exception {
         authResponse.setId(userDetails.getId());
         authResponse.setFirstName(userDetails.getFirstName());
         authResponse.setLastName(userDetails.getLastName());
@@ -260,8 +265,7 @@ public class AuthServiceImpl implements AuthService {
         authResponse.setUsername(userDetails.getUsername());
         authResponse.setProfileImage(userDetails.getProfileImage());
         authResponse.setIpAddress(userDetails.getIpAddress());
-        authResponse.setRoles(userDetails.getAuthorities().stream()
-           .map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
+        authResponse.setRoles(userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
         if (!BarcoUtil.isNull(userDetails.getProfile())) {
             authResponse.setProfile(this.getProfilePermissionResponse(userDetails.getProfile()));
         }

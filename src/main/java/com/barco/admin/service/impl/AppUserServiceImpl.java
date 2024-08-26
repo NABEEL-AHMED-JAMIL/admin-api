@@ -71,10 +71,11 @@ public class AppUserServiceImpl implements AppUserService {
      * Method use to get appUser detail
      * @param username
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse fetchAppUserProfile(String username) throws Exception {
-        logger.info("Request fetchAppUserProfile :- " + username);
+        logger.info("Request fetchAppUserProfile :- {}.", username);
         if (BarcoUtil.isNull(username)) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -86,7 +87,7 @@ public class AppUserServiceImpl implements AppUserService {
         // account type
         if (!BarcoUtil.isNull(appUser.get().getAccountType())) {
             GLookup accountType = GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                ACCOUNT_TYPE.getName(), Long.valueOf(appUser.get().getAccountType().ordinal())));
+                ACCOUNT_TYPE.getName(), Long.valueOf(appUser.get().getAccountType().getLookupCode())));
             appUserResponse.setAccountType(accountType);
         }
         // organization
@@ -97,8 +98,7 @@ public class AppUserServiceImpl implements AppUserService {
         if (!BarcoUtil.isNull(appUser.get().getAppUserEnvs())) {
             appUserResponse.setEnVariables(appUser.get().getAppUserEnvs().stream()
                 .filter(appUserEnv -> appUserEnv.getStatus().equals(APPLICATION_STATUS.ACTIVE))
-                .map(this::getEnVariablesResponse)
-                .collect(Collectors.toList()));
+                .map(this::getEnVariablesResponse).collect(Collectors.toList()));
         }
         // app user web hook
         if (!BarcoUtil.isNull(appUser.get().getAppUserEventBridges())) {
@@ -130,10 +130,11 @@ public class AppUserServiceImpl implements AppUserService {
      * Method use to update app user env variable
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse updateAppUserEnvVariable(EnVariablesRequest payload) throws Exception {
-        logger.info("Request updateAppUserEnvVariable :- " + payload);
+        logger.info("Request updateAppUserEnvVariable :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -158,10 +159,11 @@ public class AppUserServiceImpl implements AppUserService {
      * Method use to update app user password
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse updateAppUserPassword(UpdateUserProfileRequest payload) throws Exception {
-        logger.info("Request updateAppUserPassword :- " + payload);
+        logger.info("Request updateAppUserPassword :- {}.", payload);
         if (BarcoUtil.isNull(payload.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getOldPassword())) {
@@ -189,10 +191,11 @@ public class AppUserServiceImpl implements AppUserService {
      * Method use to close app user account
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse deleteAppUserAccount(AppUserRequest payload) throws Exception {
-        logger.info("Request deleteAppUserAccount :- " + payload);
+        logger.info("Request deleteAppUserAccount :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getUsername())) {
@@ -203,8 +206,7 @@ public class AppUserServiceImpl implements AppUserService {
         if (adminUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getUsername(), APPLICATION_STATUS.ACTIVE);
         if (appUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
@@ -228,10 +230,11 @@ public class AppUserServiceImpl implements AppUserService {
      * Method use to delete app user account
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse deleteAllAppUserAccount(AppUserRequest payload) throws Exception {
-        logger.info("Request deleteAllAppUserAccount :- " + payload);
+        logger.info("Request deleteAllAppUserAccount :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -253,8 +256,7 @@ public class AppUserServiceImpl implements AppUserService {
             // email to user
             this.sendCloseUserAccountEmail(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
             // notification to admin
-            this.sendNotification(MessageUtil.ACCOUNT_STATUS, String.format(MessageUtil.ACCOUNT_DELETE_DETAIL, appUser.getUsername()),
-                    adminUser.get(), this.lookupDataCacheService, this.notificationService);
+            this.sendNotification(MessageUtil.ACCOUNT_STATUS, String.format(MessageUtil.ACCOUNT_DELETE_DETAIL, appUser.getUsername()), adminUser.get(), this.lookupDataCacheService, this.notificationService);
         }
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, ""), payload);
     }
@@ -263,10 +265,11 @@ public class AppUserServiceImpl implements AppUserService {
      * Method use to download app user account
      * @param payload
      * @return ByteArrayOutputStream
+     * @throws Exception
      * */
     @Override
     public ByteArrayOutputStream downloadAppUserAccount(AppUserRequest payload) throws Exception {
-        logger.info("Request downloadAppUserAccount :- " + payload);
+        logger.info("Request downloadAppUserAccount :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             throw new Exception(MessageUtil.USERNAME_MISSING);
         }
@@ -325,10 +328,11 @@ public class AppUserServiceImpl implements AppUserService {
      * Method use to fetch all app user account
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse fetchAllAppUserAccount(AppUserRequest payload) throws Exception {
-        logger.info("Request fetchAllAppUserAccount :- " + payload);
+        logger.info("Request fetchAllAppUserAccount :- {}", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -373,10 +377,11 @@ public class AppUserServiceImpl implements AppUserService {
      * Method use to add app user account
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse addAppUserAccount(AppUserRequest payload) throws Exception {
-        logger.info("Request addAppUserAccount :- " + payload);
+        logger.info("Request addAppUserAccount :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -475,6 +480,7 @@ public class AppUserServiceImpl implements AppUserService {
      * Method use to edit app user account
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse updateAppUserAccount(AppUserRequest payload) throws Exception {
@@ -550,11 +556,10 @@ public class AppUserServiceImpl implements AppUserService {
      * @param payload
      * @return AppResponse
      * @throws Exception
-     * @throws Exception
      * */
     @Override
     public AppResponse enabledDisabledAppUserAccount(AppUserRequest payload) throws Exception {
-        logger.info("Request enabledDisabledAppUserAccount :- " + payload);
+        logger.info("Request enabledDisabledAppUserAccount :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
