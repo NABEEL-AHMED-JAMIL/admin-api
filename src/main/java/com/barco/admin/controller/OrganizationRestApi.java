@@ -3,21 +3,17 @@ package com.barco.admin.controller;
 import com.barco.admin.service.OrganizationService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
-import com.barco.common.utility.excel.ExcelUtil;
 import com.barco.model.dto.request.OrganizationRequest;
 import com.barco.model.dto.response.AppResponse;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.UUID;
 
 /**
  * @author Nabeel Ahmed
@@ -25,6 +21,8 @@ import java.util.UUID;
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping(value = "/organization.json")
+@Api(value = "Organization Rest Api",
+    description = "Organization Service : Service use to create the private org main account [admin role & client type].")
 public class OrganizationRestApi {
 
     private Logger logger = LoggerFactory.getLogger(OrganizationRestApi.class);
@@ -33,143 +31,109 @@ public class OrganizationRestApi {
     private OrganizationService organizationService;
 
     /**
-     * @apiName :- addOrg
+     * @apiName :- addOrgAccount
      * @apiNote :- Method use to add org
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value="/addOrg", method= RequestMethod.POST)
-    public ResponseEntity<?> addOrg(@RequestBody OrganizationRequest payload) {
+    @ApiOperation(value = "Api use to add the new org account.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @RequestMapping(value="/addOrgAccount", method= RequestMethod.POST)
+    public ResponseEntity<?> addOrgAccount(@RequestBody OrganizationRequest payload) {
         try {
-            return new ResponseEntity<>(this.organizationService.addOrg(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.organizationService.addOrgAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while addOrg ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while addOrgAccount ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- updateOrg
+     * @apiName :- updateOrgAccount
      * @apiNote :- Method use to update org
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value="/updateOrg", method= RequestMethod.POST)
-    public ResponseEntity<?> updateOrg(@RequestBody OrganizationRequest payload) {
+    @ApiOperation(value = "Api use to update the org account.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @RequestMapping(value="/updateOrgAccount", method= RequestMethod.POST)
+    public ResponseEntity<?> updateOrgAccount(@RequestBody OrganizationRequest payload) {
         try {
-            return new ResponseEntity<>(this.organizationService.updateOrg(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.organizationService.updateOrgAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while updateOrg ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while updateOrgAccount ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- fetchOrgById
+     * @apiName :- fetchOrgAccountById
      * @apiNote :- Method use to fetch org by id
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value="/fetchOrgById", method= RequestMethod.POST)
-    public ResponseEntity<?> fetchOrgById(@RequestBody OrganizationRequest payload) {
+    @ApiOperation(value = "Api use to fetch the org account.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @RequestMapping(value="/fetchOrgAccountById", method= RequestMethod.POST)
+    public ResponseEntity<?> fetchOrgAccountById(@RequestBody OrganizationRequest payload) {
         try {
-            return new ResponseEntity<>(this.organizationService.fetchOrgById(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.organizationService.fetchOrgAccountById(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while fetchOrgById ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while fetchOrgAccountById ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- fetchAllOrg
+     * @apiName :- fetchAllOrgAccount
      * @apiNote :- Method use to fetch all org
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value="/fetchAllOrg", method= RequestMethod.POST)
-    public ResponseEntity<?> fetchAllOrg(@RequestBody OrganizationRequest payload) {
+    @ApiOperation(value = "Api use to fetch all the org account.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @RequestMapping(value="/fetchAllOrgAccount", method= RequestMethod.POST)
+    public ResponseEntity<?> fetchAllOrgAccount(@RequestBody OrganizationRequest payload) {
         try {
-            return new ResponseEntity<>(this.organizationService.fetchAllOrg(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.organizationService.fetchAllOrgAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while fetchAllOrg ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while fetchAllOrgAccount ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- deleteOrgById
+     * @apiName :- deleteOrgAccountById
      * @apiNote :- Method use to delete org by id
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value="/deleteOrgById", method= RequestMethod.POST)
-    public ResponseEntity<?> deleteOrgById(@RequestBody OrganizationRequest payload) {
+    @ApiOperation(value = "Api use to delete the org account.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @RequestMapping(value="/deleteOrgAccountById", method= RequestMethod.POST)
+    public ResponseEntity<?> deleteOrgAccountById(@RequestBody OrganizationRequest payload) {
         try {
-            return new ResponseEntity<>(this.organizationService.deleteOrgById(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.organizationService.deleteOrgAccountById(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while deleteOrgById ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while deleteOrgAccountById ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     /**
-     * @apiName :- deleteAllOrg
+     * @apiName :- deleteAllOrgAccount
      * @apiNote :- Method use to delete all org
      * @param payload
      * @return ResponseEntity
      * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value="/deleteAllOrg", method= RequestMethod.POST)
-    public ResponseEntity<?> deleteAllOrg(@RequestBody OrganizationRequest payload) {
+    @ApiOperation(value = "Api use to delete all the org account.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
+    @RequestMapping(value="/deleteAllOrgAccount", method= RequestMethod.POST)
+    public ResponseEntity<?> deleteAllOrgAccount(@RequestBody OrganizationRequest payload) {
         try {
-            return new ResponseEntity<>(this.organizationService.deleteAllOrg(payload), HttpStatus.OK);
+            return new ResponseEntity<>(this.organizationService.deleteAllOrgAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
-            logger.error("An error occurred while deleteAllOrg ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- downloadOrgTemplateFile
-     * @apiNote :- Api use to download Org template
-     * @return ResponseEntity<?> downloadOrgTemplateFile
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value = "/downloadOrgTemplateFile", method = RequestMethod.GET)
-    public ResponseEntity<?> downloadOrgTemplateFile() {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
-            String fileName = "BatchOrgDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
-            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
-            return ResponseEntity.ok().headers(headers).body(this.organizationService.downloadOrgTemplateFile().toByteArray());
-        } catch (Exception ex) {
-            logger.error("An error occurred while downloadOrgTemplateFile xlsx file", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- downloadOrg
-     * @apiNote :- Api use to download the Org
-     * @return ResponseEntity<?> downloadOrg
-     * */
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
-    @RequestMapping(value = "/downloadOrg", method = RequestMethod.POST)
-    public ResponseEntity<?> downloadOrg(@RequestBody OrganizationRequest payload) {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            DateFormat dateFormat = new SimpleDateFormat(BarcoUtil.SIMPLE_DATE_PATTERN);
-            String fileName = "BatchOrgDownload-"+dateFormat.format(new Date())+"-"+ UUID.randomUUID() + ExcelUtil.XLSX_EXTENSION;
-            headers.add(BarcoUtil.CONTENT_DISPOSITION,BarcoUtil.FILE_NAME_HEADER + fileName);
-            return ResponseEntity.ok().headers(headers).body(this.organizationService.downloadOrg(payload).toByteArray());
-        } catch (Exception ex) {
-            logger.error("An error occurred while downloadOrg ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while deleteAllOrgAccount ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

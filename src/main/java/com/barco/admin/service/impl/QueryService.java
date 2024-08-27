@@ -66,11 +66,7 @@ public class QueryService {
     public static String TASK_TYPE = "task_type";
 
     // Query
-    public static String FETCH_PROFILE = "SELECT PRO.ID, PRO.PROFILE_NAME, PRO.STATUS, PRO.DESCRIPTION FROM PROFILE PRO WHERE PRO.CREATED_BY_ID = %d ";
-
-    public static String FETCH_PERMISSION = "SELECT PER.ID, PER.PERMISSION_NAME, PER.STATUS, PER.DESCRIPTION FROM PERMISSION PER WHERE PER.CREATED_BY_ID = %d";
-
-    public static String FETCH_PROFILE_PERMISSION = "SELECT PP.PROFILE_ID || 'X' || PP.PERMISSION_ID AS LINK_PP, PP.STATUS AS STATUS FROM PROFILE_PERMISSION PP WHERE PP.CREATED_BY_ID = %d";
+    public static String FETCH_PROFILE_PERMISSION = "SELECT PP.PROFILE_ID || 'X' || PP.PERMISSION_ID AS LINK_PP, PP.STATUS AS STATUS FROM PROFILE_PERMISSION PP";
 
     public static String DELETE_PROFILE_PERMISSION_BY_PROFILE_ID_AND_PERMISSION_ID = "DELETE FROM PROFILE_PERMISSION pp WHERE pp.PROFILE_ID = %d AND pp.PERMISSION_ID = %d ";
 
@@ -82,7 +78,7 @@ public class QueryService {
 
     public static String DELETE_APP_USER_PROFILE_ACCESS_BY_ROLE_ID_AND_APP_USER_ID = "DELETE FROM APP_USER_PROFILE_ACCESS aupa WHERE aupa.PROFILE_ID = %d AND aupa.APP_USER_ID = %d ";
 
-    public static String FETCH_LINK_ROLE_WITH_USER = "SELECT DISTINCT AU.ID, AU.EMAIL, AU.USERNAME, AU.FIRST_NAME || ' ' || AU.LAST_NAME AS FULL_NAME, " +
+    public static String FETCH_LINK_ROLE_WITH_USER_SUPER_ADMIN_PROFILE_AND_USER_ADMIN_PROFILE = "SELECT DISTINCT AU.ID, AU.EMAIL, AU.USERNAME, AU.FIRST_NAME || ' ' || AU.LAST_NAME AS FULL_NAME, " +
         "AU.IMG AS PROFIlE_IMG, PRO.ID AS PROFILE_ID, PRO.PROFILE_NAME, PRO.DESCRIPTION, AURA.DATE_CREATED AS LINK_DATA, " +
         "CASE WHEN AURA.DATE_CREATED IS NULL THEN FALSE ELSE TRUE END LINKED, " +
         "CASE WHEN AURA.STATUS IS NOT NULL THEN AURA.STATUS WHEN AU.STATUS = 0 OR RL.STATUS = 0 THEN 0 ELSE 1 END AS LINK_STATUS " +
@@ -90,10 +86,10 @@ public class QueryService {
         "INNER JOIN PROFILE PRO ON PRO.ID = AU.PROFILE_ID " +
         "LEFT JOIN APP_USER_ROLE_ACCESS AURA ON AURA.APP_USER_ID = AU.ID AND AURA.ROLE_ID = %d " +
         "LEFT JOIN ROLE RL ON RL.ID = AURA.ROLE_ID " +
-        "WHERE AU.STATUS != 2 AND PRO.PROFILE_NAME IN ('ADMIN_PROFILE', 'SUPER_ADMIN_PROFILE') " +
+        "WHERE AU.STATUS != 2 AND PRO.PROFILE_NAME IN ('ADMIN_PROFILE', 'SUPER_ADMIN_PROFILE') " + // super admin and admin user fetch only
         "ORDER BY AU.ID DESC";
 
-    public static String FETCH_LINK_PROFILE_WITH_USER = "SELECT DISTINCT AU.ID, AU.EMAIL, AU.USERNAME, AU.FIRST_NAME || ' ' || AU.LAST_NAME AS FULL_NAME, " +
+    public static String FETCH_LINK_PROFILE_WITH_USER_SUPER_ADMIN_PROFILE_AND_USER_ADMIN_PROFILE = "SELECT DISTINCT AU.ID, AU.EMAIL, AU.USERNAME, AU.FIRST_NAME || ' ' || AU.LAST_NAME AS FULL_NAME, " +
         "AU.IMG AS PROFIlE_IMG, PRO.ID AS PROFILE_ID, PRO.PROFILE_NAME, PRO.DESCRIPTION, AUPA.DATE_CREATED AS LINK_DATA, " +
         "CASE WHEN AUPA.DATE_CREATED IS NULL THEN FALSE ELSE TRUE END LINKED, " +
         "CASE WHEN AUPA.STATUS IS NOT NULL THEN AUPA.STATUS WHEN AU.STATUS = 0 OR PRO.STATUS = 0 THEN 0 ELSE 1 END AS LINK_STATUS " +
@@ -162,6 +158,7 @@ public class QueryService {
         "LEFT JOIN STTF_LINK_STT SLS ON SLS.STT_ID = STT.ID AND SLS.FORM_ID = %d  AND SLS.STATUS != %2$d " +
         "WHERE STT.STATUS != %2$d AND STT.CREATED_BY_ID = %3$d " +
         "ORDER BY STT.DATE_CREATED DESC";
+
     public static String FETCH_ALL_FORM_LINK_STT = "SELECT GF.ID, GF.FORM_NAME, GF.SERVICE_ID, GF.FORM_TYPE, GF.STATUS, " +
         "CASE WHEN SLS.FORM_ID IS NOT NULL THEN 'TRUE' ELSE 'FALSE' END AS LINK_STATUS, " +
         "SLS.ID AS LINK_FORM_ID " +
@@ -259,10 +256,10 @@ public class QueryService {
      * @return Object
      * */
     public Object deleteQuery(String queryStr) {
-        logger.info("Execute Query :- " + queryStr);
+        logger.info("Execute Query :- {}.", queryStr);
         Query query = this._em.createNativeQuery(queryStr);
         int rowsDeleted = query.executeUpdate();
-        logger.info("Execute deleted :- " + rowsDeleted);
+        logger.info("Execute deleted :- {}.", rowsDeleted);
         return rowsDeleted;
     }
 
@@ -272,30 +269,29 @@ public class QueryService {
      * @return Object
      * */
     public Object executeQueryForSingleResult(String queryStr) {
-        logger.info("Execute Query :- " + queryStr);
-        Query query = this._em.createNativeQuery(queryStr);
-        return query.getSingleResult();
+        logger.info("Execute Query :- {}.", queryStr);
+        return this._em.createNativeQuery(queryStr).getSingleResult();
     }
 
     /**
      * Method use to execute query for fetch the result
+     *
      * @param queryStr
-     * @return List<Object[]>
-     * */
-    public List<Object[]> executeQuery(String queryStr) {
-        logger.info("Execute Query :- " + queryStr);
-        Query query = this._em.createNativeQuery(queryStr);
-        return query.getResultList();
+     * @return List
+     */
+    public List executeQuery(String queryStr) {
+        logger.info("Execute Query :- {}.", queryStr);
+        return this._em.createNativeQuery(queryStr).getResultList();
     }
 
     /**
      * Method use to execute query for paging
      * @param queryStr
      * @param paging
-     * @return List<Object[]>
+     * @return List
      * **/
-    public List<Object[]> executeQuery(String queryStr, Pageable paging) {
-        logger.info("Execute Query :- " + queryStr);
+    public List executeQuery(String queryStr, Pageable paging) {
+        logger.info("Execute Query :- {}.", queryStr);
         Query query = this._em.createNativeQuery(queryStr);
         if (!BarcoUtil.isNull(paging)) {
             query.setFirstResult(paging.getPageNumber() * paging.getPageSize());
@@ -306,18 +302,18 @@ public class QueryService {
 
     /**
      * Method use to execute query for dynamic result
-     * @param queryString
+     * @param queryStr
      * @return QueryResponse
      * */
-    public QueryResponse executeQueryResponse(String queryString) {
-        logger.info("Execute Query :- " + queryString);
-        Query query = this._em.createNativeQuery(queryString);
+    public QueryResponse executeQueryResponse(String queryStr) {
+        logger.info("Execute Query :- {}.", queryStr);
+        Query query = this._em.createNativeQuery(queryStr);
         NativeQueryImpl nativeQuery = (NativeQueryImpl) query;
         nativeQuery.setResultTransformer(AliasToEntityMapResultTransformer.INSTANCE);
         List<Map<String,Object>> result = nativeQuery.getResultList();
-        QueryResponse itemResponse=new QueryResponse();
-        if (result != null && result.size() > 0) {
-            itemResponse.setQuery(queryString);
+        QueryResponse itemResponse = new QueryResponse();
+        if (!result.isEmpty()) {
+            itemResponse.setQuery(queryStr);
             itemResponse.setData(result);
             itemResponse.setColumn(result.get(0).keySet());
         }

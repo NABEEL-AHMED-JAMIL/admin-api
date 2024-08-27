@@ -18,7 +18,7 @@ public interface RefreshTokenService extends RootService {
 
     public RefreshToken createRefreshToken(Long appUserId, String ip) throws Exception;
 
-    public AppResponse verifyExpiration(RefreshToken payload);
+    public AppResponse verifyExpiration(RefreshToken payload) throws Exception;
 
     public AppResponse deleteRefreshToken(TokenRefreshRequest payload) throws Exception;
 

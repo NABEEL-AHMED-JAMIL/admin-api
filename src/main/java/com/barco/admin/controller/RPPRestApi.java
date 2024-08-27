@@ -8,6 +8,8 @@ import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.MessageUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,8 @@ import java.util.UUID;
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping(value = "/rpp.json")
+@Api(value = "RPP Rest Api",
+    description = "RPP Service : Service related to the [Role&Permission] for profile management. ")
 public class RPPRestApi {
 
     private Logger logger = LoggerFactory.getLogger(RPPRestApi.class);
@@ -42,6 +46,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to add new role in the system.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/addRole", method=RequestMethod.POST)
     public ResponseEntity<?> addRole(@RequestBody RoleRequest payload) {
@@ -59,6 +64,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to update role in the system.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/updateRole", method=RequestMethod.POST)
     public ResponseEntity<?> updateRole(@RequestBody RoleRequest payload) {
@@ -76,6 +82,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch all roles.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/fetchAllRole", method=RequestMethod.POST)
     public ResponseEntity<?> fetchAllRole(@RequestBody RoleRequest payload) {
@@ -93,6 +100,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to find role by id.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/findRoleById", method=RequestMethod.POST)
     public ResponseEntity<?> findRoleById(@RequestBody RoleRequest payload) {
@@ -110,6 +118,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to delete role by id.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/deleteRoleById", method=RequestMethod.POST)
     public ResponseEntity<?> deleteRoleById(@RequestBody RoleRequest payload) {
@@ -127,6 +136,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to delete all roles by ids.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/deleteAllRole", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllRole(@RequestBody RoleRequest payload) {
@@ -143,6 +153,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to download role template
      * @return ResponseEntity<?> downloadRoleTemplateFile
      * */
+    @ApiOperation(value = "Api use to download role template file.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/downloadRoleTemplateFile", method = RequestMethod.GET)
     public ResponseEntity<?> downloadRoleTemplateFile() {
@@ -163,6 +174,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to download the role data
      * @return ResponseEntity<?> downloadRole
      * */
+    @ApiOperation(value = "Api use to download role file.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/downloadRole", method = RequestMethod.POST)
     public ResponseEntity<?> downloadRole(@RequestBody RoleRequest payload) {
@@ -183,6 +195,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to upload the role
      * @return ResponseEntity<?> uploadRole
      * */
+    @ApiOperation(value = "Api use to upload role file.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/uploadRole", method = RequestMethod.POST)
     public ResponseEntity<?> uploadRole(FileUploadRequest payload) {
@@ -203,6 +216,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to add new profile in system.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/addProfile", method=RequestMethod.POST)
     public ResponseEntity<?> addProfile(@RequestBody ProfileRequest payload) {
@@ -220,6 +234,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to update profile in system.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/updateProfile", method=RequestMethod.POST)
     public ResponseEntity<?> updateProfile(@RequestBody ProfileRequest payload) {
@@ -237,6 +252,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch all profiles.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/fetchAllProfile", method=RequestMethod.POST)
     public ResponseEntity<?> fetchAllProfile(@RequestBody ProfileRequest payload) {
@@ -254,6 +270,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch profile by id.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/fetchProfileById",  method=RequestMethod.POST)
     public ResponseEntity<?> fetchProfileById(@RequestBody ProfileRequest payload) {
@@ -271,6 +288,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to delete profile by id.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/deleteProfileById",  method=RequestMethod.POST)
     public ResponseEntity<?> deleteProfileById(@RequestBody ProfileRequest payload) {
@@ -288,6 +306,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to delete all profile by ids.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/deleteAllProfile",  method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllProfile(@RequestBody ProfileRequest payload) {
@@ -304,6 +323,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to download profile template
      * @return ResponseEntity<?> downloadProfileTemplateFile
      * */
+    @ApiOperation(value = "Api use to download template file for profile upload.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/downloadProfileTemplateFile", method = RequestMethod.GET)
     public ResponseEntity<?> downloadProfileTemplateFile() {
@@ -324,6 +344,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to download the profile
      * @return ResponseEntity<?> downloadProfile
      * */
+    @ApiOperation(value = "Api use to download profiles file.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/downloadProfile", method = RequestMethod.POST)
     public ResponseEntity<?> downloadProfile(@RequestBody ProfileRequest payload) {
@@ -344,6 +365,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to upload the profile
      * @return ResponseEntity<?> uploadProfile
      * */
+    @ApiOperation(value = "Api use to upload profiles file.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/uploadProfile", method = RequestMethod.POST)
     public ResponseEntity<?> uploadProfile(FileUploadRequest payload) {
@@ -364,6 +386,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to add new permission in the system.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/addPermission", method=RequestMethod.POST)
     public ResponseEntity<?> addPermission(@RequestBody PermissionRequest payload) {
@@ -381,6 +404,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to update permission in the system.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/updatePermission", method=RequestMethod.POST)
     public ResponseEntity<?> updatePermission(@RequestBody PermissionRequest payload) {
@@ -398,6 +422,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch all permission.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/fetchAllPermission", method=RequestMethod.POST)
     public ResponseEntity<?> fetchAllPermission(@RequestBody PermissionRequest payload) {
@@ -415,6 +440,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch permission by id.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/fetchPermissionById", method=RequestMethod.POST)
     public ResponseEntity<?> fetchPermissionById(@RequestBody PermissionRequest payload) {
@@ -432,6 +458,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to delete permission by id.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/deletePermissionById", method=RequestMethod.POST)
     public ResponseEntity<?> deletePermissionById(@RequestBody PermissionRequest payload) {
@@ -449,6 +476,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to delete all permission by ids.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/deleteAllPermission", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllPermission(@RequestBody PermissionRequest payload) {
@@ -465,6 +493,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to download permission template
      * @return ResponseEntity<?> downloadPermissionTemplateFile
      * */
+    @ApiOperation(value = "Api use to download permission template for permission upload.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/downloadPermissionTemplateFile", method = RequestMethod.GET)
     public ResponseEntity<?> downloadPermissionTemplateFile() {
@@ -485,6 +514,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to download the permission
      * @return ResponseEntity<?> downloadPermission
      * */
+    @ApiOperation(value = "Api use to download permissions.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/downloadPermission", method = RequestMethod.POST)
     public ResponseEntity<?> downloadPermission(@RequestBody PermissionRequest payload) {
@@ -505,6 +535,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to upload the permission
      * @return ResponseEntity<?> uploadPermission
      * */
+    @ApiOperation(value = "Api use to upload new permissions.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/uploadPermission", method = RequestMethod.POST)
     public ResponseEntity<?> uploadPermission(FileUploadRequest payload) {
@@ -524,6 +555,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to fetch link-> profile & permission
      * @return ResponseEntity<?> fetchLinkProfilePermission
      * */
+    @ApiOperation(value = "Api use to fetch linked profile with permission.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/fetchLinkProfilePermission", method = RequestMethod.POST)
     public ResponseEntity<?> fetchLinkProfilePermission(@RequestBody LinkPPRequest payload) {
@@ -540,6 +572,7 @@ public class RPPRestApi {
      * @apiNote :- Api use to update link-> profile & permission
      * @return ResponseEntity<?> updateLinkProfilePermission
      * */
+    @ApiOperation(value = "Api use to update linked profile with permission.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(value = "/updateLinkProfilePermission", method = RequestMethod.POST)
     public ResponseEntity<?> updateLinkProfilePermission(@RequestBody LinkPPRequest payload) {
@@ -557,6 +590,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch linked role with user.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/fetchLinkRoleWithUser", method=RequestMethod.POST)
     public ResponseEntity<?> fetchLinkRoleWithUser(@RequestBody LinkRURequest payload) {
@@ -576,6 +610,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to linked role with user.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/linkRoleWithUser", method=RequestMethod.POST)
     public ResponseEntity<?> linkRoleWithUser(@RequestBody LinkRURequest payload) {
@@ -595,6 +630,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch linked profile with user.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/fetchLinkProfileWithUser", method=RequestMethod.POST)
     public ResponseEntity<?> fetchLinkProfileWithUser(@RequestBody LinkPURequest payload) {
@@ -614,6 +650,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to linked profile with user.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('DB') or hasRole('DEV')")
     @RequestMapping(path="/linkProfileWithUser", method=RequestMethod.POST)
     public ResponseEntity<?> linkProfileWithUser(@RequestBody LinkPURequest payload) {
@@ -633,6 +670,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch profile with user.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(path="/fetchProfileWithUser", method=RequestMethod.POST)
     public ResponseEntity<?> fetchProfileWithUser(@RequestBody LinkPURequest payload) {
@@ -652,6 +690,7 @@ public class RPPRestApi {
      * @param payload
      * @return ResponseEntity<?>
      * */
+    @ApiOperation(value = "Api use to fetch role with user.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(path="/fetchRoleWithUser", method=RequestMethod.POST)
     public ResponseEntity<?> fetchRoleWithUser(@RequestBody LinkRURequest payload) {

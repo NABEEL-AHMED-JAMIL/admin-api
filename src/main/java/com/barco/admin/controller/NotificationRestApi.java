@@ -4,6 +4,8 @@ import com.barco.admin.service.NotificationService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.request.NotificationRequest;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,8 @@ import com.barco.model.dto.response.AppResponse;
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping(value = "/notification.json")
+@Api(value = "Refresh Token Rest Api",
+    description = "Refresh Token Service : Service related to the [Session & Token Regenerate] for user. ")
 public class NotificationRestApi {
 
     private Logger logger = LoggerFactory.getLogger(NotificationRestApi.class);
@@ -28,13 +32,14 @@ public class NotificationRestApi {
     /**
      * @apiName :- updateNotification
      * @apiNote :- Api use update notification for specific user
-     * @param requestPayload
+     * @param payload
      * @return ResponseEntity<?>
      * */
     @RequestMapping(value = "/updateNotification", method = RequestMethod.POST)
-    public ResponseEntity<?> updateNotification(@RequestBody NotificationRequest requestPayload) {
+    @ApiOperation(value = "Api use to update notification by user.", response = ResponseEntity.class)
+    public ResponseEntity<?> updateNotification(@RequestBody NotificationRequest payload) {
         try {
-            return new ResponseEntity<>(this.notificationService.updateNotification(requestPayload), HttpStatus.OK);
+            return new ResponseEntity<>(this.notificationService.updateNotification(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateNotification ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
@@ -48,6 +53,7 @@ public class NotificationRestApi {
      * @return ResponseEntity<?>
      * */
     @RequestMapping(value = "/fetchAllNotification", method = RequestMethod.GET)
+    @ApiOperation(value = "Api use to fetch all notification by user.", response = ResponseEntity.class)
     public ResponseEntity<?> fetchAllNotification(@RequestParam String username) {
         try {
             return new ResponseEntity<>(this.notificationService.fetchAllNotification(username), HttpStatus.OK);
