@@ -67,6 +67,8 @@ public class AppUserServiceImpl implements AppUserService {
     @Autowired
     private EmailMessagesFactory emailMessagesFactory;
 
+    public AppUserServiceImpl() {}
+
     /**
      * Method use to get appUser detail
      * @param username
@@ -87,7 +89,7 @@ public class AppUserServiceImpl implements AppUserService {
         // account type
         if (!BarcoUtil.isNull(appUser.get().getAccountType())) {
             GLookup accountType = GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                ACCOUNT_TYPE.getName(), Long.valueOf(appUser.get().getAccountType().getLookupCode())));
+                ACCOUNT_TYPE.getName(), appUser.get().getAccountType().getLookupCode()));
             appUserResponse.setAccountType(accountType);
         }
         // organization
@@ -138,8 +140,7 @@ public class AppUserServiceImpl implements AppUserService {
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (appUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getId())) {
@@ -182,8 +183,7 @@ public class AppUserServiceImpl implements AppUserService {
         // send to the same user email and notification
         this.sendResetPasswordEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         // notification update password
-        this.sendNotification(MessageUtil.PASSWORD_UPDATED, MessageUtil.PASSWORD_UPDATE_MESSAGE, appUser.get(),
-            this.lookupDataCacheService, this.notificationService);
+        this.sendNotification(MessageUtil.PASSWORD_UPDATED, MessageUtil.PASSWORD_UPDATE_MESSAGE, appUser.get(), this.lookupDataCacheService, this.notificationService);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, appUser.get().getUsername()), payload);
     }
 
@@ -201,8 +201,7 @@ public class AppUserServiceImpl implements AppUserService {
         } else if (BarcoUtil.isNull(payload.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (adminUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
@@ -221,8 +220,7 @@ public class AppUserServiceImpl implements AppUserService {
         // email to user
         this.sendCloseUserAccountEmail(appUser.get(), this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         // notification to admin
-        this.sendNotification(MessageUtil.ACCOUNT_STATUS, String.format(MessageUtil.ACCOUNT_DELETE_DETAIL, appUser.get().getUsername()),
-            adminUser.get(), this.lookupDataCacheService, this.notificationService);
+        this.sendNotification(MessageUtil.ACCOUNT_STATUS, String.format(MessageUtil.ACCOUNT_DELETE_DETAIL, appUser.get().getUsername()), adminUser.get(), this.lookupDataCacheService, this.notificationService);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, appUser.get().getUsername()), payload);
     }
 
@@ -238,8 +236,7 @@ public class AppUserServiceImpl implements AppUserService {
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (adminUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getIds())) {
@@ -306,17 +303,16 @@ public class AppUserServiceImpl implements AppUserService {
             }
         }
         while (appUserIterator.hasNext()) {
-            AppUser appUserIter = appUserIterator.next();
+            AppUser appUserItr = appUserIterator.next();
             rowCount.getAndIncrement();
             List<String> dataCellValue = new ArrayList<>();
-            dataCellValue.add(appUserIter.getFirstName());
-            dataCellValue.add(appUserIter.getLastName());
-            dataCellValue.add(appUserIter.getEmail());
-            dataCellValue.add(appUserIter.getUsername());
-            dataCellValue.add(appUserIter.getIpAddress());
-            dataCellValue.add(appUserIter.getProfile().getProfileName());
-            dataCellValue.add(appUserIter.getAppUserRoles().stream()
-             .map(Role::getName).collect(Collectors.joining(",")));
+            dataCellValue.add(appUserItr.getFirstName());
+            dataCellValue.add(appUserItr.getLastName());
+            dataCellValue.add(appUserItr.getEmail());
+            dataCellValue.add(appUserItr.getUsername());
+            dataCellValue.add(appUserItr.getIpAddress());
+            dataCellValue.add(appUserItr.getProfile().getProfileName());
+            dataCellValue.add(appUserItr.getAppUserRoles().stream().map(Role::getName).collect(Collectors.joining(",")));
             this.bulkExcel.fillBulkBody(dataCellValue, rowCount.get());
         }
         ByteArrayOutputStream outSteam = new ByteArrayOutputStream();
@@ -344,8 +340,7 @@ public class AppUserServiceImpl implements AppUserService {
         Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
         Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
         List<AppUser> users;
-        // IF IT'S STAND-ALONE ITS MEAN THESE USER ARE NOT CREATE UNDER ANY USER
-        // BUT ITS CAN UPDATE BY SUPER ADMIN ONLY
+        // IF IT'S STAND-ALONE ITS MEAN THESE USER ARE NOT CREATE UNDER ANY USER BUT ITS CAN UPDATE BY SUPER ADMIN ONLY
         if (payload.isStandalone()) {
             users = this.appUserRepository.findAllByDateCreatedBetweenAndStatusNotOrderByDateCreatedDesc(startDate, endDate, APPLICATION_STATUS.DELETE);
         } else {
@@ -357,7 +352,7 @@ public class AppUserServiceImpl implements AppUserService {
                 AppUserResponse appUserResponse = this.getAppUserDetail(subAppUser);
                 if (!BarcoUtil.isNull(subAppUser.getAccountType())) {
                     appUserResponse.setAccountType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                        ACCOUNT_TYPE.getName(), Long.valueOf(subAppUser.getAccountType().ordinal()))));
+                        ACCOUNT_TYPE.getName(), subAppUser.getAccountType().getLookupCode())));
                 }
                 if (!BarcoUtil.isNull(subAppUser.getSubAppUsers())) {
                     appUserResponse.setTotalSubUser(subAppUser.getSubAppUsers().stream()
@@ -385,8 +380,7 @@ public class AppUserServiceImpl implements AppUserService {
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (adminUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getFirstName())) {
@@ -520,13 +514,13 @@ public class AppUserServiceImpl implements AppUserService {
         if (!BarcoUtil.isNull(payload.getLastName())) {
             appUser.get().setLastName(payload.getLastName());
         }
-        if (!BarcoUtil.isNull(payload.getEmail())) {
-            appUser.get().setEmail(payload.getEmail());
-        }
         if (!payload.getUsername().equals(appUser.get().getUsername()) && this.appUserRepository.existsByUsername(payload.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_ALREADY_TAKEN);
         } else if (!payload.getEmail().equals(appUser.get().getEmail()) && this.appUserRepository.existsByEmail(payload.getEmail())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EMAIL_ALREADY_IN_USE);
+        }
+        if (!BarcoUtil.isNull(payload.getEmail())) {
+            appUser.get().setEmail(payload.getEmail());
         }
         if (!BarcoUtil.isNull(payload.getUsername())) {
             appUser.get().setUsername(payload.getUsername());

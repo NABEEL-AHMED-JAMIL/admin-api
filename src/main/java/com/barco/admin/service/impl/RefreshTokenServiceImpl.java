@@ -46,6 +46,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     /**
      * Method use to fetch refresh token statistics
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse fetchSessionStatistics() throws Exception {
@@ -58,6 +59,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * Method use to fetch all refresh token
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse fetchByAllRefreshToken(TokenRefreshRequest payload) throws Exception {
@@ -73,6 +75,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * findByToken use for get the refresh token from db
      * @param token
      * @return Optional<RefreshToken>
+     * @throws Exception
      * */
     public Optional<RefreshToken> findByToken(String token) throws Exception {
         logger.info("Request findByToken :- {}.", token);
@@ -84,9 +87,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * @param appUserId
      * @param ip
      * @return RefreshToken
+     * @throws Exception
      * */
     public RefreshToken createRefreshToken(Long appUserId, String ip) throws Exception {
-        logger.info("Request createRefreshToken :- {} IP :- {}.", appUserId, ip);
+        logger.info("Request createRefreshToken :- AppUser Id :- {} & IP :- {}.", appUserId, ip);
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setIpAddress(ip);
         refreshToken.setToken(UUID.randomUUID().toString());
@@ -102,8 +106,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * verifyExpiration use to create refresh token into db
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
-    public AppResponse verifyExpiration(RefreshToken payload) {
+    public AppResponse verifyExpiration(RefreshToken payload) throws Exception {
         if (payload.getExpiryDate().compareTo(Instant.now()) < 0) {
             payload.setStatus(APPLICATION_STATUS.DELETE);
             this.appTokenRepository.save(payload);
@@ -116,6 +121,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * deleteRefreshToken use to delete refresh token from db
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     public AppResponse deleteRefreshToken(TokenRefreshRequest payload) throws Exception {
         logger.info("Request deleteRefreshToken :- {}.", payload);
@@ -131,6 +137,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
      * deleteAllRefreshToken use to delete all refresh token from db
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse deleteAllRefreshToken(TokenRefreshRequest payload) throws Exception {

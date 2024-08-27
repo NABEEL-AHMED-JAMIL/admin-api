@@ -59,6 +59,8 @@ public class EVariableServiceImpl implements EVariableService {
     @Autowired
     private LookupDataCacheService lookupDataCacheService;
 
+    public EVariableServiceImpl() {}
+
     /***
      * Method use to add env variable
      * @param payload
@@ -138,6 +140,10 @@ public class EVariableServiceImpl implements EVariableService {
     @Override
     public AppResponse fetchAllEnVariable(EnVariablesRequest payload) throws Exception {
         logger.info("Request fetchAllEnVariable :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
+        }
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
             this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE).stream()
                 .map(this::getEnVariablesResponse).collect(Collectors.toList()));
@@ -245,6 +251,7 @@ public class EVariableServiceImpl implements EVariableService {
     /**
      * Method use to download e-variable template
      * @return ByteArrayOutputStream
+     * @throws Exception
      * */
     @Override
     public ByteArrayOutputStream downloadEnVariableTemplateFile() throws Exception {
@@ -257,6 +264,7 @@ public class EVariableServiceImpl implements EVariableService {
      * Method use to download e-variable data
      * @param payload
      * @return ByteArrayOutputStream
+     * @throws Exception
      * */
     @Override
     public ByteArrayOutputStream downloadEnVariable(EnVariablesRequest payload) throws Exception {
@@ -273,19 +281,15 @@ public class EVariableServiceImpl implements EVariableService {
         AtomicInteger rowCount = new AtomicInteger();
         this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
         Iterator<EnvVariables> envVariables;
-        if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
+        if (!BarcoUtil.isNull(payload.getIds()) && !payload.getIds().isEmpty()) {
             envVariables = this.envVariablesRepository.findAllByIdInAndStatusNotOrderByDateCreatedDesc(payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
         } else {
             envVariables = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE).iterator();
         }
         while (envVariables.hasNext()) {
-            EnvVariables envVariable = envVariables.next();
-            List<String> dataCellValues = Arrays.asList(
-                envVariable.getEnvKey(),
-                envVariable.getDescription()
-            );
             int currentRowCount = rowCount.incrementAndGet();
-            this.bulkExcel.fillBulkBody(dataCellValues, currentRowCount);
+            EnvVariables envVariable = envVariables.next();
+            this.bulkExcel.fillBulkBody(Arrays.asList(envVariable.getEnvKey(), envVariable.getDescription()), currentRowCount);
         }
         ByteArrayOutputStream outSteam = new ByteArrayOutputStream();
         workbook.write(outSteam);
@@ -296,6 +300,7 @@ public class EVariableServiceImpl implements EVariableService {
      * Method use to upload role data
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse uploadEnVariable(FileUploadRequest payload) throws Exception {
@@ -375,6 +380,7 @@ public class EVariableServiceImpl implements EVariableService {
      * Method use to link variable with root user
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse fetchLinkEVariableWitUser(LinkEURequest payload) throws Exception {
@@ -401,6 +407,7 @@ public class EVariableServiceImpl implements EVariableService {
      * Method use to link variable with root user
      * @param payload
      * @return AppResponse
+     * @throws Exception
      * */
     @Override
     public AppResponse linkEVariableWithUser(LinkEURequest payload) throws Exception {

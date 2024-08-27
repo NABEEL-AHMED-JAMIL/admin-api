@@ -50,8 +50,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
         }
-        if (this.templateRegRepository.findFirstByTemplateNameAndStatusNot(
-            payload.getTemplateName(), APPLICATION_STATUS.DELETE).isPresent()) {
+        if (this.templateRegRepository.findFirstByTemplateNameAndStatusNot(payload.getTemplateName(), APPLICATION_STATUS.DELETE).isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_ALREADY_EXIST);
         }
         TemplateReg templateReg = this.createTemplateReg(payload);
@@ -91,7 +90,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
     @Override
     public AppResponse findTemplateRegByTemplateId(TemplateRegRequest payload) throws Exception {
         logger.info("Request findTemplateRegByTemplateId :- {}.", payload);
-        AppResponse usernameExist = this.isUsernameExist(payload);
+        AppResponse usernameExist = this.isUsernameAndIdExist(payload);
         if (!BarcoUtil.isNull(usernameExist)) {
             return usernameExist;
         }
@@ -127,7 +126,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
     @Override
     public AppResponse deleteTemplateReg(TemplateRegRequest payload) throws Exception {
         logger.info("Request deleteTemplateReg :- {}.", payload);
-        AppResponse usernameExist = this.isUsernameExist(payload);
+        AppResponse usernameExist = this.isUsernameAndIdExist(payload);
         if (!BarcoUtil.isNull(usernameExist)) {
             return usernameExist;
         }
@@ -166,13 +165,9 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * @throws Exception
      * */
     private AppResponse validateAddOrUpdatePayload(TemplateRegRequest payload) throws Exception {
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUserOpt = appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (appUserOpt.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         } else if (BarcoUtil.isNull(payload.getTemplateName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getDescription())) {
@@ -192,8 +187,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
     private AppResponse validateUsername(TemplateRegRequest payload) throws Exception {
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        } else if (this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE).isEmpty()) {
+        } else if (this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE).isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         return (AppResponse) BarcoUtil.NULL;
@@ -206,7 +200,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * @return AppResponse
      * @throws Exception
      * */
-    private AppResponse isUsernameExist(TemplateRegRequest payload) throws Exception {
+    private AppResponse isUsernameAndIdExist(TemplateRegRequest payload) throws Exception {
         AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
@@ -257,8 +251,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         if (!BarcoUtil.isNull(payload.getStatus())) {
             templateReg.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
         }
-        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         appUserOpt.ifPresent(templateReg::setUpdatedBy);
         return templateReg;
     }

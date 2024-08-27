@@ -282,7 +282,7 @@ public class RPPServiceImpl implements RPPService {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.SHEET_NOT_FOUND, sheetFiled.getSheetName()));
         } else if (sheet.getLastRowNum() < 1) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.YOU_CANT_UPLOAD_EMPTY_FILE);
-        } else if (sheet.getLastRowNum() > Long.valueOf(uploadLimit.getLookupValue())) {
+        } else if (sheet.getLastRowNum() > Long.parseLong(uploadLimit.getLookupValue())) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.FILE_SUPPORT_ROW_AT_TIME, uploadLimit.getLookupValue()));
         }
         List<RPPValidation> rppValidationsList = new ArrayList<>();

@@ -45,14 +45,17 @@ public class NotificationServiceImpl implements NotificationService {
     @Autowired
     private NotificationAuditRepository notificationAuditRepository;
 
+    public NotificationServiceImpl() {}
+
     /**
      * Method use send notification to user session
      * @param payload
      * @param appUser
+     * @throws Exception
      * */
     @Override
     public void addNotification(NotificationRequest payload, AppUser appUser) throws Exception {
-        logger.info("Request addNotification :- {}", payload);
+        logger.info("Request addNotification :- {}.", payload);
         NotificationAudit notificationAudit = new NotificationAudit();
         notificationAudit.setSendTo(appUser);
         notificationAudit.setMessage(payload.getBody().toString());
@@ -71,10 +74,11 @@ public class NotificationServiceImpl implements NotificationService {
     /**
      * updateNotification method use to change the notification status by update the status(read|unread)
      * @param payload
+     * @throws Exception
      * */
     @Override
     public AppResponse updateNotification(NotificationRequest payload) throws Exception {
-        logger.info("Request updateNotification :- {}", payload);
+        logger.info("Request updateNotification :- {}.", payload);
         if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.NOTIFY_ID_MISSING);
         }
@@ -90,10 +94,11 @@ public class NotificationServiceImpl implements NotificationService {
     /**
      * fetchAllNotification method use to fetch all notification by user
      * @param username
+     * @throws Exception
      * */
     @Override
     public AppResponse fetchAllNotification(String username) throws Exception {
-        logger.info("Request fetchAllNotification :- {}", username);
+        logger.info("Request fetchAllNotification :- {}.", username);
         if (BarcoUtil.isNull(username)) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
@@ -108,10 +113,11 @@ public class NotificationServiceImpl implements NotificationService {
     /**
      * sendNotificationToSpecificUser method use to send the notification to specific user
      * @param payload
+     * @throws Exception
      * */
     @Override
     public void sendNotificationToSpecificUser(NotificationResponse payload) throws Exception {
-        logger.info("Request sendNotificationToSpecificUser :- {}", payload);
+        logger.info("Request sendNotificationToSpecificUser :- {}.", payload);
         this.simpMessagingTemplate.convertAndSendToUser(payload.getSendTo(), REPLAY, payload);
     }
 

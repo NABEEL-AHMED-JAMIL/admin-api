@@ -19,8 +19,8 @@ import com.barco.model.repository.CredentialRepository;
 import com.barco.model.repository.EventBridgeRepository;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.lookup.*;
-import java.io.ByteArrayOutputStream;
 import com.google.gson.Gson;
+import java.io.ByteArrayOutputStream;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -61,6 +61,8 @@ public class EventBridgeServiceImpl implements EventBridgeService {
     private LookupDataCacheService lookupDataCacheService;
     @Autowired
     private AppUserRepository appUserRepository;
+
+    public EventBridgeServiceImpl() {}
 
     /**
      * Method use to add event bridge
@@ -180,8 +182,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!adminUser.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
