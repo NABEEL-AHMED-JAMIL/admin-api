@@ -91,6 +91,66 @@ public class AppUserRestApi {
     }
 
     /**
+     * @apiName :- addAppUserAccount
+     * @apiNote :- Api use to add app user account
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @ApiOperation(value = "Api use to add new app user account.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
+    @RequestMapping(value = "/addAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> addAppUserAccount(@RequestBody AppUserRequest payload) {
+        try {
+            // user session detail
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            return new ResponseEntity<>(this.appUserService.addAppUserAccount(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while addAppUserAccount ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- updateAppUserAccount
+     * @apiNote :- Api use to update the app user account
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @ApiOperation(value = "Api use to update new app user account.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
+    @RequestMapping(value = "/updateAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> updateAppUserAccount(@RequestBody AppUserRequest payload) {
+        try {
+            // user session detail
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            return new ResponseEntity<>(this.appUserService.updateAppUserAccount(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while updateAppUserAccount ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @apiName :- fetchAllAppUserAccount
+     * @apiNote :- Api user to fetch all app user account
+     * @param payload
+     * @return ResponseEntity<?>
+     * */
+    @ApiOperation(value = "Api use to fetch app user account.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
+    @RequestMapping(value = "/fetchAllAppUserAccount", method = RequestMethod.POST)
+    public ResponseEntity<?> fetchAllAppUserAccount(@RequestBody AppUserRequest payload) {
+        try {
+            return new ResponseEntity<>(this.appUserService.fetchAllAppUserAccount(payload), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllAppUserAccount ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- deleteAppUserAccount
      * @apiNote :- Api use to delete app user account
      * @param payload
@@ -143,66 +203,6 @@ public class AppUserRestApi {
             return ResponseEntity.ok().headers(headers).body(this.appUserService.downloadAppUserAccount(payload).toByteArray());
         } catch (Exception ex) {
             logger.error("An error occurred while downloadAppUserAccount ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- fetchAllAppUserAccount
-     * @apiNote :- Api user to fetch all app user account
-     * @param payload
-     * @return ResponseEntity<?>
-     * */
-    @ApiOperation(value = "Api use to fetch app user account.", response = ResponseEntity.class)
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
-    @RequestMapping(value = "/fetchAllAppUserAccount", method = RequestMethod.POST)
-    public ResponseEntity<?> fetchAllAppUserAccount(@RequestBody AppUserRequest payload) {
-        try {
-            return new ResponseEntity<>(this.appUserService.fetchAllAppUserAccount(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while fetchAllAppUserAccount ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- addAppUserAccount
-     * @apiNote :- Api use to add app user account
-     * @param payload
-     * @return ResponseEntity<?>
-     * */
-    @ApiOperation(value = "Api use to add new app user account.", response = ResponseEntity.class)
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
-    @RequestMapping(value = "/addAppUserAccount", method = RequestMethod.POST)
-    public ResponseEntity<?> addAppUserAccount(@RequestBody AppUserRequest payload) {
-        try {
-            // user session detail
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
-            return new ResponseEntity<>(this.appUserService.addAppUserAccount(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while addAppUserAccount ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @apiName :- updateAppUserAccount
-     * @apiNote :- Api use to update the app user account
-     * @param payload
-     * @return ResponseEntity<?>
-     * */
-    @ApiOperation(value = "Api use to update new app user account.", response = ResponseEntity.class)
-    @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
-    @RequestMapping(value = "/updateAppUserAccount", method = RequestMethod.POST)
-    public ResponseEntity<?> updateAppUserAccount(@RequestBody AppUserRequest payload) {
-        try {
-            // user session detail
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
-            return new ResponseEntity<>(this.appUserService.updateAppUserAccount(payload), HttpStatus.OK);
-        } catch (Exception ex) {
-            logger.error("An error occurred while updateAppUserAccount ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }

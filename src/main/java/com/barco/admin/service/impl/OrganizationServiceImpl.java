@@ -84,7 +84,9 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (etlCountry.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ORG_COUNTRY_CODE_NOT_FOUND);
         }
+        // SESSION USER
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        // org object
         Organization organization = this.createOrganization(payload);
         this.organizationRepository.save(organization);
         // check the access for role and profile for user creating
@@ -96,6 +98,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         appUser.setUsername(orgAppUser.getUsername());
         appUser.setImg(orgAppUser.getProfileImg());
         appUser.setIpAddress(orgAppUser.getIpAddress());
+        appUser.setOrgAccount(Boolean.TRUE); // org account
         appUser.setPassword(this.passwordEncoder.encode(orgAppUser.getPassword()));
         appUser.setStatus(APPLICATION_STATUS.ACTIVE);
         appUser.setOrganization(organization);
@@ -109,7 +112,7 @@ public class OrganizationServiceImpl implements OrganizationService {
             appUser.setAppUserRoles(roleList);
         }
         // profile
-        Optional<Profile> profile = this.profileRepository.findProfileByIdAndStatus(orgAppUser.getProfile(), APPLICATION_STATUS.ACTIVE);
+        Optional<Profile> profile = this.profileRepository.findProfileByProfileNameAndStatus(orgAppUser.getProfile(), APPLICATION_STATUS.ACTIVE);
         profile.ifPresent(appUser::setProfile);
         appUser.setCreatedBy(adminUser.get());
         appUser.setUpdatedBy(adminUser.get());
@@ -125,8 +128,7 @@ public class OrganizationServiceImpl implements OrganizationService {
             });
             // event bridge only receiver event bridge if exist and create by the main user
             this.eventBridgeRepository.findAllByBridgeTypeInAndCreatedByAndStatusNotOrderByDateCreatedDesc(List.of(EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVE),
-                superAdmin.get(), APPLICATION_STATUS.DELETE)
-                .forEach(eventBridge -> {
+                superAdmin.get(), APPLICATION_STATUS.DELETE).forEach(eventBridge -> {
                     try {
                         LinkEBURequest linkEBURequest = new LinkEBURequest();
                         linkEBURequest.setId(eventBridge.getId());
@@ -143,12 +145,14 @@ public class OrganizationServiceImpl implements OrganizationService {
         this.sendNotification(MessageUtil.NEW_ORG_ACCOUNT_ADDED, String.format(MessageUtil.NEW_ORG_USER_REGISTER_WITH_ID,
             appUser.getId()), adminUser.get(), this.lookupDataCacheService, this.notificationService);
         // email send to the user
-        this.sendRegisterUserEmail(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
+        this.sendRegisterOrgAccountUserEmail(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, organization.getId()), payload);
     }
 
     /**
      * Method use to update the org account
+     * Note :- Role and Profile not update in the update org
+     * org account profile admin and role admin
      * @param payload
      * @return AppResponse
      * @throws Exception
@@ -169,8 +173,9 @@ public class OrganizationServiceImpl implements OrganizationService {
         this.organizationRepository.save(this.updateOrganizationFromPayload(organizationOpt.get(), payload));
         // check the access for role and profile for user creating
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        // org app user
         AppUserRequest orgAppUser = payload.getUser();
-        Optional<AppUser> appUser = this.appUserRepository.findById(payload.getId());
+        Optional<AppUser> appUser = this.appUserRepository.findByIdAndStatusNot(orgAppUser.getId(), APPLICATION_STATUS.DELETE);
         if (!BarcoUtil.isNull(orgAppUser.getFirstName())) {
             appUser.get().setFirstName(orgAppUser.getFirstName());
         }
@@ -195,17 +200,9 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (!BarcoUtil.isNull(orgAppUser.getAccountType())) {
             appUser.get().setAccountType(ACCOUNT_TYPE.getByLookupCode(orgAppUser.getAccountType()));
         }
-        // register user role default as admin role
-        Set<Role> roleList = this.roleRepository.findAllByNameInAndStatus(orgAppUser.getAssignRole(), APPLICATION_STATUS.ACTIVE);
-        if (!roleList.isEmpty()) {
-            appUser.get().setAppUserRoles(roleList);
-        }
-        // profile
-        Optional<Profile> profile = this.profileRepository.findProfileByIdAndStatus(orgAppUser.getProfile(), APPLICATION_STATUS.ACTIVE);
-        profile.ifPresent(value -> appUser.get().setProfile(value));
         adminUser.ifPresent(user -> appUser.get().setUpdatedBy(user));
         this.appUserRepository.save(appUser.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, payload.getId()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
     /**
