@@ -106,7 +106,7 @@ public class QueryService {
         "FROM APP_USER AU " +
         "INNER JOIN PROFILE PRO ON PRO.ID = AU.PROFILE_ID " +
         "LEFT JOIN APP_USER_ENV AUE ON AUE.APP_USER_ID = AU.ID AND AUE.ENV_KEY_ID = %d " +
-        "WHERE AU.STATUS != %d " +
+        "WHERE AU.STATUS != %d and AND AU.CREATE_DATE between %s and %s " +
         "ORDER by AU.ID DESC";
 
     public static String FETCH_LINK_EVENT_BRIDGE_WITH_USER = "SELECT DISTINCT AU.ID, AU.EMAIL, AU.USERNAME, AU.FIRST_NAME || ' ' || AU.LAST_NAME AS FULL_NAME, " +
@@ -116,7 +116,7 @@ public class QueryService {
         "FROM APP_USER AU " +
         "INNER JOIN PROFILE PRO ON PRO.ID = AU.PROFILE_ID " +
         "LEFT JOIN APP_USER_EVENT_BRIDGE AUEB ON AUEB.APP_USER_ID = AU.ID AND AUEB.EVENT_BRIDGE_ID = %d " +
-        "WHERE AU.STATUS != %d " +
+        "WHERE AU.STATUS != %d and AND AU.CREATE_DATE between %s and %s " +
         "ORDER BY AU.ID DESC";
 
     public static String FETCH_ALL_CONTROLS_LINK_SECTION= "SELECT GS.ID, GS.SECTION_NAME, GS.DESCRIPTION, GS.STATUS, " +
