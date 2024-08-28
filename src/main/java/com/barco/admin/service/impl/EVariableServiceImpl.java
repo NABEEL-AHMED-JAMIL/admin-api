@@ -394,7 +394,7 @@ public class EVariableServiceImpl implements EVariableService {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getEnvId()), payload);
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_ENVIRONMENT_VARIABLE_WITH_USER,
-           envVariables.get().getId(), payload.getStartDate().concat(BarcoUtil.START_DATE), payload.getEndDate().concat(BarcoUtil.END_DATE), APPLICATION_STATUS.DELETE.getLookupCode()));
+           envVariables.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), payload.getStartDate().concat(BarcoUtil.START_DATE), payload.getEndDate().concat(BarcoUtil.END_DATE)));
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {

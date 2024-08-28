@@ -1011,7 +1011,8 @@ public class RPPServiceImpl implements RPPService {
         if (role.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ROLE_NOT_FOUND_WITH_ID, payload.getRoleId()), payload);
         }
-        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_ROLE_WITH_USER_SUPER_ADMIN_PROFILE_AND_USER_ADMIN_PROFILE, role.get().getId()));
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_ROLE_WITH_USER_SUPER_ADMIN_PROFILE_AND_USER_ADMIN_PROFILE,
+            role.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), payload.getStartDate().concat(BarcoUtil.START_DATE), payload.getEndDate().concat(BarcoUtil.END_DATE)));
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -1078,7 +1079,8 @@ public class RPPServiceImpl implements RPPService {
         if (profile.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.PROFILE_NOT_FOUND_WITH_ID, payload.getProfileId()), payload);
         }
-        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_PROFILE_WITH_USER_SUPER_ADMIN_PROFILE_AND_USER_ADMIN_PROFILE, profile.get().getId()));
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_PROFILE_WITH_USER_SUPER_ADMIN_PROFILE_AND_USER_ADMIN_PROFILE,
+            profile.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), payload.getStartDate().concat(BarcoUtil.START_DATE), payload.getEndDate().concat(BarcoUtil.END_DATE)));
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -1133,7 +1135,7 @@ public class RPPServiceImpl implements RPPService {
      * @throws Exception
      * */
     @Override
-    public AppResponse fetchProfileWithUser(LinkPURequest payload) throws Exception {
+    public AppResponse fetchProfileWithUser(ProfileRequest payload) throws Exception {
         logger.info("Request fetchProfileWithUser :- {}.", payload);
         AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
@@ -1159,7 +1161,7 @@ public class RPPServiceImpl implements RPPService {
      * @throws Exception
      * */
     @Override
-    public AppResponse fetchRoleWithUser(LinkRURequest payload) throws Exception {
+    public AppResponse fetchRoleWithUser(RoleRequest payload) throws Exception {
         logger.info("Request fetchRoleWithUser :- {}.", payload);
         AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
