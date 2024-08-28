@@ -309,6 +309,7 @@ public interface RootService {
         appUserResponse.setUsername(appUser.getUsername());
         appUserResponse.setProfileImg(appUser.getImg());
         appUserResponse.setIpAddress(appUser.getIpAddress());
+        appUserResponse.setOrgAccount(appUser.getOrgAccount());
         appUserResponse.setDateCreated(appUser.getDateCreated());
         appUserResponse.setDateUpdated(appUser.getDateUpdated());
         appUserResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(appUser.getStatus().getLookupType()));
@@ -428,6 +429,44 @@ public interface RootService {
             emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
             emailMessageRequest.setRecipients(appUser.getEmail());
             emailMessageRequest.setSubject(EmailUtil.USER_REGISTERED);
+            emailMessageRequest.setBodyMap(metaData);
+            emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
+            logger.info("Email Send Status :- {}.", emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
+            return true;
+        } catch (Exception ex) {
+            logger.error("Exception :- {}.",ExceptionUtil.getRootCauseMessage(ex));
+            return false;
+        }
+    }
+
+    /**
+     * sendRegisterUser method use on user register.
+     * @param appUser
+     * @param lookupDataCacheService
+     * @param templateRegRepository
+     * @param emailMessagesFactory
+     * */
+    public default boolean sendRegisterOrgAccountUserEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
+         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
+        try {
+            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
+            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(REGISTER_USER.name(), APPLICATION_STATUS.ACTIVE);
+            if (templateReg.isEmpty()) {
+                logger.error("No Template Found With {}.", REGISTER_USER.name());
+                return false;
+            }
+            Map<String, Object> metaData = new HashMap<>();
+            metaData.put(EmailUtil.USERNAME, appUser.getUsername());
+            metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
+            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream().map(Role::getName).collect(Collectors.joining(",")));
+            metaData.put(EmailUtil.PROFILE, appUser.getProfile().getProfileName());
+            metaData.put(EmailUtil.ORG_NAME, appUser.getOrganization().getName());
+            metaData.put(EmailUtil.ORG_ADDRESS, appUser.getOrganization().getAddress().concat(",").concat(appUser.getOrganization().getCountry().getCountryName()));
+            // email send request
+            EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
+            emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
+            emailMessageRequest.setRecipients(appUser.getEmail());
+            emailMessageRequest.setSubject(EmailUtil.ORG_ACCOUNT_REGISTERED);
             emailMessageRequest.setBodyMap(metaData);
             emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
             logger.info("Email Send Status :- {}.", emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));

@@ -77,8 +77,8 @@ public interface RPPService extends RootService {
 
     public AppResponse linkProfileWithUser(LinkPURequest payload) throws Exception;
 
-    public AppResponse fetchProfileWithUser(LinkPURequest payload) throws Exception;
+    public AppResponse fetchProfileWithUser(ProfileRequest payload) throws Exception;
 
-    public AppResponse fetchRoleWithUser(LinkRURequest payload) throws Exception;
+    public AppResponse fetchRoleWithUser(RoleRequest payload) throws Exception;
 
 }

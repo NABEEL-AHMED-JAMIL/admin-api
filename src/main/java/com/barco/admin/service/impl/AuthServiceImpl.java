@@ -127,27 +127,27 @@ public class AuthServiceImpl implements AuthService {
         appUser.setUsername(payload.getUsername());
         appUser.setImg(payload.getProfileImg());
         appUser.setIpAddress(payload.getIpAddress());
+        appUser.setOrgAccount(Boolean.FALSE);
         appUser.setStatus(APPLICATION_STATUS.ACTIVE);
         appUser.setPassword(this.passwordEncoder.encode(payload.getPassword()));
-        /**
-         * ALL USER REGISTER FROM THE MAIN REGISTER PAGE THEY ARE NORMAL USER
-         * AND THEY WILL GET THE NORMAL ACCOUNT TYPE
-         * AND THEY WILL GET THE USER DEFAULT PROFILE
-         * AND THEY WILL GET THE USER DEFAULT USER ROLE
-         * => admin can change the account type and profile type and role type
-         * **/
+        /*
+          ALL USER REGISTER FROM THE MAIN REGISTER PAGE THEY ARE NORMAL USER
+          AND THEY WILL GET THE NORMAL ACCOUNT TYPE
+          AND THEY WILL GET THE USER DEFAULT PROFILE
+          AND THEY WILL GET THE USER DEFAULT USER ROLE
+          => admin can change the account type and profile type and role type
+          **/
         // register user will get the default role USER
-        this.roleRepository.findByNameAndStatus(this.lookupDataCacheService.getParentLookupDataByParentLookupType(
-           LookupUtil.DEFAULT_ROLE).getLookupValue(), APPLICATION_STATUS.ACTIVE).ifPresent(role -> appUser.setAppUserRoles(Set.of(role)));
+        this.roleRepository.findByNameAndStatus(this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.DEFAULT_ROLE).getLookupValue(), APPLICATION_STATUS.ACTIVE)
+            .ifPresent(role -> appUser.setAppUserRoles(Set.of(role)));
         // register user will get the default profile USER
-        this.profileRepository.findProfileByProfileName(this.lookupDataCacheService.getParentLookupDataByParentLookupType(
-           LookupUtil.DEFAULT_PROFILE).getLookupValue()).ifPresent(appUser::setProfile);
+        this.profileRepository.findProfileByProfileName(this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.DEFAULT_PROFILE).getLookupValue())
+            .ifPresent(appUser::setProfile);
         // register user account type as 'Customer'
         appUser.setAccountType(ACCOUNT_TYPE.CUSTOMER);
         this.appUserRepository.save(appUser);
         // notification & register email
-        Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
-            this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
         if (superAdmin.isPresent()) {
             // linking all env variable to the user give by the system
             for (EnvVariables envVariables : this.envVariablesRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(superAdmin.get(), APPLICATION_STATUS.DELETE)) {
@@ -163,8 +163,7 @@ public class AuthServiceImpl implements AuthService {
                 linkEBURequest.setSessionUser(new SessionUser(superAdmin.get().getUsername()));
                 this.eventBridgeService.linkEventBridgeWithUser(linkEBURequest);
             }
-            this.sendNotification(MessageUtil.REQUESTED_FOR_NEW_ACCOUNT, String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()),
-                superAdmin.get(), this.lookupDataCacheService, this.notificationService);
+            this.sendNotification(MessageUtil.REQUESTED_FOR_NEW_ACCOUNT, String.format(MessageUtil.NEW_USER_REGISTER_WITH_ID, appUser.getId()), superAdmin.get(), this.lookupDataCacheService, this.notificationService);
         }
         this.sendRegisterUserEmail(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.USER_SUCCESSFULLY_REGISTER, appUser.getUsername()), payload);
@@ -191,7 +190,6 @@ public class AuthServiceImpl implements AuthService {
         }
         return new AppResponse(BarcoUtil.ERROR, MessageUtil.ACCOUNT_NOT_EXIST);
     }
-
 
     /**
      * Method use to reset app user password
@@ -272,7 +270,7 @@ public class AuthServiceImpl implements AuthService {
         // account type
         if (!BarcoUtil.isNull(userDetails.getAccountType())) {
             GLookup accountType = GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-                ACCOUNT_TYPE.getName(), Long.valueOf(userDetails.getAccountType().ordinal())));
+                ACCOUNT_TYPE.getName(), userDetails.getAccountType().getLookupCode()));
             authResponse.setAccountType(accountType);
         }
         // organization

@@ -15,6 +15,10 @@ public interface AppUserService extends RootService {
 
     public AppResponse updateAppUserPassword(UpdateUserProfileRequest payload) throws Exception;
 
+    public AppResponse addAppUserAccount(AppUserRequest payload) throws Exception;
+
+    public AppResponse updateAppUserAccount(AppUserRequest payload) throws Exception;
+
     public AppResponse deleteAppUserAccount(AppUserRequest payload) throws Exception;
 
     public AppResponse deleteAllAppUserAccount(AppUserRequest payload) throws Exception;
@@ -22,10 +26,6 @@ public interface AppUserService extends RootService {
     public ByteArrayOutputStream downloadAppUserAccount(AppUserRequest payload) throws Exception;
 
     public AppResponse fetchAllAppUserAccount(AppUserRequest payload) throws Exception;
-
-    public AppResponse addAppUserAccount(AppUserRequest payload) throws Exception;
-
-    public AppResponse updateAppUserAccount(AppUserRequest payload) throws Exception;
 
     public AppResponse enabledDisabledAppUserAccount(AppUserRequest payload) throws Exception;
 

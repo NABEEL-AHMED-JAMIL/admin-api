@@ -51,6 +51,8 @@ public class RPPRestApi {
     @RequestMapping(path="/addRole", method=RequestMethod.POST)
     public ResponseEntity<?> addRole(@RequestBody RoleRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.rppService.addRole(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addRole ", ExceptionUtil.getRootCause(ex));
@@ -69,6 +71,8 @@ public class RPPRestApi {
     @RequestMapping(path="/updateRole", method=RequestMethod.POST)
     public ResponseEntity<?> updateRole(@RequestBody RoleRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.rppService.updateRole(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateRole ", ExceptionUtil.getRootCause(ex));
@@ -221,6 +225,8 @@ public class RPPRestApi {
     @RequestMapping(path="/addProfile", method=RequestMethod.POST)
     public ResponseEntity<?> addProfile(@RequestBody ProfileRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.rppService.addProfile(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addProfile ", ExceptionUtil.getRootCause(ex));
@@ -239,6 +245,8 @@ public class RPPRestApi {
     @RequestMapping(path="/updateProfile", method=RequestMethod.POST)
     public ResponseEntity<?> updateProfile(@RequestBody ProfileRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.rppService.updateProfile(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateProfile ", ExceptionUtil.getRootCause(ex));
@@ -391,6 +399,8 @@ public class RPPRestApi {
     @RequestMapping(path="/addPermission", method=RequestMethod.POST)
     public ResponseEntity<?> addPermission(@RequestBody PermissionRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.rppService.addPermission(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addPermission ", ExceptionUtil.getRootCause(ex));
@@ -409,6 +419,8 @@ public class RPPRestApi {
     @RequestMapping(path="/updatePermission", method=RequestMethod.POST)
     public ResponseEntity<?> updatePermission(@RequestBody PermissionRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.rppService.updatePermission(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updatePermission ", ExceptionUtil.getRootCause(ex));
@@ -673,7 +685,7 @@ public class RPPRestApi {
     @ApiOperation(value = "Api use to fetch profile with user.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(path="/fetchProfileWithUser", method=RequestMethod.POST)
-    public ResponseEntity<?> fetchProfileWithUser(@RequestBody LinkPURequest payload) {
+    public ResponseEntity<?> fetchProfileWithUser(@RequestBody ProfileRequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
@@ -693,7 +705,7 @@ public class RPPRestApi {
     @ApiOperation(value = "Api use to fetch role with user.", response = ResponseEntity.class)
     @PreAuthorize("hasRole('MASTER_ADMIN') or hasRole('ADMIN') or hasRole('DEV')")
     @RequestMapping(path="/fetchRoleWithUser", method=RequestMethod.POST)
-    public ResponseEntity<?> fetchRoleWithUser(@RequestBody LinkRURequest payload) {
+    public ResponseEntity<?> fetchRoleWithUser(@RequestBody RoleRequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
