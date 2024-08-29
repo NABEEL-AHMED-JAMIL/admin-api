@@ -86,7 +86,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_CREDENTIAL_MISSING);
         }
         Optional<AppUser> appUser = this.getAppUser(payload.getSessionUser().getUsername());
-        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(payload.getCredentialId(), appUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getCredentialId(), appUser.get(), APPLICATION_STATUS.ACTIVE);
         if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
@@ -131,7 +131,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_CREDENTIAL_MISSING);
         }
         Optional<AppUser> appUser = this.getAppUser(payload.getSessionUser().getUsername());
-        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(payload.getCredentialId(), appUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getCredentialId(), appUser.get(), APPLICATION_STATUS.ACTIVE);
         if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
@@ -255,10 +255,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
     @Override
     public AppResponse deleteAllEventBridge(EventBridgeRequest payload) throws Exception {
         logger.info("Request deleteAllEventBridge :- {}.", payload);
-        AppResponse validationResponse = this.validateUsername(payload);
-        if (!BarcoUtil.isNull(validationResponse)) {
-            return validationResponse;
-        } else if (BarcoUtil.isNull(payload.getIds())) {
+        if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         this.eventBridgeRepository.deleteAll(this.eventBridgeRepository.findAllByIdIn(payload.getIds()).stream()

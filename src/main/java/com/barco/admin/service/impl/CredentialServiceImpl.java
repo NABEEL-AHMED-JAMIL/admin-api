@@ -1,5 +1,6 @@
 package com.barco.admin.service.impl;
 
+import com.barco.model.dto.request.SessionUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.barco.admin.service.CredentialService;
@@ -52,12 +53,9 @@ public class CredentialServiceImpl implements CredentialService {
     @Override
     public AppResponse addCredential(CredentialRequest payload) throws Exception {
         logger.info("Request addCredential :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (adminUser.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getDescription())) {
@@ -67,6 +65,7 @@ public class CredentialServiceImpl implements CredentialService {
         } else if (BarcoUtil.isNull(payload.getContent())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_CONTENT_MISSING);
         }
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         Credential credential = new Credential();
         credential.setName(payload.getName());
         credential.setDescription(payload.getDescription());
@@ -88,12 +87,9 @@ public class CredentialServiceImpl implements CredentialService {
     @Override
     public AppResponse updateCredential(CredentialRequest payload) throws Exception {
         logger.info("Request updateCredential :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (adminUser.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_ID_MISSING);
         } else if (BarcoUtil.isNull(payload.getName())) {
@@ -105,18 +101,27 @@ public class CredentialServiceImpl implements CredentialService {
         } else if (BarcoUtil.isNull(payload.getContent())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_CONTENT_MISSING);
         }
-        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatusNot(
-            payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
         if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
-        credential.get().setName(payload.getName());
-        credential.get().setDescription(payload.getDescription());
-        credential.get().setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
-        credential.get().setContent(Base64.getEncoder().encodeToString(new Gson().toJson(payload.getContent()).getBytes()));
+        if (BarcoUtil.isNull(payload.getName())) {
+            credential.get().setName(payload.getName());
+        }
+        if (BarcoUtil.isNull(payload.getDescription())) {
+            credential.get().setDescription(payload.getDescription());
+        }
+        if (BarcoUtil.isNull(payload.getType())) {
+            credential.get().setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
+        }
+        if (BarcoUtil.isNull(payload.getContent())) {
+            credential.get().setContent(Base64.getEncoder().encodeToString(new Gson().toJson(payload.getContent()).getBytes()));
+        }
         if (!BarcoUtil.isNull(payload.getStatus())) {
             credential.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
         }
+        credential.get().setUpdatedBy(adminUser.get());
         this.credentialRepository.save(credential.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()));
     }
@@ -129,21 +134,18 @@ public class CredentialServiceImpl implements CredentialService {
     @Override
     public AppResponse fetchAllCredential(CredentialRequest payload) throws Exception {
         logger.info("Request fetchAllCredential :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (adminUser.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        List<Credential> credentials;
         Boolean readFull;
+        List<Credential> credentials;
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         if (!BarcoUtil.isNull(payload.getStartDate()) && !BarcoUtil.isNull(payload.getEndDate())) {
             readFull = true;
             Timestamp startDate = Timestamp.valueOf(payload.getStartDate().concat(BarcoUtil.START_DATE));
             Timestamp endDate = Timestamp.valueOf(payload.getEndDate().concat(BarcoUtil.END_DATE));
-            credentials = this.credentialRepository.findAllByDateCreatedBetweenAndUsernameAndStatusNot(
-                startDate, endDate, payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
+            credentials = this.credentialRepository.findAllByDateCreatedBetweenAndCreatedByAndStatusNot(startDate, endDate, adminUser.get(), APPLICATION_STATUS.DELETE);
         } else {
             readFull = true;
             credentials = this.credentialRepository.findAllByCreatedByAndStatusNot(adminUser.get(), APPLICATION_STATUS.DELETE);
@@ -160,8 +162,9 @@ public class CredentialServiceImpl implements CredentialService {
     @Override
     public AppResponse fetchAllCredentialByType(CredentialRequest payload) throws Exception {
         logger.info("Request fetchAllCredentialByType :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getTypes())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_TYPE_MISSING);
         }
@@ -181,29 +184,16 @@ public class CredentialServiceImpl implements CredentialService {
     @Override
     public AppResponse fetchCredentialById(CredentialRequest payload) throws Exception {
         logger.info("Request fetchCredentialById :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (adminUser.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_ID_MISSING);
         }
-        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatusNot(payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
-        if (credential.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
-        }
-        CredentialResponse credentialResponse = new CredentialResponse();
-        credentialResponse.setId(credential.get().getId());
-        credentialResponse.setName(credential.get().getName());
-        credentialResponse.setDescription(credential.get().getDescription());
-        credentialResponse.setType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
-            CREDENTIAL_TYPE.getName(),credential.get().getType().getLookupCode())));
-        credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(credential.get().getStatus().getLookupCode()));
-        credentialResponse.setDateCreated(credential.get().getDateCreated());
-        credentialResponse.setContent(new Gson().fromJson(new String(Base64.getDecoder().decode(credential.get().getContent().getBytes())), Object.class));
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, credentialResponse);
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        return this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE)
+            .map(value -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getCredentialResponse(value, true)))
+            .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND));
     }
 
     /**
@@ -214,16 +204,14 @@ public class CredentialServiceImpl implements CredentialService {
     @Override
     public AppResponse deleteCredential(CredentialRequest payload) throws Exception {
         logger.info("Request deleteCredential :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (adminUser.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_ID_MISSING);
         }
-        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatusNot(payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
         if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
@@ -243,13 +231,7 @@ public class CredentialServiceImpl implements CredentialService {
     @Override
     public AppResponse deleteAllCredential(CredentialRequest payload) throws Exception {
         logger.info("Request deleteAllCredential :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (appUser.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        } else if (BarcoUtil.isNull(payload.getIds())) {
+        if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         List<Credential> credentials = this.credentialRepository.findAllByIdIn(payload.getIds());
@@ -286,6 +268,35 @@ public class CredentialServiceImpl implements CredentialService {
             credentialResponse.setDateUpdated(credential.getDateUpdated());
         }
         return credentialResponse;
+    }
+
+    /**
+     * Method use to validate the username
+     * @param payload
+     * @return AppResponse
+     * @throws Exception
+     * */
+    private AppResponse validateUsername(Object payload) {
+        SessionUser sessionUser = null;
+        // Check if the payload is an instance of RoleRequest or other types
+        if (payload instanceof CredentialRequest) {
+            CredentialRequest credentialRequest = (CredentialRequest) payload;
+            sessionUser = credentialRequest.getSessionUser();
+        } else {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.INVALID_PAYLOAD_TYPE);
+        }
+        // Ensure sessionUser is not null
+        if (BarcoUtil.isNull(sessionUser)) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SESSION_USER_MISSING);
+        } else if (BarcoUtil.isNull(sessionUser.getUsername())) {
+            // Check if the username is null or empty
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        } else if (this.appUserRepository.findByUsernameAndStatus(sessionUser.getUsername(), APPLICATION_STATUS.ACTIVE).isEmpty()) {
+            // Check if the username exists and has an active status
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        // Username is valid
+        return (AppResponse) BarcoUtil.NULL;
     }
 
 }
