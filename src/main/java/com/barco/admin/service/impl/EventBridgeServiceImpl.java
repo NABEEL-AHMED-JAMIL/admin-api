@@ -7,10 +7,7 @@ import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.excel.BulkExcel;
 import com.barco.common.utility.excel.SheetFiled;
 import com.barco.common.utility.validation.EventBridgeValidation;
-import com.barco.model.dto.request.FileUploadRequest;
-import com.barco.model.dto.request.LinkEBURequest;
-import com.barco.model.dto.request.EventBridgeRequest;
-import com.barco.model.dto.request.LookupDataRequest;
+import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.*;
 import com.barco.model.pojo.*;
 import com.barco.model.repository.AppUserRepository;
@@ -71,14 +68,10 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     @Override
     public AppResponse addEventBridge(EventBridgeRequest payload) throws Exception {
-        logger.info("Request addEventBridge :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        logger.info("Request addEventBridge :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         } else if (BarcoUtil.isNull(payload.getName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getBridgeUrl())) {
@@ -92,9 +85,9 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         } else if (BarcoUtil.isNull(payload.getCredentialId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_CREDENTIAL_MISSING);
         }
-        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(
-            payload.getCredentialId(), adminUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!credential.isPresent()) {
+        Optional<AppUser> appUser = this.getAppUser(payload.getSessionUser().getUsername());
+        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(payload.getCredentialId(), appUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
         EventBridge eventBridge = new EventBridge();
@@ -104,8 +97,8 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         eventBridge.setDescription(payload.getDescription());
         eventBridge.setBridgeType(EVENT_BRIDGE_TYPE.getByLookupCode(payload.getBridgeType()));
         eventBridge.setCredential(credential.get());
-        eventBridge.setCreatedBy(adminUser.get());
-        eventBridge.setUpdatedBy(adminUser.get());
+        eventBridge.setCreatedBy(appUser.get());
+        eventBridge.setUpdatedBy(appUser.get());
         eventBridge.setStatus(APPLICATION_STATUS.ACTIVE);
         this.eventBridgeRepository.save(eventBridge);
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, eventBridge.getId().toString()), payload);
@@ -118,14 +111,10 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     @Override
     public AppResponse updateEventBridge(EventBridgeRequest payload) throws Exception {
-        logger.info("Request updateEventBridge :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        logger.info("Request updateEventBridge :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_ID_MISSING);
         } else if (BarcoUtil.isNull(payload.getName())) {
@@ -141,14 +130,13 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         } else if (BarcoUtil.isNull(payload.getCredentialId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_CREDENTIAL_MISSING);
         }
-        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(
-            payload.getCredentialId(), adminUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!credential.isPresent()) {
+        Optional<AppUser> appUser = this.getAppUser(payload.getSessionUser().getUsername());
+        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(payload.getCredentialId(), appUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
-        Optional<EventBridge> eventBridge = this.eventBridgeRepository.findByIdAndCreatedByAndStatusNot(
-            payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
-        if (!eventBridge.isPresent()) {
+        Optional<EventBridge> eventBridge = this.eventBridgeRepository.findByIdAndCreatedByAndStatusNot(payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE);
+        if (eventBridge.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_NOT_FOUND);
         }
         eventBridge.get().setName(payload.getName());
@@ -157,15 +145,14 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         eventBridge.get().setHttpMethod(payload.getHttpMethod());
         eventBridge.get().setBridgeType(EVENT_BRIDGE_TYPE.getByLookupCode(payload.getBridgeType()));
         eventBridge.get().setCredential(credential.get());
-        eventBridge.get().setUpdatedBy(adminUser.get());
+        eventBridge.get().setUpdatedBy(appUser.get());
         if (!BarcoUtil.isNull(payload.getStatus())) {
             // if status is in-active & delete then we have filter the role and show only those role in user detail
             eventBridge.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-            eventBridge.get().getAppUserEventBridges().stream()
-            .map(appUserEventBridge -> {
+            eventBridge.get().getAppUserEventBridges().stream().map(appUserEventBridge -> {
                 appUserEventBridge.setStatus(eventBridge.get().getStatus());
                 return appUserEventBridge;
-            }).collect(Collectors.toList());
+            });
         }
         this.eventBridgeRepository.save(eventBridge.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()), payload);
@@ -178,17 +165,14 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     @Override
     public AppResponse fetchAllEventBridge(EventBridgeRequest payload) throws Exception {
-        logger.info("Request fetchAllEventBridge :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        logger.info("Request fetchAllEventBridge :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
+        Optional<AppUser> appUser = this.getAppUser(payload.getSessionUser().getUsername());
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.eventBridgeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
-            adminUser.get(), APPLICATION_STATUS.DELETE).stream()
+            this.eventBridgeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(appUser.get(), APPLICATION_STATUS.DELETE).stream()
             .map(eventBridge -> {
                 EventBridgeResponse eventBridgeResponse = this.getEventBridgeResponse(eventBridge);
                 eventBridgeResponse.setTotalLinkCount(this.getLinkEventBridgeCount(eventBridge));
@@ -203,20 +187,17 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     @Override
     public AppResponse fetchEventBridgeById(EventBridgeRequest payload) throws Exception {
-        logger.info("Request fetchEventBridgeById :- " + payload);
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        logger.info("Request fetchEventBridgeById :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_ID_MISSING);
         }
-        Optional<EventBridge> eventBridge = this.eventBridgeRepository.findByIdAndCreatedByAndStatusNot(
-            payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
-        if (!eventBridge.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_ID, payload.getId().toString()));
-        }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getEventBridgeResponse(eventBridge.get()));
+        Optional<AppUser> appUser = this.getAppUser(payload.getSessionUser().getUsername());
+        return this.eventBridgeRepository.findByIdAndCreatedByAndStatusNot(payload.getId(), appUser.get(), APPLICATION_STATUS.DELETE)
+            .map(bridge -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getEventBridgeResponse(bridge)))
+            .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_ID, payload.getId().toString())));
     }
 
     /**
@@ -226,21 +207,19 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     @Override
     public AppResponse fetchEventBridgeByBridgeType(EventBridgeRequest payload) throws Exception {
-        logger.info("Request fetchEventBridgeByBridgeType :- " + payload);
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        logger.info("Request fetchEventBridgeByBridgeType :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         } else if (BarcoUtil.isNull(payload.getBridgeType())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_TYPE_MISSING);
         }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            appUser.get().getAppUserEventBridges().stream()
+        Optional<AppUser> appUser = this.getAppUser(payload.getSessionUser().getUsername());
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, appUser.get().getAppUserEventBridges().stream()
             .filter(appUserEventBridge -> !appUserEventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
-            .map(appUserEventBridge -> appUserEventBridge.getEventBridge())
+            .map(AppUserEventBridge::getEventBridge)
             .filter(eventBridge -> eventBridge.getBridgeType().getLookupCode().equals(payload.getBridgeType()))
-            .map(eventBridge -> this.getEventBridgeResponse(eventBridge))
-            .collect(Collectors.toList()));
+            .map(this::getEventBridgeResponse).collect(Collectors.toList()));
     }
 
     /**
@@ -250,19 +229,17 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     @Override
     public AppResponse deleteEventBridgeById(EventBridgeRequest payload) throws Exception {
-        logger.info("Request deleteEventBridgeById :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        logger.info("Request deleteEventBridgeById :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
+        } else if (BarcoUtil.isNull(payload.getBridgeType())) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_TYPE_MISSING);
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_ID_MISSING);
         }
         Optional<EventBridge> eventBridge = this.eventBridgeRepository.findByIdAndStatusNot(payload.getId(), APPLICATION_STATUS.DELETE);
-        if (!eventBridge.isPresent()) {
+        if (eventBridge.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND, payload.getId().toString()));
         }
         this.nullifyReportSettingReferences(eventBridge.get());
@@ -277,20 +254,15 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     @Override
     public AppResponse deleteAllEventBridge(EventBridgeRequest payload) throws Exception {
-        logger.info("Request deleteAllEventBridge :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        logger.info("Request deleteAllEventBridge :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         } else if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
-        this.eventBridgeRepository.deleteAll(
-            this.eventBridgeRepository.findAllByIdIn(payload.getIds())
-            .stream().map(eventBridge -> {
+        this.eventBridgeRepository.deleteAll(this.eventBridgeRepository.findAllByIdIn(payload.getIds()).stream()
+            .map(eventBridge -> {
                 this.nullifyReportSettingReferences(eventBridge);
                 return eventBridge;
             }).collect(Collectors.toList()));
@@ -304,20 +276,16 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     @Override
     public AppResponse fetchLinkEventBridgeWitUser(EventBridgeRequest payload) throws Exception {
-        logger.info("Request fetchLinkEventBridgeWitUser :- " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        logger.info("Request fetchLinkEventBridgeWitUser :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_ID_MISSING);
         }
-        Optional<EventBridge> eventBridge = this.eventBridgeRepository.findByIdAndCreatedByAndStatusNot(
-            payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
-        if (!eventBridge.isPresent()) {
+        Optional<AppUser> adminUser = this.getAppUser(payload.getSessionUser().getUsername());
+        Optional<EventBridge> eventBridge = this.eventBridgeRepository.findByIdAndCreatedByAndStatusNot(payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
+        if (eventBridge.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_EVENT_BRIDGE_WITH_USER,
@@ -339,29 +307,29 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      */
     @Override
     public AppResponse linkEventBridgeWithUser(LinkEBURequest payload) throws Exception {
-        logger.info("Request linkEventBridgeWithUser :- " + payload);
-        Optional<AppUser> superAdmin = this.getAppUser(payload.getSessionUser().getUsername());
-        if (!superAdmin.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        AppResponse validationResponse = this.validateLinkEventBridgePayload(payload);
+        logger.info("Request linkEventBridgeWithUser :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
         }
+        validationResponse = this.validateLinkEventBridgePayload(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
+        }
+        Optional<AppUser> superAdmin = this.getAppUser(payload.getSessionUser().getUsername());
         Optional<EventBridge> eventBridge = this.eventBridgeRepository.findById(payload.getId());
-        if (!eventBridge.isPresent()) {
+        if (eventBridge.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_ID, payload.getId()), payload);
         } else if (BarcoUtil.isNull(eventBridge.get().getCredential())) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID, payload.getId()), payload);
         }
         Optional<AppUser> appUser = this.appUserRepository.findById(payload.getAppUserId());
-        if (!appUser.isPresent()) {
+        if (appUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.APPUSER_NOT_FOUND, payload.getAppUserId()), payload);
         } else if (payload.getLinked()) {
             return linkEventBridge(superAdmin.get(), appUser.get(), eventBridge.get(), payload);
         } else {
-            this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_EVENT_BRIDGE_BY_EVENT_BRIDGE_ID_AND_APP_USER_ID,
-                eventBridge.get().getId(), appUser.get().getId()));
+            this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_EVENT_BRIDGE_BY_EVENT_BRIDGE_ID_AND_APP_USER_ID, eventBridge.get().getId(), appUser.get().getId()));
         }
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, ""), payload);
     }
@@ -374,15 +342,15 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      */
     @Override
     public AppResponse genEventBridgeToken(LinkEBURequest payload) throws Exception {
-        logger.info("Request genEventBridgeToken :- " + payload);
-        Optional<AppUser> appUser = getAppUser(payload.getSessionUser().getUsername());
-        if (!appUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        logger.info("Request genEventBridgeToken :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
+            return validationResponse;
         } else if (BarcoUtil.isNull(payload.getTokenId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_GEN_TOKEN_MISSING);
         }
         Optional<AppUserEventBridge> linkEventBridge = this.appUserEventBridgeRepository.findByTokenId(payload.getTokenId());
-        if (!linkEventBridge.isPresent()) {
+        if (linkEventBridge.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_GEN_TOKEN);
         }
         EventBridge eventBridge = linkEventBridge.get().getEventBridge();
@@ -410,15 +378,12 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     @Override
     public ByteArrayOutputStream downloadEventBridge(EventBridgeRequest payload) throws Exception {
-        logger.info("Request downloadEventBridge " + payload);
-        if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
-            throw new Exception(MessageUtil.USERNAME_MISSING);
-        }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
+        logger.info("Request downloadEventBridge :- {}.", payload);
+        AppResponse validationResponse = this.validateUsername(payload);
+        if (!BarcoUtil.isNull(validationResponse)) {
             throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         }
+        Optional<AppUser> appUser = this.getAppUser(payload.getSessionUser().getUsername());
         SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.EVENT_BRIDGE);
         XSSFWorkbook workbook = new XSSFWorkbook();
         this.bulkExcel.setWb(workbook);
@@ -427,12 +392,10 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         AtomicInteger rowCount = new AtomicInteger();
         this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
         List<EventBridge> eventBridges;
-        if (!BarcoUtil.isNull(payload.getIds()) && payload.getIds().size() > 0) {
-            eventBridges = this.eventBridgeRepository.findAllByIdInAndCreatedByAndStatusNotOrderByDateCreatedDesc(
-                payload.getIds(), appUser.get(), APPLICATION_STATUS.DELETE);
+        if (!BarcoUtil.isNull(payload.getIds()) && !payload.getIds().isEmpty()) {
+            eventBridges = this.eventBridgeRepository.findAllByIdInAndCreatedByAndStatusNotOrderByDateCreatedDesc(payload.getIds(), appUser.get(), APPLICATION_STATUS.DELETE);
         } else {
-            eventBridges = this.eventBridgeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(
-                appUser.get(), APPLICATION_STATUS.DELETE);
+            eventBridges = this.eventBridgeRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(appUser.get(), APPLICATION_STATUS.DELETE);
         }
         // event-bridges
         eventBridges.stream().filter(eventBridge -> !eventBridge.getStatus().equals(APPLICATION_STATUS.DELETE))
@@ -446,7 +409,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
                     eventBridge.getBridgeType().name()
                 );
                 this.bulkExcel.fillBulkBody(dataCellValues, currentRowCount);
-            });
+        });
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         workbook.write(outputStream);
         return outputStream;
@@ -459,17 +422,16 @@ public class EventBridgeServiceImpl implements EventBridgeService {
      * */
     @Override
     public AppResponse uploadEventBridge(FileUploadRequest payload) throws Exception {
-        logger.info("Request uploadEventBridge :- " + payload);
+        logger.info("Request uploadEventBridge :- {}.", payload);
         LookupDataRequest lookupDataRequest = new Gson().fromJson((String) payload.getData(), LookupDataRequest.class);
         if (BarcoUtil.isNull(lookupDataRequest.getSessionUser().getUsername())) {
             throw new Exception(MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            lookupDataRequest.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
+        Optional<AppUser> appUser = this.getAppUser(lookupDataRequest.getSessionUser().getUsername());
+        if (appUser.isEmpty()) {
             throw new Exception(MessageUtil.APPUSER_NOT_FOUND);
         } else if (!payload.getFile().getContentType().equalsIgnoreCase(this.bulkExcel.SHEET_TYPE)) {
-            logger.info("File Type " + payload.getFile().getContentType());
+            logger.info("File Type :- {}.", payload.getFile().getContentType());
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.XLSX_FILE_ONLY);
         }
         // fill the stream with file into work-book
@@ -489,11 +451,9 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         }
         List<EventBridgeValidation> eventBridgeValidations = new ArrayList<>();
         List<String> errors = new ArrayList<>();
-        Iterator<Row> rows = sheet.iterator();
-        while (rows.hasNext()) {
-            Row currentRow = rows.next();
+        for (Row currentRow : sheet) {
             if (currentRow.getRowNum() == 0) {
-                for (int i=0; i < sheetFiled.getColTitle().size(); i++) {
+                for (int i = 0; i < sheetFiled.getColTitle().size(); i++) {
                     if (!currentRow.getCell(i).getStringCellValue().equals(sheetFiled.getColTitle().get(i))) {
                         return new AppResponse(BarcoUtil.ERROR, "File at row " + (currentRow.getRowNum() + 1)
                             + " " + sheetFiled.getColTitle().get(i) + " heading missing.");
@@ -502,8 +462,8 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             } else if (currentRow.getRowNum() > 0) {
                 EventBridgeValidation eventBridgeValidation = new EventBridgeValidation();
                 try {
-                    eventBridgeValidation.setRowCounter(currentRow.getRowNum()+1);
-                    for (int i=0; i < sheetFiled.getColTitle().size(); i++) {
+                    eventBridgeValidation.setRowCounter(currentRow.getRowNum() + 1);
+                    for (int i = 0; i < sheetFiled.getColTitle().size(); i++) {
                         int index = 0;
                         if (i == index) {
                             eventBridgeValidation.setName(this.bulkExcel.getCellDetail(currentRow, i));
@@ -520,8 +480,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
                     eventBridgeValidation.isValidBatch();
                     EVENT_BRIDGE_TYPE.getByLookupCode(eventBridgeValidation.getBridgeType());
                 } catch (RuntimeException ex) {
-                    eventBridgeValidation.setErrorMsg(String.format("%s at row %s.<br>", ex.getMessage(),
-                        eventBridgeValidation.getRowCounter()));
+                    eventBridgeValidation.setErrorMsg(String.format("%s at row %s.<br>", ex.getMessage(), eventBridgeValidation.getRowCounter()));
                 }
                 if (!BarcoUtil.isNull(eventBridgeValidation.getErrorMsg())) {
                     errors.add(eventBridgeValidation.getErrorMsg());
@@ -530,7 +489,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
                 eventBridgeValidations.add(eventBridgeValidation);
             }
         }
-        if (errors.size() > 0) {
+        if (!errors.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.TOTAL_INVALID, errors.size()), errors);
         }
         eventBridgeValidations.forEach(eventBridgeValidation -> {
@@ -619,16 +578,14 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         eventBridgeResponse.setDescription(eventBridge.getDescription());
         // http method
         if (!BarcoUtil.isNull(eventBridge.getHttpMethod())) {
-            GLookup httpMethod = GLookup.getGLookup(this.lookupDataCacheService
-                .getChildLookupDataByParentLookupTypeAndChildLookupCode(REQUEST_METHOD.getName(),
-                    Long.valueOf(eventBridge.getHttpMethod().ordinal())));
+            GLookup httpMethod = GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(REQUEST_METHOD.getName(),
+                Long.valueOf(eventBridge.getHttpMethod().ordinal())));
             eventBridgeResponse.setHttpMethod(httpMethod);
         }
         // bridge type
         if (!BarcoUtil.isNull(eventBridge.getBridgeType())) {
-            GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService
-                .getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
-                    eventBridge.getBridgeType().getLookupCode()));
+            GLookup bridgeType = GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(EVENT_BRIDGE_TYPE.getName(),
+                eventBridge.getBridgeType().getLookupCode()));
             eventBridgeResponse.setBridgeType(bridgeType);
         }
         // credential
@@ -641,6 +598,35 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         eventBridgeResponse.setUpdatedBy(getActionUser(eventBridge.getUpdatedBy()));
         eventBridgeResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(eventBridge.getStatus().getLookupType()));
         return eventBridgeResponse;
+    }
+
+    /**
+     * Method use to validate the username
+     * @param payload
+     * @return AppResponse
+     * @throws Exception
+     * */
+    private AppResponse validateUsername(Object payload) {
+        SessionUser sessionUser = null;
+        // Check if the payload is an instance of RoleRequest or other types
+        if (payload instanceof EventBridgeRequest) {
+            EventBridgeRequest eventBridgeRequest = (EventBridgeRequest) payload;
+            sessionUser = eventBridgeRequest.getSessionUser();
+        }else {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.INVALID_PAYLOAD_TYPE);
+        }
+        // Ensure sessionUser is not null
+        if (BarcoUtil.isNull(sessionUser)) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SESSION_USER_MISSING);
+        } else if (BarcoUtil.isNull(sessionUser.getUsername())) {
+            // Check if the username is null or empty
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
+        } else if (this.appUserRepository.findByUsernameAndStatus(sessionUser.getUsername(), APPLICATION_STATUS.ACTIVE).isEmpty()) {
+            // Check if the username exists and has an active status
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
+        }
+        // Username is valid
+        return (AppResponse) BarcoUtil.NULL;
     }
 
 }

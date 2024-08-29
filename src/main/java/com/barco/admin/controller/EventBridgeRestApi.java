@@ -80,8 +80,6 @@ public class EventBridgeRestApi {
     @RequestMapping(path="/fetchAllEventBridge", method=RequestMethod.POST)
     public ResponseEntity<?> fetchAllEventBridge(@RequestBody EventBridgeRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.eventBridgeService.fetchAllEventBridge(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllEventBridge ", ExceptionUtil.getRootCause(ex));
@@ -99,8 +97,6 @@ public class EventBridgeRestApi {
     @RequestMapping(path="/fetchEventBridgeById", method=RequestMethod.POST)
     public ResponseEntity<?> fetchEventBridgeById(@RequestBody EventBridgeRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.eventBridgeService.fetchEventBridgeById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchEventBridgeById ", ExceptionUtil.getRootCause(ex));

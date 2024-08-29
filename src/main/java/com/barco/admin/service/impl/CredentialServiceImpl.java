@@ -51,13 +51,12 @@ public class CredentialServiceImpl implements CredentialService {
      * */
     @Override
     public AppResponse addCredential(CredentialRequest payload) throws Exception {
-        logger.info("Request addCredential :- " + payload);
+        logger.info("Request addCredential :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (adminUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NAME_MISSING);
@@ -72,8 +71,7 @@ public class CredentialServiceImpl implements CredentialService {
         credential.setName(payload.getName());
         credential.setDescription(payload.getDescription());
         credential.setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
-        credential.setContent(Base64.getEncoder().encodeToString(
-            new Gson().toJson(payload.getContent()).getBytes()));
+        credential.setContent(Base64.getEncoder().encodeToString(new Gson().toJson(payload.getContent()).getBytes()));
         credential.setStatus(APPLICATION_STATUS.ACTIVE);
         credential.setCreatedBy(adminUser.get());
         credential.setUpdatedBy(adminUser.get());
@@ -89,13 +87,12 @@ public class CredentialServiceImpl implements CredentialService {
      * */
     @Override
     public AppResponse updateCredential(CredentialRequest payload) throws Exception {
-        logger.info("Request updateCredential :- " + payload);
+        logger.info("Request updateCredential :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (adminUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_ID_MISSING);
@@ -110,14 +107,13 @@ public class CredentialServiceImpl implements CredentialService {
         }
         Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatusNot(
             payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
-        if (!credential.isPresent()) {
+        if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
         credential.get().setName(payload.getName());
         credential.get().setDescription(payload.getDescription());
         credential.get().setType(CREDENTIAL_TYPE.getByLookupCode(payload.getType()));
-        credential.get().setContent(Base64.getEncoder().encodeToString(
-            new Gson().toJson(payload.getContent()).getBytes()));
+        credential.get().setContent(Base64.getEncoder().encodeToString(new Gson().toJson(payload.getContent()).getBytes()));
         if (!BarcoUtil.isNull(payload.getStatus())) {
             credential.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
         }
@@ -132,13 +128,12 @@ public class CredentialServiceImpl implements CredentialService {
      * */
     @Override
     public AppResponse fetchAllCredential(CredentialRequest payload) throws Exception {
-        logger.info("Request fetchAllCredential :- " + payload);
+        logger.info("Request fetchAllCredential :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (adminUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         }
         List<Credential> credentials;
@@ -164,23 +159,18 @@ public class CredentialServiceImpl implements CredentialService {
      * */
     @Override
     public AppResponse fetchAllCredentialByType(CredentialRequest payload) throws Exception {
-        logger.info("Request fetchAllCredential :- " + payload);
+        logger.info("Request fetchAllCredentialByType :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getTypes())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_TYPE_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.credentialRepository.findAllByCreatedByAndTypeInAndStatusNot(adminUser.get(), payload.getTypes()
-                .stream().map(type -> CREDENTIAL_TYPE.getByLookupCode(type))
-                .collect(Collectors.toSet()), APPLICATION_STATUS.DELETE)
-                .stream().map(credential -> this.getCredentialResponse(credential, true))
-                .collect(Collectors.toList()));
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        return adminUser.map(appUser -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
+            this.credentialRepository.findAllByCreatedByAndTypeInAndStatusNot(appUser, payload.getTypes()
+            .stream().map(CREDENTIAL_TYPE::getByLookupCode).collect(Collectors.toSet()), APPLICATION_STATUS.DELETE)
+            .stream().map(credential -> this.getCredentialResponse(credential, true)).collect(Collectors.toList())))
+            .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND));
     }
 
     /**
@@ -190,20 +180,18 @@ public class CredentialServiceImpl implements CredentialService {
      * */
     @Override
     public AppResponse fetchCredentialById(CredentialRequest payload) throws Exception {
-        logger.info("Request fetchCredentialById :- " + payload);
+        logger.info("Request fetchCredentialById :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (adminUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_ID_MISSING);
         }
-        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatusNot(
-            payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
-        if (!credential.isPresent()) {
+        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatusNot(payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
+        if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
         CredentialResponse credentialResponse = new CredentialResponse();
@@ -225,23 +213,21 @@ public class CredentialServiceImpl implements CredentialService {
      * */
     @Override
     public AppResponse deleteCredential(CredentialRequest payload) throws Exception {
-        logger.info("Request deleteCredential :- " + payload);
+        logger.info("Request deleteCredential :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!adminUser.isPresent()) {
+        Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (adminUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getId())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_ID_MISSING);
         }
-        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatusNot(payload.getId(),
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
-        if (!credential.isPresent()) {
+        Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatusNot(payload.getId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.DELETE);
+        if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
-        // de-link the source and event bridge [if its connect with other then service or task then add new mthod]
+        // de-link the source and event bridge [if its connect with other than service or task then add new method]
         credential.get().setStatus(APPLICATION_STATUS.DELETE);
         this.deleteEventBridgesCredential(credential.get());
         this.deleteSourceTaskCredential(credential.get());
@@ -256,20 +242,19 @@ public class CredentialServiceImpl implements CredentialService {
      * */
     @Override
     public AppResponse deleteAllCredential(CredentialRequest payload) throws Exception {
-        logger.info("Request deleteAllCredential :- " + payload);
+        logger.info("Request deleteAllCredential :- {}.", payload);
         if (BarcoUtil.isNull(payload.getSessionUser().getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(
-            payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        if (!appUser.isPresent()) {
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        if (appUser.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
         } else if (BarcoUtil.isNull(payload.getIds())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
         List<Credential> credentials = this.credentialRepository.findAllByIdIn(payload.getIds());
         credentials.forEach(credential -> {
-            // de-link the source and event bridge [if its connect with other then service or task then add new mthod]
+            // de-link the source and event bridge [if its connect with other than service or task then add new method]
             credential.setStatus(APPLICATION_STATUS.DELETE);
             this.deleteEventBridgesCredential(credential);
             this.deleteSourceTaskCredential(credential);

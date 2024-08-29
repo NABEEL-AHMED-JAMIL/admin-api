@@ -7,6 +7,7 @@ import com.barco.model.dto.request.QueryInquiryRequest;
 import com.barco.model.dto.request.QueryRequest;
 import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.response.AppResponse;
+import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.MessageUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -18,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.io.ByteArrayOutputStream;
 import java.text.DateFormat;
@@ -87,10 +89,10 @@ public class SettingRestApi {
         try {
             return new ResponseEntity<>(this.settingService.dynamicQueryResponse(payload), HttpStatus.OK);
         } catch (SQLGrammarException ex) {
-            logger.error("An error occurred while dynamicQueryResponse", ExceptionUtil.getRootCauseMessage(ex));
+            logger.error("An error occurred while dynamicQueryResponse :- {}.", ExceptionUtil.getRootCauseMessage(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.SQL_GRAMMAR_EXCEPTION), HttpStatus.BAD_REQUEST);
         }  catch (Exception ex) {
-            logger.error("An error occurred while dynamicQueryResponse ", ExceptionUtil.getRootCause(ex));
+            logger.error("An error occurred while dynamicQueryResponse :- {}.", ExceptionUtil.getRootCauseMessage(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
@@ -113,10 +115,10 @@ public class SettingRestApi {
             ByteArrayOutputStream byteArrayOutputStream = this.settingService.downloadDynamicQueryFile(payload);
             return ResponseEntity.ok().headers(headers).body(byteArrayOutputStream.toByteArray());
         } catch (SQLGrammarException ex) {
-            logger.error("An error occurred while downloadDynamicQueryFile xlsx file", ExceptionUtil.getRootCauseMessage(ex));
+            logger.error("An error occurred while downloadDynamicQueryFile xlsx file :- {}.", ExceptionUtil.getRootCauseMessage(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, MessageUtil.SQL_GRAMMAR_EXCEPTION), HttpStatus.BAD_REQUEST);
         } catch (Exception ex) {
-            logger.error("An error occurred while downloadDynamicQueryFile xlsx file", ExceptionUtil.getRootCauseMessage(ex));
+            logger.error("An error occurred while downloadDynamicQueryFile xlsx file :- {}.", ExceptionUtil.getRootCauseMessage(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
@@ -132,6 +134,8 @@ public class SettingRestApi {
     @RequestMapping(value = "/addQueryInquiry", method = RequestMethod.POST)
     public ResponseEntity<?> addQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.addQueryInquiry(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addQueryInquiry ", ExceptionUtil.getRootCause(ex));
@@ -150,6 +154,8 @@ public class SettingRestApi {
     @RequestMapping(value = "/updateQueryInquiry", method = RequestMethod.POST)
     public ResponseEntity<?> updateQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.updateQueryInquiry(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateQueryInquiry ", ExceptionUtil.getRootCause(ex));
@@ -168,6 +174,8 @@ public class SettingRestApi {
     @RequestMapping(value = "/fetchQueryInquiryById", method = RequestMethod.POST)
     public ResponseEntity<?> fetchQueryInquiryById(@RequestBody QueryInquiryRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.fetchQueryInquiryById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchQueryInquiryById ", ExceptionUtil.getRootCause(ex));
@@ -186,6 +194,8 @@ public class SettingRestApi {
     @RequestMapping(value = "/fetchAllQueryInquiry", method = RequestMethod.POST)
     public ResponseEntity<?> fetchAllQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.fetchAllQueryInquiry(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllQueryInquiry ", ExceptionUtil.getRootCause(ex));
@@ -204,6 +214,8 @@ public class SettingRestApi {
     @RequestMapping(value = "/deleteQueryInquiryById", method = RequestMethod.POST)
     public ResponseEntity<?> deleteQueryInquiryById(@RequestBody QueryInquiryRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.deleteQueryInquiryById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteQueryInquiryById ", ExceptionUtil.getRootCause(ex));
@@ -222,6 +234,8 @@ public class SettingRestApi {
     @RequestMapping(path="/deleteAllQueryInquiry", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.deleteAllQueryInquiry(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllQueryInquiry ", ExceptionUtil.getRootCause(ex));

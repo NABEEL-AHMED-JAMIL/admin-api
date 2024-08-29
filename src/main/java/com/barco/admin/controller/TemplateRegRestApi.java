@@ -3,8 +3,10 @@ package com.barco.admin.controller;
 import com.barco.admin.service.TemplateRegService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
+import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.request.TemplateRegRequest;
 import com.barco.model.dto.response.AppResponse;
+import com.barco.model.security.UserSessionDetail;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -22,8 +25,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @CrossOrigin(origins="*")
 @RequestMapping(value="/templateReg.json")
-//@Api(value = "App Rest Api",
-//    description = "Template Service : Service related to the email template management.")
+@Api(value = "App Rest Api",
+    description = "Template Service : Service related to the email template management.")
 public class TemplateRegRestApi {
 
     private Logger logger = LoggerFactory.getLogger(TemplateRegRestApi.class);
@@ -42,6 +45,8 @@ public class TemplateRegRestApi {
     @RequestMapping(path="/addTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> addTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.templateRegService.addTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addTemplateReg ", ExceptionUtil.getRootCause(ex));
@@ -60,6 +65,8 @@ public class TemplateRegRestApi {
     @RequestMapping(path="/updateTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> updateTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.templateRegService.updateTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateTemplateReg ", ExceptionUtil.getRootCause(ex));
@@ -78,6 +85,8 @@ public class TemplateRegRestApi {
     @RequestMapping(path="/findTemplateRegByTemplateId", method=RequestMethod.POST)
     public ResponseEntity<?> findTemplateRegByTemplateId(@RequestBody TemplateRegRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.templateRegService.findTemplateRegByTemplateId(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while findTemplateRegByTemplateId ", ExceptionUtil.getRootCause(ex));
@@ -96,6 +105,8 @@ public class TemplateRegRestApi {
     @RequestMapping(path="/fetchTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> fetchTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.templateRegService.fetchTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchTemplateReg ", ExceptionUtil.getRootCause(ex));
@@ -114,6 +125,8 @@ public class TemplateRegRestApi {
     @RequestMapping(path="/deleteTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> deleteTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.templateRegService.deleteTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteTemplateReg ", ExceptionUtil.getRootCause(ex));
@@ -132,6 +145,8 @@ public class TemplateRegRestApi {
     @RequestMapping(path="/deleteAllTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.templateRegService.deleteAllTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllTemplateReg ", ExceptionUtil.getRootCause(ex));
