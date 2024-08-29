@@ -51,6 +51,8 @@ public class EVariableRestApi {
     @RequestMapping(value="/addEnVariable", method= RequestMethod.POST)
     public ResponseEntity<?> addEnVariable(@RequestBody EnVariablesRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.eVariableService.addEnVariable(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addEnVariable ", ExceptionUtil.getRootCause(ex));
@@ -69,6 +71,8 @@ public class EVariableRestApi {
     @RequestMapping(value="/updateEnVariable", method= RequestMethod.POST)
     public ResponseEntity<?> updateEnVariable(@RequestBody EnVariablesRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.eVariableService.updateEnVariable(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateEnVariable ", ExceptionUtil.getRootCause(ex));
@@ -122,6 +126,8 @@ public class EVariableRestApi {
     @RequestMapping(value="/fetchUserEnvByEnvKey", method= RequestMethod.POST)
     public ResponseEntity<?> fetchUserEnvByEnvKey(@RequestBody EnVariablesRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.eVariableService.fetchUserEnvByEnvKey(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchUserEnvByEnvKey ", ExceptionUtil.getRootCause(ex));
