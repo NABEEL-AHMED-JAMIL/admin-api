@@ -86,37 +86,34 @@ public class OrganizationServiceImpl implements OrganizationService {
         }
         // SESSION USER
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        // org object
-        Organization organization = this.createOrganization(payload);
-        this.organizationRepository.save(organization);
         // check the access for role and profile for user creating
-        AppUserRequest orgAppUser = payload.getUser();
-        AppUser appUser = new AppUser();
-        appUser.setFirstName(orgAppUser.getFirstName());
-        appUser.setLastName(orgAppUser.getLastName());
-        appUser.setEmail(orgAppUser.getEmail());
-        appUser.setUsername(orgAppUser.getUsername());
-        appUser.setImg(orgAppUser.getProfileImg());
-        appUser.setIpAddress(orgAppUser.getIpAddress());
-        appUser.setOrgAccount(Boolean.TRUE); // org account
-        appUser.setPassword(this.passwordEncoder.encode(orgAppUser.getPassword()));
-        appUser.setStatus(APPLICATION_STATUS.ACTIVE);
-        appUser.setOrganization(organization);
+        AppUserRequest orgAppUserRequest = payload.getUser();
+        AppUser orgAppUser = new AppUser();
+        orgAppUser.setFirstName(orgAppUserRequest.getFirstName());
+        orgAppUser.setLastName(orgAppUserRequest.getLastName());
+        orgAppUser.setEmail(orgAppUserRequest.getEmail());
+        orgAppUser.setUsername(orgAppUserRequest.getUsername());
+        orgAppUser.setImg(orgAppUserRequest.getProfileImg());
+        orgAppUser.setIpAddress(orgAppUserRequest.getIpAddress());
+        orgAppUser.setOrgAccount(Boolean.TRUE); // org account
+        orgAppUser.setPassword(this.passwordEncoder.encode(orgAppUserRequest.getPassword()));
+        orgAppUser.setStatus(APPLICATION_STATUS.ACTIVE);
+        orgAppUser.setOrganization(this.createOrganization(payload));
         // account type
-        if (!BarcoUtil.isNull(orgAppUser.getAccountType())) {
-            appUser.setAccountType(ACCOUNT_TYPE.getByLookupCode(orgAppUser.getAccountType()));
+        if (!BarcoUtil.isNull(orgAppUserRequest.getAccountType())) {
+            orgAppUser.setAccountType(ACCOUNT_TYPE.getByLookupCode(orgAppUserRequest.getAccountType()));
         }
         // register user role default as admin role
-        Set<Role> roleList = this.roleRepository.findAllByNameInAndStatus(orgAppUser.getAssignRole(), APPLICATION_STATUS.ACTIVE);
+        Set<Role> roleList = this.roleRepository.findAllByNameInAndStatus(orgAppUserRequest.getAssignRole(), APPLICATION_STATUS.ACTIVE);
         if (!roleList.isEmpty()) {
-            appUser.setAppUserRoles(roleList);
+            orgAppUser.setAppUserRoles(roleList);
         }
         // profile
-        Optional<Profile> profile = this.profileRepository.findProfileByProfileNameAndStatus(orgAppUser.getProfile(), APPLICATION_STATUS.ACTIVE);
-        profile.ifPresent(appUser::setProfile);
-        appUser.setCreatedBy(adminUser.get());
-        appUser.setUpdatedBy(adminUser.get());
-        this.appUserRepository.save(appUser);
+        Optional<Profile> profile = this.profileRepository.findProfileByProfileNameAndStatus(orgAppUserRequest.getProfile(), APPLICATION_STATUS.ACTIVE);
+        profile.ifPresent(orgAppUser::setProfile);
+        orgAppUser.setCreatedBy(adminUser.get());
+        orgAppUser.setUpdatedBy(adminUser.get());
+        this.appUserRepository.save(orgAppUser);
         // notification & register email
         Optional<AppUser> superAdmin = this.appUserRepository.findByUsernameAndStatus(
             this.lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.ROOT_USER).getLookupValue(), APPLICATION_STATUS.ACTIVE);
@@ -124,7 +121,7 @@ public class OrganizationServiceImpl implements OrganizationService {
             // e-variable for account
             this.envVariablesRepository.findAllByCreatedByAndStatusNotOrderByDateCreatedDesc(superAdmin.get(), APPLICATION_STATUS.DELETE)
             .forEach(envVariables -> {
-                this.appUserEnvRepository.save(this.getAppUserEnv(adminUser.get(), appUser, envVariables));
+                this.appUserEnvRepository.save(this.getAppUserEnv(adminUser.get(), orgAppUser, envVariables));
             });
             // event bridge only receiver event bridge if exist and create by the main user
             this.eventBridgeRepository.findAllByBridgeTypeInAndCreatedByAndStatusNotOrderByDateCreatedDesc(List.of(EVENT_BRIDGE_TYPE.WEB_HOOK_RECEIVE),
@@ -132,7 +129,7 @@ public class OrganizationServiceImpl implements OrganizationService {
                     try {
                         LinkEBURequest linkEBURequest = new LinkEBURequest();
                         linkEBURequest.setId(eventBridge.getId());
-                        linkEBURequest.setAppUserId(appUser.getId());
+                        linkEBURequest.setAppUserId(orgAppUser.getId());
                         linkEBURequest.setLinked(Boolean.TRUE);
                         linkEBURequest.setSessionUser(new SessionUser(superAdmin.get().getUsername()));
                         this.eventBridgeService.linkEventBridgeWithUser(linkEBURequest);
@@ -143,10 +140,10 @@ public class OrganizationServiceImpl implements OrganizationService {
         }
         // email send to the admin
         this.sendNotification(MessageUtil.NEW_ORG_ACCOUNT_ADDED, String.format(MessageUtil.NEW_ORG_USER_REGISTER_WITH_ID,
-            appUser.getId()), adminUser.get(), this.lookupDataCacheService, this.notificationService);
+            orgAppUser.getId()), adminUser.get(), this.lookupDataCacheService, this.notificationService);
         // email send to the user
-        this.sendRegisterOrgAccountUserEmail(appUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, organization.getId()), payload);
+        this.sendRegisterOrgAccountUserEmail(orgAppUser, this.lookupDataCacheService, this.templateRegRepository, this.emailMessagesFactory);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, orgAppUser.getOrganization().getId()), payload);
     }
 
     /**
@@ -174,34 +171,34 @@ public class OrganizationServiceImpl implements OrganizationService {
         // check the access for role and profile for user creating
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         // org app user
-        AppUserRequest orgAppUser = payload.getUser();
-        Optional<AppUser> appUser = this.appUserRepository.findByIdAndStatusNot(orgAppUser.getId(), APPLICATION_STATUS.DELETE);
-        if (!BarcoUtil.isNull(orgAppUser.getFirstName())) {
-            appUser.get().setFirstName(orgAppUser.getFirstName());
+        AppUserRequest orgAppUserRequest = payload.getUser();
+        Optional<AppUser> orgAppUser = this.appUserRepository.findByIdAndStatusNot(orgAppUserRequest.getId(), APPLICATION_STATUS.DELETE);
+        if (!BarcoUtil.isNull(orgAppUserRequest.getFirstName())) {
+            orgAppUser.get().setFirstName(orgAppUserRequest.getFirstName());
         }
-        if (!BarcoUtil.isNull(orgAppUser.getLastName())) {
-            appUser.get().setLastName(orgAppUser.getLastName());
+        if (!BarcoUtil.isNull(orgAppUserRequest.getLastName())) {
+            orgAppUser.get().setLastName(orgAppUserRequest.getLastName());
         }
-        if (!orgAppUser.getUsername().equals(appUser.get().getUsername()) && this.appUserRepository.existsByUsername(orgAppUser.getUsername())) {
+        if (!orgAppUserRequest.getUsername().equals(orgAppUser.get().getUsername()) && this.appUserRepository.existsByUsername(orgAppUserRequest.getUsername())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_ALREADY_TAKEN);
-        } else if (!orgAppUser.getEmail().equals(appUser.get().getEmail()) && this.appUserRepository.existsByEmail(orgAppUser.getEmail())) {
+        } else if (!orgAppUserRequest.getEmail().equals(orgAppUser.get().getEmail()) && this.appUserRepository.existsByEmail(orgAppUserRequest.getEmail())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EMAIL_ALREADY_IN_USE);
         }
-        if (!BarcoUtil.isNull(orgAppUser.getEmail())) {
-            appUser.get().setEmail(orgAppUser.getEmail());
+        if (!BarcoUtil.isNull(orgAppUserRequest.getEmail())) {
+            orgAppUser.get().setEmail(orgAppUserRequest.getEmail());
         }
-        if (!BarcoUtil.isNull(orgAppUser.getUsername())) {
-            appUser.get().setUsername(orgAppUser.getUsername());
+        if (!BarcoUtil.isNull(orgAppUserRequest.getUsername())) {
+            orgAppUser.get().setUsername(orgAppUserRequest.getUsername());
         }
-        if (!BarcoUtil.isNull(orgAppUser.getIpAddress())) {
-            appUser.get().setIpAddress(orgAppUser.getIpAddress());
+        if (!BarcoUtil.isNull(orgAppUserRequest.getIpAddress())) {
+            orgAppUser.get().setIpAddress(orgAppUserRequest.getIpAddress());
         }
         // account type
-        if (!BarcoUtil.isNull(orgAppUser.getAccountType())) {
-            appUser.get().setAccountType(ACCOUNT_TYPE.getByLookupCode(orgAppUser.getAccountType()));
+        if (!BarcoUtil.isNull(orgAppUserRequest.getAccountType())) {
+            orgAppUser.get().setAccountType(ACCOUNT_TYPE.getByLookupCode(orgAppUserRequest.getAccountType()));
         }
-        adminUser.ifPresent(user -> appUser.get().setUpdatedBy(user));
-        this.appUserRepository.save(appUser.get());
+        adminUser.ifPresent(user -> orgAppUser.get().setUpdatedBy(user));
+        this.appUserRepository.save(orgAppUser.get());
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
     }
 
@@ -291,10 +288,7 @@ public class OrganizationServiceImpl implements OrganizationService {
      * @throws Exception
      * */
     private AppResponse validateAddOrgAccountPayload(OrganizationRequest payload) throws Exception {
-        AppResponse validationResponse = this.validateUsername(payload);
-        if (!BarcoUtil.isNull(validationResponse)) {
-            return validationResponse;
-        } else if (BarcoUtil.isNull(payload.getName())) {
+        if (BarcoUtil.isNull(payload.getName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ORG_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getPhone())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ORG_PHONE_MISSING);
@@ -339,10 +333,7 @@ public class OrganizationServiceImpl implements OrganizationService {
      * @throws Exception
      * */
     private AppResponse validateUpdateOrgAccountPayload(OrganizationRequest payload) throws Exception {
-        AppResponse validationResponse = this.validateUsername(payload);
-        if (!BarcoUtil.isNull(validationResponse)) {
-            return validationResponse;
-        } else if (BarcoUtil.isNull(payload.getName())) {
+        if (BarcoUtil.isNull(payload.getName())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ORG_NAME_MISSING);
         } else if (BarcoUtil.isNull(payload.getPhone())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ORG_PHONE_MISSING);

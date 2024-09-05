@@ -62,6 +62,7 @@ public class SettingRestApi {
     /**
      * @apiName :- fetchCountryData
      * @apiName :- Api use to fetch the country for admin section
+     * @param sessionUser
      * @return ResponseEntity<?>
      * */
     @ApiOperation(value = "Api use to fetch country data.", response = ResponseEntity.class)
@@ -124,6 +125,23 @@ public class SettingRestApi {
     }
 
     /**
+     * @apiName :- fetchAllQueryInquiryAccessUser
+     * @apiNote :- Api use to add the query inquiry
+     * @return ResponseEntity<?> fetchAllQueryInquiryAccessUser
+     * */
+    @ApiOperation(value = "Api use to fetch the query inquiry access user.", response = ResponseEntity.class)
+    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    @RequestMapping(value = "/fetchAllQueryInquiryAccessUser", method = RequestMethod.GET)
+    public ResponseEntity<?> fetchAllQueryInquiryAccessUser() {
+        try {
+            return new ResponseEntity<>(this.settingService.fetchAllQueryInquiryAccessUser(), HttpStatus.OK);
+        } catch (Exception ex) {
+            logger.error("An error occurred while fetchAllQueryInquiryAccessUser ", ExceptionUtil.getRootCause(ex));
+            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * @apiName :- addQueryInquiry
      * @apiNote :- Api use to add the query inquiry
      * @param payload
@@ -135,7 +153,7 @@ public class SettingRestApi {
     public ResponseEntity<?> addQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(new SessionUser(userSessionDetail.getUuid(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.addQueryInquiry(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addQueryInquiry ", ExceptionUtil.getRootCause(ex));
@@ -155,7 +173,7 @@ public class SettingRestApi {
     public ResponseEntity<?> updateQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(new SessionUser(userSessionDetail.getUuid(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.updateQueryInquiry(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateQueryInquiry ", ExceptionUtil.getRootCause(ex));
@@ -174,8 +192,6 @@ public class SettingRestApi {
     @RequestMapping(value = "/fetchQueryInquiryById", method = RequestMethod.POST)
     public ResponseEntity<?> fetchQueryInquiryById(@RequestBody QueryInquiryRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.fetchQueryInquiryById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchQueryInquiryById ", ExceptionUtil.getRootCause(ex));
@@ -195,7 +211,7 @@ public class SettingRestApi {
     public ResponseEntity<?> fetchAllQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(new SessionUser(userSessionDetail.getUuid(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.fetchAllQueryInquiry(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchAllQueryInquiry ", ExceptionUtil.getRootCause(ex));
@@ -214,8 +230,6 @@ public class SettingRestApi {
     @RequestMapping(value = "/deleteQueryInquiryById", method = RequestMethod.POST)
     public ResponseEntity<?> deleteQueryInquiryById(@RequestBody QueryInquiryRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.deleteQueryInquiryById(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteQueryInquiryById ", ExceptionUtil.getRootCause(ex));
@@ -234,8 +248,6 @@ public class SettingRestApi {
     @RequestMapping(path="/deleteAllQueryInquiry", method=RequestMethod.POST)
     public ResponseEntity<?> deleteAllQueryInquiry(@RequestBody QueryInquiryRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.settingService.deleteAllQueryInquiry(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while deleteAllQueryInquiry ", ExceptionUtil.getRootCause(ex));

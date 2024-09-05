@@ -191,9 +191,20 @@ public class CredentialServiceImpl implements CredentialService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_ID_MISSING);
         }
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        return this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE)
-            .map(value -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getCredentialResponse(value, true)))
-            .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND));
+        Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
+        if (credential.isEmpty()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
+        }
+        CredentialResponse credentialResponse = new CredentialResponse();
+        credentialResponse.setId(credential.get().getId());
+        credentialResponse.setName(credential.get().getName());
+        credentialResponse.setDescription(credential.get().getDescription());
+        credentialResponse.setType(GLookup.getGLookup(this.lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
+            CREDENTIAL_TYPE.getName(),credential.get().getType().getLookupCode())));
+        credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupCode(credential.get().getStatus().getLookupCode()));
+        credentialResponse.setDateCreated(credential.get().getDateCreated());
+        credentialResponse.setContent(new Gson().fromJson(new String(Base64.getDecoder().decode(credential.get().getContent().getBytes())), Object.class));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, credentialResponse);
     }
 
     /**

@@ -4,7 +4,9 @@ import com.barco.admin.service.OrganizationService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
 import com.barco.model.dto.request.OrganizationRequest;
+import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.response.AppResponse;
+import com.barco.model.security.UserSessionDetail;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -41,6 +44,8 @@ public class OrganizationRestApi {
     @RequestMapping(value="/addOrgAccount", method= RequestMethod.POST)
     public ResponseEntity<?> addOrgAccount(@RequestBody OrganizationRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.organizationService.addOrgAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addOrgAccount ", ExceptionUtil.getRootCause(ex));
@@ -59,6 +64,8 @@ public class OrganizationRestApi {
     @RequestMapping(value="/updateOrgAccount", method= RequestMethod.POST)
     public ResponseEntity<?> updateOrgAccount(@RequestBody OrganizationRequest payload) {
         try {
+            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.organizationService.updateOrgAccount(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateOrgAccount ", ExceptionUtil.getRootCause(ex));

@@ -327,7 +327,7 @@ public interface RootService {
      * */
     public default OrganizationResponse getOrganizationResponse(Organization organization) {
         OrganizationResponse organizationResponse = new OrganizationResponse();
-        organizationResponse.setId(organization.getId());
+        organizationResponse.setUuid(organization.getUuid());
         organizationResponse.setName(organization.getName());
         organizationResponse.setPhone(organization.getPhone());
         organizationResponse.setAddress(organization.getAddress());
@@ -347,7 +347,7 @@ public interface RootService {
      * */
     public default ProfileResponse getProfilePermissionResponse(Profile profile) {
         ProfileResponse profilePermission = new ProfileResponse();
-        profilePermission.setId(profile.getId());
+        profilePermission.setUuid(profile.getUuid());
         profilePermission.setProfileName(profile.getProfileName());
         profilePermission.setDescription(profile.getDescription());
         profilePermission.setPermission(profile.getProfilePermissions().stream()
@@ -363,7 +363,7 @@ public interface RootService {
      * */
     public default ActionByUser getActionUser(AppUser appUser) {
         ActionByUser actionByUser = new ActionByUser();
-        actionByUser.setId(appUser.getId());
+        actionByUser.setUuid(appUser.getUuid());
         actionByUser.setEmail(appUser.getEmail());
         actionByUser.setUsername(appUser.getUsername());
         return actionByUser;
@@ -520,12 +520,13 @@ public interface RootService {
 
     /**
      * sendRegisterUser method use on user register.
+     *
      * @param appUser
      * @param lookupDataCacheService
      * @param templateRegRepository
      * @param emailMessagesFactory
-     * */
-    public default boolean sendForgotPasswordEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
+     */
+    public default void sendForgotPasswordEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory, JwtUtils jwtUtils) {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
@@ -533,11 +534,11 @@ public interface RootService {
             Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(FORGOT_USER_PASSWORD.name(), APPLICATION_STATUS.ACTIVE);
             if (templateReg.isEmpty()) {
                 logger.error("No Template Found With {}.", FORGOT_USER_PASSWORD.name());
-                return false;
+                return;
             }
             // forgot password
             ForgotPasswordRequest forgotPasswordRequest = new ForgotPasswordRequest();
-            forgotPasswordRequest.setId(appUser.getId());
+            forgotPasswordRequest.setUuid(appUser.getUuid());
             forgotPasswordRequest.setEmail(appUser.getEmail());
             forgotPasswordRequest.setUsername(appUser.getUsername());
             // meta data
@@ -554,30 +555,28 @@ public interface RootService {
             emailMessageRequest.setBodyMap(metaData);
             emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
             logger.info("Email Send Status :- {}.", emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
-            return true;
         } catch (Exception ex) {
             logger.error("Exception :- {}.", ExceptionUtil.getRootCauseMessage(ex));
-            return false;
         }
     }
 
     /**
      * sendResetPassword method use to send reset confirm email
+     *
      * @param appUser
      * @param lookupDataCacheService
      * @param templateRegRepository
      * @param emailMessagesFactory
-     * */
-    public default boolean sendResetPasswordEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
-        TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
+     */
+    public default void sendResetPasswordEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
+       TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
             Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(RESET_USER_PASSWORD.name(), APPLICATION_STATUS.ACTIVE);
             if (templateReg.isEmpty()) {
                 logger.info("No Template Found With {}.", RESET_USER_PASSWORD.name());
-                return false;
+                return;
             }
-            // metadata
             Map<String, Object> metaData = new HashMap<>();
             metaData.put(EmailUtil.USERNAME, appUser.getUsername());
             metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
@@ -589,29 +588,28 @@ public interface RootService {
             emailMessageRequest.setBodyMap(metaData);
             emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
             logger.info("Email Send Status :- {}.", emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
-            return true;
         } catch (Exception ex) {
             logger.error("Exception :- {}.",ExceptionUtil.getRootCauseMessage(ex));
-            return false;
         }
     }
 
 
     /**
      * send close user account email
+     *
      * @param appUser
      * @param lookupDataCacheService
      * @param templateRegRepository
      * @param emailMessagesFactory
-     * */
-    public default boolean sendCloseUserAccountEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
+     */
+    public default void sendCloseUserAccountEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
         try {
             LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
             Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(DELETE_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
             if (templateReg.isEmpty()) {
                 logger.info("No Template Found With {}.", RESET_USER_PASSWORD.name());
-                return false;
+                return;
             }
             Map<String, Object> metaData = new HashMap<>();
             metaData.put(EmailUtil.USERNAME, appUser.getUsername());
@@ -624,10 +622,8 @@ public interface RootService {
             emailMessageRequest.setBodyMap(metaData);
             emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
             logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
-            return true;
         } catch (Exception ex) {
             logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
-            return false;
         }
     }
 
@@ -682,7 +678,7 @@ public interface RootService {
      * */
     public default TemplateRegResponse getTemplateRegResponse(TemplateReg templateReg) {
         TemplateRegResponse templateRegResponse = new TemplateRegResponse();
-        templateRegResponse.setId(templateReg.getId());
+        templateRegResponse.setUuid(templateReg.getUuid());
         templateRegResponse.setTemplateName(templateReg.getTemplateName());
         templateRegResponse.setDescription(templateReg.getDescription());
         templateRegResponse.setTemplateContent(templateReg.getTemplateContent());
@@ -701,7 +697,7 @@ public interface RootService {
      * */
     public default QueryInquiryResponse getQueryInquiryResponse(QueryInquiry queryInquiry) {
         QueryInquiryResponse queryInquiryResponse = new QueryInquiryResponse();
-        queryInquiryResponse.setId(queryInquiry.getId());
+        queryInquiryResponse.setUuid(queryInquiry.getUuid());
         queryInquiryResponse.setName(queryInquiry.getName());
         queryInquiryResponse.setDescription(queryInquiry.getDescription());
         queryInquiryResponse.setQuery(queryInquiry.getQuery());

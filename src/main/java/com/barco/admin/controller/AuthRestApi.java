@@ -48,9 +48,6 @@ public class AuthRestApi {
             LoginRequest requestPayload = new Gson().fromJson(requestData, LoginRequest.class);
             requestPayload.setIpAddress(BarcoUtil.getRequestIP(httpServletRequest));
             return new ResponseEntity<>(this.authService.signInAppUser(requestPayload), HttpStatus.OK);
-        } catch (BadCredentialsException ex) {
-            logger.error("An error occurred while signInAppUser ", ExceptionUtil.getRootCause(ex));
-            return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);
         } catch (Exception ex) {
             logger.error("An error occurred while signInAppUser ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);

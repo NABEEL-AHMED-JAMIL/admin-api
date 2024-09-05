@@ -86,7 +86,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_CREDENTIAL_MISSING);
         }
         Optional<AppUser> appUser = this.getAppUser(payload.getSessionUser().getUsername());
-        Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getCredentialId(), appUser.get(), APPLICATION_STATUS.ACTIVE);
+        Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getCredentialId(), appUser.get(), APPLICATION_STATUS.DELETE);
         if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
@@ -131,7 +131,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_CREDENTIAL_MISSING);
         }
         Optional<AppUser> appUser = this.getAppUser(payload.getSessionUser().getUsername());
-        Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getCredentialId(), appUser.get(), APPLICATION_STATUS.ACTIVE);
+        Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getCredentialId(), appUser.get(), APPLICATION_STATUS.DELETE);
         if (credential.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.CREDENTIAL_NOT_FOUND);
         }
@@ -609,7 +609,10 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         if (payload instanceof EventBridgeRequest) {
             EventBridgeRequest eventBridgeRequest = (EventBridgeRequest) payload;
             sessionUser = eventBridgeRequest.getSessionUser();
-        }else {
+        } else if (payload instanceof LinkEBURequest) {
+            LinkEBURequest linkEBURequest = (LinkEBURequest) payload;
+            sessionUser = linkEBURequest.getSessionUser();
+        } else {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.INVALID_PAYLOAD_TYPE);
         }
         // Ensure sessionUser is not null
