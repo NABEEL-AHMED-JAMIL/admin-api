@@ -992,7 +992,7 @@ public interface RootService {
      * */
     public default RefreshTokenResponse getRefreshTokenResponse(RefreshToken refreshToken) {
         RefreshTokenResponse refreshTokenResponse = new RefreshTokenResponse();
-        refreshTokenResponse.setId(refreshToken.getId());
+        refreshTokenResponse.setUuid(refreshToken.getUuid());
         refreshTokenResponse.setToken(refreshToken.getToken());
         refreshTokenResponse.setExpiryDate(refreshToken.getExpiryDate());
         refreshTokenResponse.setIpAddress(refreshToken.getIpAddress());

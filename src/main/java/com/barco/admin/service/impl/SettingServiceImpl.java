@@ -67,23 +67,36 @@ public class SettingServiceImpl implements SettingService {
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getUsername(), APPLICATION_STATUS.ACTIVE);
         Map<String, Object> settingDashboard = new HashMap<>();
         // APP_SETTING_STATISTICS
+        QueryResponse queryResponse = (QueryResponse) BarcoUtil.NULL;
         String APP_SETTING_STATISTICS = "APP_SETTING_STATISTICS";
-        settingDashboard.put(APP_SETTING_STATISTICS, this.queryService.executeQueryResponse(String.format(QueryService.APP_SETTING_STATISTICS, appUser.get().getId())));
+        queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.APP_SETTING_STATISTICS, appUser.get().getId()));
+        queryResponse.setQuery((String) BarcoUtil.NULL);
+        settingDashboard.put(APP_SETTING_STATISTICS, queryResponse);
         // PROFILE_SETTING_STATISTICS
         String PROFILE_SETTING_STATISTICS = "PROFILE_SETTING_STATISTICS";
-        settingDashboard.put(PROFILE_SETTING_STATISTICS, this.queryService.executeQueryResponse(String.format(QueryService.PROFILE_SETTING_STATISTICS, appUser.get().getId())));
+        queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.PROFILE_SETTING_STATISTICS, appUser.get().getId()));
+        queryResponse.setQuery((String) BarcoUtil.NULL);
+        settingDashboard.put(PROFILE_SETTING_STATISTICS, queryResponse);
         // FORM_SETTING_STATISTICS
         String FORM_SETTING_STATISTICS = "FORM_SETTING_STATISTICS";
-        settingDashboard.put(FORM_SETTING_STATISTICS, this.queryService.executeQueryResponse(String.format(QueryService.FORM_SETTING_STATISTICS, appUser.get().getId())));
+        queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FORM_SETTING_STATISTICS, appUser.get().getId()));
+        queryResponse.setQuery((String) BarcoUtil.NULL);
+        settingDashboard.put(FORM_SETTING_STATISTICS, queryResponse);
         // DASHBOARD_AND_REPORT_SETTING_STATISTICS
         String DASHBOARD_AND_REPORT_SETTING_STATISTICS = "DASHBOARD_AND_REPORT_SETTING_STATISTICS";
-        settingDashboard.put(DASHBOARD_AND_REPORT_SETTING_STATISTICS, this.queryService.executeQueryResponse(String.format(QueryService.DASHBOARD_AND_REPORT_SETTING_STATISTICS, appUser.get().getId())));
+        queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.DASHBOARD_AND_REPORT_SETTING_STATISTICS, appUser.get().getId()));
+        queryResponse.setQuery((String) BarcoUtil.NULL);
+        settingDashboard.put(DASHBOARD_AND_REPORT_SETTING_STATISTICS, queryResponse);
         // SERVICE_SETTING_STATISTICS
         String SERVICE_SETTING_STATISTICS = "SERVICE_SETTING_STATISTICS";
-        settingDashboard.put(SERVICE_SETTING_STATISTICS, this.queryService.executeQueryResponse(String.format(QueryService.SERVICE_SETTING_STATISTICS, appUser.get().getId())));
+        queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.SERVICE_SETTING_STATISTICS, appUser.get().getId()));
+        queryResponse.setQuery((String) BarcoUtil.NULL);
+        settingDashboard.put(SERVICE_SETTING_STATISTICS, queryResponse);
         // SESSION_COUNT_STATISTICS
         String SESSION_COUNT_STATISTICS = "SESSION_COUNT_STATISTICS";
-        settingDashboard.put(SESSION_COUNT_STATISTICS, this.queryService.executeQueryResponse(String.format(QueryService.SESSION_COUNT_STATISTICS, appUser.get().getId())));
+        queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.SESSION_COUNT_STATISTICS, appUser.get().getId()));
+        queryResponse.setQuery((String) BarcoUtil.NULL);
+        settingDashboard.put(SESSION_COUNT_STATISTICS, queryResponse);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, settingDashboard);
     }
 

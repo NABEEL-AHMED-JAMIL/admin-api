@@ -10,6 +10,7 @@ import com.barco.admin.service.RefreshTokenService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.model.dto.request.TokenRefreshRequest;
 import com.barco.model.dto.response.AppResponse;
+import com.barco.model.dto.response.QueryResponse;
 import com.barco.model.dto.response.RefreshTokenResponse;
 import com.barco.model.pojo.AppUser;
 import com.barco.model.pojo.RefreshToken;
@@ -51,8 +52,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     public AppResponse fetchSessionStatistics() throws Exception {
         logger.info("Request fetchSessionStatistics");
-        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.queryService.executeQueryResponse(QueryService.SESSION_STATISTICS));
+        QueryResponse queryResponse = this.queryService.executeQueryResponse(QueryService.SESSION_STATISTICS);
+        queryResponse.setQuery((String) BarcoUtil.NULL);
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, queryResponse);
     }
 
     /**
@@ -95,7 +97,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         refreshToken.setIpAddress(ip);
         refreshToken.setToken(UUID.randomUUID().toString());
         refreshToken.setStatus(APPLICATION_STATUS.ACTIVE);
-        AppUser appUser = this.appUserRepository.findById(appUserId).orElseThrow(() -> new NullPointerException(MessageUtil.APPUSER_NOT_FOUND));
+        AppUser appUser = this.appUserRepository.findById(appUserId)
+            .orElseThrow(() -> new NullPointerException(MessageUtil.APPUSER_NOT_FOUND));
         refreshToken.setExpiryDate(Instant.now().plusMillis(this.refreshTokenDurationMs));
         refreshToken.setCreatedBy(appUser);
         refreshToken.setUpdatedBy(appUser);
@@ -142,13 +145,14 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     public AppResponse deleteAllRefreshToken(TokenRefreshRequest payload) throws Exception {
         logger.info("Request deleteAllRefreshToken :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getIds())) {
+        if (BarcoUtil.isNull(payload.getUuids())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.REFRESH_TOKEN_IDS_MISSING);
         }
-        for (RefreshToken refreshToken : this.appTokenRepository.findAllById(payload.getIds())) {
+        this.appTokenRepository.findAllByUuidInAndStatusNot(payload.getUuids(), APPLICATION_STATUS.DELETE)
+        .forEach(refreshToken -> {
             refreshToken.setStatus(APPLICATION_STATUS.DELETE);
             this.appTokenRepository.save(refreshToken);
-        }
+        });
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.REFRESH_TOKEN_DELETED, payload);
     }
 }
