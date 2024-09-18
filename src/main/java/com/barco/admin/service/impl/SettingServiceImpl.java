@@ -67,7 +67,7 @@ public class SettingServiceImpl implements SettingService {
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getUsername(), APPLICATION_STATUS.ACTIVE);
         Map<String, Object> settingDashboard = new HashMap<>();
         // APP_SETTING_STATISTICS
-        QueryResponse queryResponse = (QueryResponse) BarcoUtil.NULL;
+        QueryResponse queryResponse;
         String APP_SETTING_STATISTICS = "APP_SETTING_STATISTICS";
         queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.APP_SETTING_STATISTICS, appUser.get().getId()));
         queryResponse.setQuery((String) BarcoUtil.NULL);

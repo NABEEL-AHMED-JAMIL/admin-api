@@ -348,11 +348,11 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         }
         Optional<AppUserEventBridge> linkEventBridge = this.appUserEventBridgeRepository.findByTokenId(payload.getTokenId());
         if (linkEventBridge.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_GEN_TOKEN);
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_WITH_GEN_TOKEN, payload.getTokenId()));
         }
         EventBridge eventBridge = linkEventBridge.get().getEventBridge();
         if (BarcoUtil.isNull(eventBridge.getCredential())) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID, payload.getId()), payload);
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.EVENT_BRIDGE_NOT_FOUND_LINK_CREDENTIAL_WITH_ID, eventBridge.getUuid()), payload);
         }
         return this.generateTokenForEventBridge(linkEventBridge.get(), eventBridge, payload);
     }
@@ -524,7 +524,7 @@ public class EventBridgeServiceImpl implements EventBridgeService {
         this.appUserEventBridgeRepository.save(linkEventBridge);
         payload.setAccessToken(linkEventBridge.getAccessToken());
         payload.setExpireTime(linkEventBridge.getExpireTime());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, ""), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getTokenId()), payload);
     }
 
     /**

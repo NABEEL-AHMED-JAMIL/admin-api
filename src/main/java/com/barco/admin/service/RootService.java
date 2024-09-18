@@ -1,18 +1,12 @@
 package com.barco.admin.service;
 
 import com.barco.admin.service.impl.QueryService;
-import com.barco.common.emailer.EmailMessageRequest;
-import com.barco.common.emailer.EmailMessagesFactory;
-import com.barco.common.emailer.EmailUtil;
-import com.barco.common.security.JwtUtils;
 import com.barco.common.utility.BarcoUtil;
-import com.barco.common.utility.ExceptionUtil;
 import com.barco.common.utility.excel.BulkExcel;
 import com.barco.common.utility.excel.SheetFiled;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.*;
 import com.barco.model.pojo.*;
-import com.barco.model.repository.TemplateRegRepository;
 import com.barco.model.util.MessageUtil;
 import com.barco.model.util.ModelUtil;
 import com.barco.model.util.lookup.*;
@@ -31,8 +25,6 @@ import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
-import static com.barco.model.util.lookup.EMAIL_TEMPLATE.*;
-import static com.barco.model.util.lookup.EMAIL_TEMPLATE.REGISTER_USER;
 
 /**
  * Api use to perform crud operation on root user
@@ -297,67 +289,6 @@ public interface RootService {
     }
 
     /**
-     * getAppUserDetail method use to convert entity to dto
-     * @param appUser
-     * */
-    public default AppUserResponse getAppUserDetail(AppUser appUser) {
-        AppUserResponse appUserResponse = new AppUserResponse();
-        appUserResponse.setId(appUser.getId());
-        appUserResponse.setFirstName(appUser.getFirstName());
-        appUserResponse.setLastName(appUser.getLastName());
-        appUserResponse.setEmail(appUser.getEmail());
-        appUserResponse.setUsername(appUser.getUsername());
-        appUserResponse.setProfileImg(appUser.getImg());
-        appUserResponse.setIpAddress(appUser.getIpAddress());
-        appUserResponse.setOrgAccount(appUser.getOrgAccount());
-        appUserResponse.setDateCreated(appUser.getDateCreated());
-        appUserResponse.setDateUpdated(appUser.getDateUpdated());
-        appUserResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(appUser.getStatus().getLookupType()));
-        appUserResponse.setRoles(appUser.getAppUserRoles().stream().map(Role::getName).collect(Collectors.toList()));
-        if (!BarcoUtil.isNull(appUser.getProfile())) {
-            appUserResponse.setProfile(this.getProfilePermissionResponse(appUser.getProfile()));
-        }
-        return appUserResponse;
-    }
-
-    /**
-     * Method use to get the organization response
-     * @param organization
-     * @return OrganizationResponse
-     * */
-    public default OrganizationResponse getOrganizationResponse(Organization organization) {
-        OrganizationResponse organizationResponse = new OrganizationResponse();
-        organizationResponse.setUuid(organization.getUuid());
-        organizationResponse.setName(organization.getName());
-        organizationResponse.setPhone(organization.getPhone());
-        organizationResponse.setAddress(organization.getAddress());
-        organizationResponse.setCountry(new ETLCountryResponse(organization.getCountry().getCountryCode(),
-            organization.getCountry().getCountryName(), organization.getCountry().getCode()));
-        organizationResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(organization.getStatus().getLookupType()));
-        organizationResponse.setCreatedBy(getActionUser(organization.getCreatedBy()));
-        organizationResponse.setUpdatedBy(getActionUser(organization.getUpdatedBy()));
-        organizationResponse.setDateUpdated(organization.getDateUpdated());
-        organizationResponse.setDateCreated(organization.getDateCreated());
-        return organizationResponse;
-    }
-
-    /**
-     * getRoleResponse method use to convert entity to dto
-     * @param profile
-     * */
-    public default ProfileResponse getProfilePermissionResponse(Profile profile) {
-        ProfileResponse profilePermission = new ProfileResponse();
-        profilePermission.setUuid(profile.getUuid());
-        profilePermission.setProfileName(profile.getProfileName());
-        profilePermission.setDescription(profile.getDescription());
-        profilePermission.setPermission(profile.getProfilePermissions().stream()
-            .filter(permissionOption -> permissionOption.getStatus().equals(APPLICATION_STATUS.ACTIVE))
-            .map(permission -> permission.getPermission().getPermissionName())
-            .collect(Collectors.toList()));
-        return profilePermission;
-    }
-
-    /**
      * Method use to get the action user as response
      * @param appUser
      * */
@@ -404,248 +335,6 @@ public interface RootService {
     }
 
     /**
-     * sendRegisterUser method use on user register.
-     * @param appUser
-     * @param lookupDataCacheService
-     * @param templateRegRepository
-     * @param emailMessagesFactory
-     * */
-    public default boolean sendRegisterUserEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
-        TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
-        try {
-            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(REGISTER_USER.name(), APPLICATION_STATUS.ACTIVE);
-            if (templateReg.isEmpty()) {
-                logger.error("No Template Found With {}.", REGISTER_USER.name());
-                return false;
-            }
-            Map<String, Object> metaData = new HashMap<>();
-            metaData.put(EmailUtil.USERNAME, appUser.getUsername());
-            metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream().map(Role::getName).collect(Collectors.joining(",")));
-            metaData.put(EmailUtil.PROFILE, appUser.getProfile().getProfileName());
-            // email send request
-            EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
-            emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
-            emailMessageRequest.setRecipients(appUser.getEmail());
-            emailMessageRequest.setSubject(EmailUtil.USER_REGISTERED);
-            emailMessageRequest.setBodyMap(metaData);
-            emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
-            logger.info("Email Send Status :- {}.", emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
-            return true;
-        } catch (Exception ex) {
-            logger.error("Exception :- {}.",ExceptionUtil.getRootCauseMessage(ex));
-            return false;
-        }
-    }
-
-    /**
-     * sendRegisterUser method use on user register.
-     * @param appUser
-     * @param lookupDataCacheService
-     * @param templateRegRepository
-     * @param emailMessagesFactory
-     * */
-    public default boolean sendRegisterOrgAccountUserEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
-         TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
-        try {
-            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(REGISTER_USER.name(), APPLICATION_STATUS.ACTIVE);
-            if (templateReg.isEmpty()) {
-                logger.error("No Template Found With {}.", REGISTER_USER.name());
-                return false;
-            }
-            Map<String, Object> metaData = new HashMap<>();
-            metaData.put(EmailUtil.USERNAME, appUser.getUsername());
-            metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream().map(Role::getName).collect(Collectors.joining(",")));
-            metaData.put(EmailUtil.PROFILE, appUser.getProfile().getProfileName());
-            metaData.put(EmailUtil.ORG_NAME, appUser.getOrganization().getName());
-            metaData.put(EmailUtil.ORG_ADDRESS, appUser.getOrganization().getAddress().concat(",").concat(appUser.getOrganization().getCountry().getCountryName()));
-            // email send request
-            EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
-            emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
-            emailMessageRequest.setRecipients(appUser.getEmail());
-            emailMessageRequest.setSubject(EmailUtil.ORG_ACCOUNT_REGISTERED);
-            emailMessageRequest.setBodyMap(metaData);
-            emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
-            logger.info("Email Send Status :- {}.", emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
-            return true;
-        } catch (Exception ex) {
-            logger.error("Exception :- {}.",ExceptionUtil.getRootCauseMessage(ex));
-            return false;
-        }
-    }
-
-    /**
-     * sendRegisterUser method use on user register.
-     * @param appUser
-     * @param lookupDataCacheService
-     * @param templateRegRepository
-     * @param emailMessagesFactory
-     * */
-    public default boolean sendEnabledDisabledRegisterUserEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
-        TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
-        try {
-            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg;
-            if (appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE)) {
-                templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(ACTIVE_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
-            } else {
-                templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(BLOCK_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
-            }
-            if (templateReg.isEmpty()) {
-                logger.error("No Template Found With {}.", (appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE) ? ACTIVE_USER_ACCOUNT.name() : BLOCK_USER_ACCOUNT.name()));
-                return false;
-            }
-            Map<String, Object> metaData = new HashMap<>();
-            metaData.put(EmailUtil.USERNAME, appUser.getUsername());
-            metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.ROLE, appUser.getAppUserRoles().stream().map(Role::getName).collect(Collectors.joining(",")));
-            metaData.put(EmailUtil.PROFILE, appUser.getProfile().getProfileName());
-            // email send request
-            EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
-            emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
-            emailMessageRequest.setRecipients(appUser.getEmail());
-            emailMessageRequest.setSubject(appUser.getStatus().equals(APPLICATION_STATUS.ACTIVE) ? EmailUtil.YOUR_ACCOUNT_IS_NOW_ACTIVE : EmailUtil.YOUR_ACCOUNT_HAS_BEEN_BLOCKED);
-            emailMessageRequest.setBodyMap(metaData);
-            emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
-            logger.info("Email Send Status :- {}.", emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
-            return true;
-        } catch (Exception ex) {
-            logger.error("Exception :- {}.", ExceptionUtil.getRootCauseMessage(ex));
-            return false;
-        }
-    }
-
-    /**
-     * sendRegisterUser method use on user register.
-     *
-     * @param appUser
-     * @param lookupDataCacheService
-     * @param templateRegRepository
-     * @param emailMessagesFactory
-     */
-    public default void sendForgotPasswordEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
-        TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory, JwtUtils jwtUtils) {
-        try {
-            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
-            LookupDataResponse forgotPasswordUrl = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.RESET_PASSWORD_LINK);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(FORGOT_USER_PASSWORD.name(), APPLICATION_STATUS.ACTIVE);
-            if (templateReg.isEmpty()) {
-                logger.error("No Template Found With {}.", FORGOT_USER_PASSWORD.name());
-                return;
-            }
-            // forgot password
-            ForgotPasswordRequest forgotPasswordRequest = new ForgotPasswordRequest();
-            forgotPasswordRequest.setUuid(appUser.getUuid());
-            forgotPasswordRequest.setEmail(appUser.getEmail());
-            forgotPasswordRequest.setUsername(appUser.getUsername());
-            // meta data
-            Map<String, Object> metaData = new HashMap<>();
-            metaData.put(EmailUtil.USERNAME, appUser.getUsername());
-            metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            metaData.put(EmailUtil.FORGOT_PASSWORD_URL, forgotPasswordUrl.getLookupValue().concat("?token=")
-                .concat(jwtUtils.generateTokenFromUsernameResetPassword(forgotPasswordRequest.toString())));
-            // email send request
-            EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
-            emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
-            emailMessageRequest.setRecipients(appUser.getEmail());
-            emailMessageRequest.setSubject(EmailUtil.FORGOT_PASSWORD);
-            emailMessageRequest.setBodyMap(metaData);
-            emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
-            logger.info("Email Send Status :- {}.", emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
-        } catch (Exception ex) {
-            logger.error("Exception :- {}.", ExceptionUtil.getRootCauseMessage(ex));
-        }
-    }
-
-    /**
-     * sendResetPassword method use to send reset confirm email
-     *
-     * @param appUser
-     * @param lookupDataCacheService
-     * @param templateRegRepository
-     * @param emailMessagesFactory
-     */
-    public default void sendResetPasswordEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
-       TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
-        try {
-            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(RESET_USER_PASSWORD.name(), APPLICATION_STATUS.ACTIVE);
-            if (templateReg.isEmpty()) {
-                logger.info("No Template Found With {}.", RESET_USER_PASSWORD.name());
-                return;
-            }
-            Map<String, Object> metaData = new HashMap<>();
-            metaData.put(EmailUtil.USERNAME, appUser.getUsername());
-            metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            // email send request
-            EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
-            emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
-            emailMessageRequest.setRecipients(appUser.getEmail());
-            emailMessageRequest.setSubject(EmailUtil.PASSWORD_UPDATED);
-            emailMessageRequest.setBodyMap(metaData);
-            emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
-            logger.info("Email Send Status :- {}.", emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
-        } catch (Exception ex) {
-            logger.error("Exception :- {}.",ExceptionUtil.getRootCauseMessage(ex));
-        }
-    }
-
-
-    /**
-     * send close user account email
-     *
-     * @param appUser
-     * @param lookupDataCacheService
-     * @param templateRegRepository
-     * @param emailMessagesFactory
-     */
-    public default void sendCloseUserAccountEmail(AppUser appUser, LookupDataCacheService lookupDataCacheService,
-        TemplateRegRepository templateRegRepository, EmailMessagesFactory emailMessagesFactory) {
-        try {
-            LookupDataResponse senderEmail = lookupDataCacheService.getParentLookupDataByParentLookupType(LookupUtil.NON_REPLY_EMAIL_SENDER);
-            Optional<TemplateReg> templateReg = templateRegRepository.findFirstByTemplateNameAndStatus(DELETE_USER_ACCOUNT.name(), APPLICATION_STATUS.ACTIVE);
-            if (templateReg.isEmpty()) {
-                logger.info("No Template Found With {}.", RESET_USER_PASSWORD.name());
-                return;
-            }
-            Map<String, Object> metaData = new HashMap<>();
-            metaData.put(EmailUtil.USERNAME, appUser.getUsername());
-            metaData.put(EmailUtil.FULL_NAME, appUser.getFirstName().concat(" ").concat(appUser.getLastName()));
-            // email send request
-            EmailMessageRequest emailMessageRequest = new EmailMessageRequest();
-            emailMessageRequest.setFromEmail(senderEmail.getLookupValue());
-            emailMessageRequest.setRecipients(appUser.getEmail());
-            emailMessageRequest.setSubject(EmailUtil.PASSWORD_UPDATED);
-            emailMessageRequest.setBodyMap(metaData);
-            emailMessageRequest.setBodyPayload(templateReg.get().getTemplateContent());
-            logger.info("Email Send Status :- " + emailMessagesFactory.sendSimpleMailAsync(emailMessageRequest));
-        } catch (Exception ex) {
-            logger.error("Exception :- " + ExceptionUtil.getRootCauseMessage(ex));
-        }
-    }
-
-    /***
-     * Method use to get the env variable
-     * @param envVariables
-     * @return EnVariablesResponse
-     * */
-    public default EnVariablesResponse getEnVariablesResponse(EnvVariables envVariables) {
-        EnVariablesResponse enVariablesResponse = new EnVariablesResponse();
-        enVariablesResponse.setId(envVariables.getId());
-        enVariablesResponse.setEnvKey(envVariables.getEnvKey());
-        enVariablesResponse.setDescription(envVariables.getDescription());
-        enVariablesResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(envVariables.getStatus().getLookupType()));
-        enVariablesResponse.setCreatedBy(getActionUser(envVariables.getCreatedBy()));
-        enVariablesResponse.setUpdatedBy(getActionUser(envVariables.getUpdatedBy()));
-        enVariablesResponse.setDateUpdated(envVariables.getDateUpdated());
-        enVariablesResponse.setDateCreated(envVariables.getDateCreated());
-        return enVariablesResponse;
-    }
-
-    /**
      * Method use to send notification
      * @param title
      * @param message
@@ -669,6 +358,24 @@ public interface RootService {
     public default GLookup getDBLoopUp(Optional<LookupData> lookupData) {
         return lookupData.map(data -> new GLookup(data.getLookupType(), data.getLookupCode(), data.getLookupValue()))
             .orElseGet(() -> (GLookup) BarcoUtil.NULL);
+    }
+
+    /***
+     * Method use to get the env variable
+     * @param envVariables
+     * @return EnVariablesResponse
+     * */
+    public default EnVariablesResponse getEnVariablesResponse(EnvVariables envVariables) {
+        EnVariablesResponse enVariablesResponse = new EnVariablesResponse();
+        enVariablesResponse.setUuid(envVariables.getUuid());
+        enVariablesResponse.setEnvKey(envVariables.getEnvKey());
+        enVariablesResponse.setDescription(envVariables.getDescription());
+        enVariablesResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(envVariables.getStatus().getLookupType()));
+        enVariablesResponse.setCreatedBy(getActionUser(envVariables.getCreatedBy()));
+        enVariablesResponse.setUpdatedBy(getActionUser(envVariables.getUpdatedBy()));
+        enVariablesResponse.setDateUpdated(envVariables.getDateUpdated());
+        enVariablesResponse.setDateCreated(envVariables.getDateCreated());
+        return enVariablesResponse;
     }
 
     /**
@@ -710,64 +417,6 @@ public interface RootService {
     }
 
     /**
-     * Method use to add the link detail
-     * @param superAdmin
-     * @param role
-     * @param appUser
-     * @return AppUserRoleAccess
-     * */
-    public default AppUserRoleAccess getAppUserRoleAccess(AppUser superAdmin, Role role, AppUser appUser) {
-        AppUserRoleAccess appUserRoleAccess = new AppUserRoleAccess();
-        appUserRoleAccess.setCreatedBy(superAdmin);
-        appUserRoleAccess.setUpdatedBy(superAdmin);
-        appUserRoleAccess.setRole(role);
-        appUserRoleAccess.setAppUser(appUser);
-        appUserRoleAccess.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (role.getStatus().equals(APPLICATION_STATUS.INACTIVE) || appUser.getStatus().equals(APPLICATION_STATUS.INACTIVE)) {
-            appUserRoleAccess.setStatus(APPLICATION_STATUS.INACTIVE);
-        }
-        return appUserRoleAccess;
-    }
-
-    /**
-     * Method use to add the link detail
-     * @param superAdmin
-     * @param profile
-     * @param appUser
-     * @return AppUserRoleAccess
-     * */
-    public default AppUserProfileAccess getAppUserProfileAccess(AppUser superAdmin, Profile profile, AppUser appUser) {
-        AppUserProfileAccess appUserRoleAccess = new AppUserProfileAccess();
-        appUserRoleAccess.setCreatedBy(superAdmin);
-        appUserRoleAccess.setUpdatedBy(superAdmin);
-        appUserRoleAccess.setProfile(profile);
-        appUserRoleAccess.setAppUser(appUser);
-        appUserRoleAccess.setStatus(APPLICATION_STATUS.ACTIVE);
-        if (profile.getStatus().equals(APPLICATION_STATUS.INACTIVE) || appUser.getStatus().equals(APPLICATION_STATUS.INACTIVE)) {
-            appUserRoleAccess.setStatus(APPLICATION_STATUS.INACTIVE);
-        }
-        return appUserRoleAccess;
-    }
-
-    /**
-     * Method use to convert the role to role response
-     * @param role
-     * @return RoleResponse
-     * */
-    public default RoleResponse gateRoleResponse(Role role) {
-        RoleResponse roleResponse = new RoleResponse();
-        roleResponse.setId(role.getId());
-        roleResponse.setName(role.getName());
-        roleResponse.setDescription(role.getDescription());
-        roleResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(role.getStatus().getLookupType()));
-        roleResponse.setCreatedBy(getActionUser(role.getCreatedBy()));
-        roleResponse.setUpdatedBy(getActionUser(role.getUpdatedBy()));
-        roleResponse.setDateUpdated(role.getDateUpdated());
-        roleResponse.setDateCreated(role.getDateCreated());
-        return roleResponse;
-    }
-
-    /**
      * Method use to convert source kafka task type to kafka task type resposne
      * @param kafkaTaskType
      * @return kafkaTaskTypeResponse
@@ -794,42 +443,6 @@ public interface RootService {
         apiTaskTypeResponse.setHttpMethod(GLookup.getGLookup(lookupDataCacheService.getChildLookupDataByParentLookupTypeAndChildLookupCode(
             REQUEST_METHOD.getName(), Long.valueOf(apiTaskType.getHttpMethod().ordinal()))));
         return apiTaskTypeResponse;
-    }
-
-    /**
-     * Method use to convert pojo to dto as response
-     * @param profile
-     * @return ProfileResponse
-     * */
-    public default ProfileResponse gateProfileResponse(Profile profile) {
-        ProfileResponse profileResponse = new ProfileResponse();
-        profileResponse.setId(profile.getId());
-        profileResponse.setProfileName(profile.getProfileName());
-        profileResponse.setDescription(profile.getDescription());
-        profileResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(profile.getStatus().getLookupType()));
-        profileResponse.setCreatedBy(getActionUser(profile.getCreatedBy()));
-        profileResponse.setUpdatedBy(getActionUser(profile.getUpdatedBy()));
-        profileResponse.setDateUpdated(profile.getDateUpdated());
-        profileResponse.setDateCreated(profile.getDateCreated());
-        return profileResponse;
-    }
-
-    /**
-     * Method use to convert pojo to deto as response
-     * @param permission
-     * @return ProfileResponse
-     * */
-    public default PermissionResponse gatePermissionResponse(Permission permission) {
-        PermissionResponse permissionResponse = new PermissionResponse();
-        permissionResponse.setId(permission.getId());
-        permissionResponse.setPermissionName(permission.getPermissionName());
-        permissionResponse.setDescription(permission.getDescription());
-        permissionResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(permission.getStatus().getLookupType()));
-        permissionResponse.setCreatedBy(getActionUser(permission.getCreatedBy()));
-        permissionResponse.setUpdatedBy(getActionUser(permission.getUpdatedBy()));
-        permissionResponse.setDateUpdated(permission.getDateUpdated());
-        permissionResponse.setDateCreated(permission.getDateCreated());
-        return permissionResponse;
     }
 
     /**
@@ -867,70 +480,6 @@ public interface RootService {
             lookupDataResponse.setDateCreated(lookupData.getDateCreated());
         }
         return lookupDataResponse;
-    }
-
-    /**
-     * Method use to enabled or disabled the profile permissions accesses
-     * @param appUser
-     * @param adminUser
-     * */
-    public default void enabledDisabledProfilePermissionsAccesses(AppUser appUser, AppUser adminUser) {
-        if (!BarcoUtil.isNull(appUser.getProfilePermissionsAccesses()) && !appUser.getProfilePermissionsAccesses().isEmpty()) {
-            appUser.getProfilePermissionsAccesses().stream()
-            .map(profileAccess -> {
-                profileAccess.setStatus(appUser.getStatus());
-                profileAccess.setUpdatedBy(adminUser);
-                return profileAccess;
-            });
-        }
-    }
-
-    /**
-     * Method use to enabled or disabled the app user role accesses
-     * @param appUser
-     * @param adminUser
-     * */
-    public default void enabledDisabledAppUserRoleAccesses(AppUser appUser, AppUser adminUser) {
-        if (!BarcoUtil.isNull(appUser.getAppUserRoleAccesses()) && !appUser.getAppUserRoleAccesses().isEmpty()) {
-            appUser.getAppUserRoleAccesses().stream()
-            .map(appUserRoleAccess -> {
-                appUserRoleAccess.setStatus(appUser.getStatus());
-                appUserRoleAccess.setUpdatedBy(adminUser);
-                return appUserRoleAccess;
-            });
-        }
-    }
-
-    /**
-     * Method use to enabled and disabled the app user envs
-     * @param appUser
-     * @param adminUser
-     * */
-    public default void enabledDisabledAppUserEnvs(AppUser appUser, AppUser adminUser) {
-        if (!BarcoUtil.isNull(appUser.getAppUserEnvs()) && !appUser.getAppUserEnvs().isEmpty()) {
-            appUser.getAppUserEnvs().stream()
-            .map(appUserEnv -> {
-                appUserEnv.setStatus(appUser.getStatus());
-                appUserEnv.setUpdatedBy(adminUser);
-                return appUserEnv;
-            });
-        }
-    }
-
-    /**
-     * Method use to enabled and disabled the app user event bridges
-     * @param appUser
-     * @param adminUser
-     * */
-    public default void enabledDisabledAppUserEventBridges(AppUser appUser, AppUser adminUser) {
-        if (!BarcoUtil.isNull(appUser.getAppUserEventBridges()) && !appUser.getAppUserEventBridges().isEmpty()) {
-            appUser.getAppUserEventBridges().stream()
-            .map(appUserEventBridge -> {
-                appUserEventBridge.setStatus(appUser.getStatus());
-                appUserEventBridge.setUpdatedBy(adminUser);
-                return appUserEventBridge;
-            });
-        }
     }
 
     /***
@@ -983,57 +532,6 @@ public interface RootService {
             appUserEventBridge.setStatus(APPLICATION_STATUS.INACTIVE);
         }
         return appUserEventBridge;
-    }
-
-    /**
-     * Method use to fetch the refresh token resposne
-     * @param refreshToken
-     * @return RefreshTokenResponse
-     * */
-    public default RefreshTokenResponse getRefreshTokenResponse(RefreshToken refreshToken) {
-        RefreshTokenResponse refreshTokenResponse = new RefreshTokenResponse();
-        refreshTokenResponse.setUuid(refreshToken.getUuid());
-        refreshTokenResponse.setToken(refreshToken.getToken());
-        refreshTokenResponse.setExpiryDate(refreshToken.getExpiryDate());
-        refreshTokenResponse.setIpAddress(refreshToken.getIpAddress());
-        refreshTokenResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(refreshToken.getStatus().getLookupType()));
-        refreshTokenResponse.setCreatedBy(getActionUser(refreshToken.getCreatedBy()));
-        refreshTokenResponse.setUpdatedBy(getActionUser(refreshToken.getUpdatedBy()));
-        refreshTokenResponse.setDateUpdated(refreshToken.getDateUpdated());
-        refreshTokenResponse.setDateCreated(refreshToken.getDateCreated());
-        return refreshTokenResponse;
-    }
-
-    /**
-     * Method use to convert object to EnVariablesResponse
-     * @param appUserEnv
-     * @return EnVariablesResponse
-     * */
-    public default EnVariablesResponse getEnVariablesResponse(AppUserEnv appUserEnv) {
-        EnVariablesResponse enVariables = new EnVariablesResponse();
-        enVariables.setId(appUserEnv.getId());
-        enVariables.setEnvKey(appUserEnv.getEnvVariables().getEnvKey());
-        enVariables.setEnvValue(appUserEnv.getEnvValue());
-        enVariables.setDescription(appUserEnv.getEnvVariables().getDescription());
-        return enVariables;
-    }
-
-    /**
-     * Method use to get teh event bridge response
-     * @param appUserEventBridge
-     * @return EventBridgeResponse
-     * */
-    public default EventBridgeResponse getEventBridgeResponse(AppUserEventBridge appUserEventBridge) {
-        EventBridgeResponse eventBridgeResponse = new EventBridgeResponse();
-        eventBridgeResponse.setTokenId(appUserEventBridge.getTokenId());
-        eventBridgeResponse.setAccessToken(appUserEventBridge.getAccessToken());
-        eventBridgeResponse.setExpireTime(appUserEventBridge.getExpireTime());
-        // Event Bridge
-        EventBridge eventBridge = appUserEventBridge.getEventBridge();
-        eventBridgeResponse.setName(eventBridge.getName());
-        eventBridgeResponse.setBridgeUrl(eventBridge.getBridgeUrl());
-        eventBridgeResponse.setDescription(eventBridge.getDescription());
-        return eventBridgeResponse;
     }
 
     /**
