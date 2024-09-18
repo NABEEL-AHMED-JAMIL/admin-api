@@ -101,11 +101,8 @@ public class SourceTaskTypeServiceImpl implements SourceTaskTypeService {
         sourceTaskType.setTaskType(TASK_TYPE.getRequestMethodByValue(payload.getTaskType()));
         // credential
         if (!BarcoUtil.isNull(payload.getCredentialId())) {
-            Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(
-                payload.getCredentialId(), adminUser.get().getUsername(), APPLICATION_STATUS.ACTIVE);
-            if (credential.isPresent()) {
-                sourceTaskType.setCredential(credential.get());
-            }
+            Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getCredentialId(), adminUser.get(), APPLICATION_STATUS.ACTIVE);
+            credential.ifPresent(sourceTaskType::setCredential);
         }
         sourceTaskType.setCreatedBy(adminUser.get());
         sourceTaskType.setUpdatedBy(adminUser.get());
@@ -178,8 +175,7 @@ public class SourceTaskTypeServiceImpl implements SourceTaskTypeService {
         } else if (payload.getTaskType().equals(TASK_TYPE.KAFKA.getLookupCode()) && BarcoUtil.isNull(payload.getKafkaTaskType())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_WITH_KAFKA_TYPE_MISSING);
         }
-        Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(
-            payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
+        Optional<SourceTaskType> sourceTaskType = this.sourceTaskTypeRepository.findByIdAndCreatedByAndStatusNot(payload.getId(), adminUser.get(), APPLICATION_STATUS.DELETE);
         if (!sourceTaskType.isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.SOURCE_TASK_TYPE_NOT_FOUND);
         } else if (!sourceTaskType.get().getTaskType().getLookupCode().equals(payload.getTaskType())) {
@@ -192,11 +188,8 @@ public class SourceTaskTypeServiceImpl implements SourceTaskTypeService {
         }
         // credential
         if (!BarcoUtil.isNull(payload.getCredentialId())) {
-            Optional<Credential> credential = this.credentialRepository.findByIdAndUsernameAndStatus(
-                payload.getCredentialId(), payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-            if (credential.isPresent()) {
-                sourceTaskType.get().setCredential(credential.get());
-            }
+            Optional<Credential> credential = this.credentialRepository.findByIdAndCreatedByAndStatusNot(payload.getCredentialId(), adminUser.get(), APPLICATION_STATUS.ACTIVE);
+            credential.ifPresent(value -> sourceTaskType.get().setCredential(value));
         }
         if (payload.getTaskType().equals(TASK_TYPE.AWS_SQS.getLookupCode()) ||
             payload.getTaskType().equals(TASK_TYPE.API.getLookupCode()) ||

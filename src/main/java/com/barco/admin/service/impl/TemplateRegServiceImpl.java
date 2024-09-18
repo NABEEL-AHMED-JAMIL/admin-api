@@ -70,15 +70,15 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         AppResponse validationResponse = this.validateAddOrUpdatePayload(payload);
         if (!BarcoUtil.isNull(validationResponse)) {
             return validationResponse;
-        } else if (BarcoUtil.isNull(payload.getId())) {
+        } else if (BarcoUtil.isNull(payload.getUuid())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         }
-        Optional<TemplateReg> templateRegOpt = this.templateRegRepository.findById(payload.getId());
+        Optional<TemplateReg> templateRegOpt = this.templateRegRepository.findByUuidAndStatusNot(payload.getUuid(), APPLICATION_STATUS.DELETE);
         if (templateRegOpt.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
         this.templateRegRepository.save(this.updateTemplateRegPayload(templateRegOpt.get(), payload));
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getUuid()), payload);
     }
 
     /**
@@ -90,10 +90,10 @@ public class TemplateRegServiceImpl implements TemplateRegService {
     @Override
     public AppResponse findTemplateRegByTemplateId(TemplateRegRequest payload) throws Exception {
         logger.info("Request findTemplateRegByTemplateId :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getId())) {
+        if (BarcoUtil.isNull(payload.getUuid())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         }
-        return this.templateRegRepository.findById(payload.getId())
+        return this.templateRegRepository.findByUuidAndStatusNot(payload.getUuid(), APPLICATION_STATUS.DELETE)
             .map(reg -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getTemplateRegResponse(reg)))
             .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND));
     }
@@ -108,8 +108,8 @@ public class TemplateRegServiceImpl implements TemplateRegService {
     public AppResponse fetchTemplateReg(TemplateRegRequest payload) throws Exception {
         logger.info("Request fetchTemplateReg :- {}.", payload);
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY,
-            this.templateRegRepository.findAllByOrderByDateCreatedDesc().stream()
-                .map(this::getTemplateRegResponse).collect(Collectors.toList()));
+            this.templateRegRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE)
+                .stream().map(this::getTemplateRegResponse).collect(Collectors.toList()));
     }
 
     /**
@@ -121,15 +121,15 @@ public class TemplateRegServiceImpl implements TemplateRegService {
     @Override
     public AppResponse deleteTemplateReg(TemplateRegRequest payload) throws Exception {
         logger.info("Request deleteTemplateReg :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getId())) {
+        if (BarcoUtil.isNull(payload.getUuid())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ID_MISSING);
         }
-        Optional<TemplateReg> templateReg = this.templateRegRepository.findById(payload.getId());
+        Optional<TemplateReg> templateReg = this.templateRegRepository.findByUuidAndStatusNot(payload.getUuid(), APPLICATION_STATUS.DELETE);
         if (templateReg.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.TEMPLATE_REG_NOT_FOUND);
         }
         this.templateRegRepository.delete(templateReg.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getUuid()), payload);
     }
 
     /**
@@ -142,10 +142,10 @@ public class TemplateRegServiceImpl implements TemplateRegService {
     @Transactional
     public AppResponse deleteAllTemplateReg(TemplateRegRequest payload) throws Exception {
         logger.info("Request deleteAllTemplateReg :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getIds())) {
+        if (BarcoUtil.isNull(payload.getUuids())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
-        this.templateRegRepository.deleteAll(this.templateRegRepository.findAllByIdIn(payload.getIds()));
+        this.templateRegRepository.deleteAll(this.templateRegRepository.findAllByUuidInAndStatusNot(payload.getUuids(), APPLICATION_STATUS.DELETE));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 

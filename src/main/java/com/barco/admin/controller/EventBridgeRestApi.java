@@ -115,7 +115,7 @@ public class EventBridgeRestApi {
     public ResponseEntity<?> fetchEventBridgeByBridgeType(@RequestBody EventBridgeRequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(new SessionUser(userSessionDetail.getUuid(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.eventBridgeService.fetchEventBridgeByBridgeType(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchEventBridgeByBridgeType ", ExceptionUtil.getRootCause(ex));
@@ -168,7 +168,7 @@ public class EventBridgeRestApi {
     public ResponseEntity<?> fetchLinkEventBridgeWitUser(@RequestBody EventBridgeRequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(new SessionUser(userSessionDetail.getUuid(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.eventBridgeService.fetchLinkEventBridgeWitUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchLinkEventBridgeWitUser ", ExceptionUtil.getRootCause(ex));
@@ -187,7 +187,7 @@ public class EventBridgeRestApi {
     public ResponseEntity<?> linkEventBridgeWithUser(@RequestBody LinkEBURequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(new SessionUser(userSessionDetail.getUuid(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.eventBridgeService.linkEventBridgeWithUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkEventBridgeWithUser ", ExceptionUtil.getRootCause(ex));
@@ -206,7 +206,7 @@ public class EventBridgeRestApi {
     public ResponseEntity<?> genEventBridgeToken(@RequestBody LinkEBURequest payload) {
         try {
             UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(new SessionUser(userSessionDetail.getUuid(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
             return new ResponseEntity<>(this.eventBridgeService.genEventBridgeToken(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while genEventBridgeToken ", ExceptionUtil.getRootCause(ex));

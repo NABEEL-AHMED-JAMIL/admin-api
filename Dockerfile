@@ -4,8 +4,8 @@ FROM openjdk:11-jdk-alpine
 LABEL maintainer="nabeel.amd93@gmail.com"
 # Add a volume pointing to /tmp
 VOLUME /tmp
-# Make 9096 available to the world outside this container
-EXPOSE 9096
+# Make 9097 available to the world outside this container
+EXPOSE 9097
 # The application's jar file
 ARG JAR_FILE=/target/admin-api-0.0.1-SNAPSHOT.jar
 # Add the application jar to the container

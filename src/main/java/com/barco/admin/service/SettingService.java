@@ -19,6 +19,8 @@ public interface SettingService extends RootService {
 
     public ByteArrayOutputStream downloadDynamicQueryFile(QueryRequest payload) throws Exception;
 
+    public AppResponse fetchAllQueryInquiryAccessUser() throws Exception;
+
     public AppResponse addQueryInquiry(QueryInquiryRequest payload) throws Exception;
 
     public AppResponse updateQueryInquiry(QueryInquiryRequest payload) throws Exception;
