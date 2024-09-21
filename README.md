@@ -52,7 +52,7 @@ Feel free to reach out if you have any questions or need assistance getting star
 
 🔗 [Model GitHub Repository](https://github.com/NABEEL-AHMED-JAMIL/model)
 🔗 [ETL Source GitHub Repository](https://github.com/NABEEL-AHMED-JAMIL/etl-source)
-🔗 [Common GitHub Repository](https://github.com/NABEEL-AHMED-JAMIL/common)
+🔗 [Common GitHub Repository](https://github.com/NABEEL-AHMED-JAMIL/common
 🔗 [Auth API GitHub Repository](https://github.com/NABEEL-AHMED-JAMIL/auth)
 🔗 [Admin API GitHub Repository](https://github.com/NABEEL-AHMED-JAMIL/admin-api)
 
