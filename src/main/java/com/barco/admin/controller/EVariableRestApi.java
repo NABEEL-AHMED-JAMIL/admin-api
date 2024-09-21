@@ -6,7 +6,6 @@ import com.barco.common.utility.ExceptionUtil;
 import com.barco.common.utility.excel.ExcelUtil;
 import com.barco.model.dto.request.*;
 import com.barco.model.dto.response.AppResponse;
-import com.barco.model.security.UserSessionDetail;
 import com.barco.model.util.MessageUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -17,7 +16,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -33,7 +31,7 @@ import java.util.UUID;
 @RequestMapping(value="/eVariable.json")
 @Api(value = "E-Variable Rest Api",
     description = "E-Variable Service : Service related to the [Environment Variable] for user.")
-public class EVariableRestApi {
+public class EVariableRestApi extends RootRestApi {
 
     private Logger logger = LoggerFactory.getLogger(EVariableRestApi.class);
 
@@ -51,8 +49,7 @@ public class EVariableRestApi {
     @RequestMapping(value="/addEnVariable", method= RequestMethod.POST)
     public ResponseEntity<?> addEnVariable(@RequestBody EnVariablesRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(this.getSessionUser());
             return new ResponseEntity<>(this.eVariableService.addEnVariable(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addEnVariable ", ExceptionUtil.getRootCause(ex));
@@ -71,8 +68,7 @@ public class EVariableRestApi {
     @RequestMapping(value="/updateEnVariable", method= RequestMethod.POST)
     public ResponseEntity<?> updateEnVariable(@RequestBody EnVariablesRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(this.getSessionUser());
             return new ResponseEntity<>(this.eVariableService.updateEnVariable(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateEnVariable ", ExceptionUtil.getRootCause(ex));
@@ -126,8 +122,7 @@ public class EVariableRestApi {
     @RequestMapping(value="/fetchUserEnvByEnvKey", method= RequestMethod.POST)
     public ResponseEntity<?> fetchUserEnvByEnvKey(@RequestBody EnVariablesRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(this.getSessionUser());
             return new ResponseEntity<>(this.eVariableService.fetchUserEnvByEnvKey(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while fetchUserEnvByEnvKey ", ExceptionUtil.getRootCause(ex));
@@ -223,6 +218,7 @@ public class EVariableRestApi {
     @RequestMapping(value = "/uploadEnVariable", method = RequestMethod.POST)
     public ResponseEntity<?> uploadEnVariable(FileUploadRequest payload) {
         try {
+            payload.setData(this.getSessionUser());
             if (!BarcoUtil.isNull(payload.getFile())) {
                 return new ResponseEntity<>(this.eVariableService.uploadEnVariable(payload), HttpStatus.OK);
             }
@@ -260,8 +256,7 @@ public class EVariableRestApi {
     @RequestMapping(value = "/linkEVariableWithUser", method = RequestMethod.POST)
     public ResponseEntity<?> linkEVariableWithUser(@RequestBody LinkEURequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getId(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(this.getSessionUser());
             return new ResponseEntity<>(this.eVariableService.linkEVariableWithUser(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while linkEVariableWithUser ", ExceptionUtil.getRootCause(ex));

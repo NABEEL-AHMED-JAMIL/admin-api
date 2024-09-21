@@ -466,7 +466,7 @@ public interface RootService {
      * @param lookupDataResponse
      * */
     public default LookupDataResponse fillLookupDataResponse(LookupData lookupData, LookupDataResponse lookupDataResponse, Boolean isFull) {
-        lookupDataResponse.setId(lookupData.getId());
+        lookupDataResponse.setUuid(lookupData.getUuid());
         lookupDataResponse.setLookupCode(lookupData.getLookupCode());
         lookupDataResponse.setLookupValue(lookupData.getLookupValue());
         lookupDataResponse.setLookupType(lookupData.getLookupType());
@@ -489,7 +489,7 @@ public interface RootService {
      * */
     public default CredentialResponse getCredentialResponse(Credential credential) {
         CredentialResponse credentialResponse = new CredentialResponse();
-        credentialResponse.setId(credential.getId());
+        credentialResponse.setUuid(credential.getUuid());
         credentialResponse.setName(credential.getName());
         credentialResponse.setStatus(APPLICATION_STATUS.getStatusByLookupType(credential.getStatus().getLookupType()));
         return credentialResponse;

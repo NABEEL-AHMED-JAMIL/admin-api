@@ -16,7 +16,6 @@ import com.barco.common.utility.excel.BulkExcel;
 import com.barco.model.dto.request.QueryRequest;
 import com.barco.model.dto.response.AppResponse;
 import com.barco.model.repository.AppUserRepository;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
@@ -47,8 +46,6 @@ public class SettingServiceImpl implements SettingService {
     private ETLCountryRepository etlCountryRepository;
     @Autowired
     private QueryInquiryRepository queryInquiryRepository;
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     public SettingServiceImpl() {}
 

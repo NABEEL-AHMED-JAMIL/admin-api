@@ -3,10 +3,8 @@ package com.barco.admin.controller;
 import com.barco.admin.service.TemplateRegService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.ExceptionUtil;
-import com.barco.model.dto.request.SessionUser;
 import com.barco.model.dto.request.TemplateRegRequest;
 import com.barco.model.dto.response.AppResponse;
-import com.barco.model.security.UserSessionDetail;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -27,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(value="/templateReg.json")
 @Api(value = "App Rest Api",
     description = "Template Service : Service related to the email template management.")
-public class TemplateRegRestApi {
+public class TemplateRegRestApi extends RootRestApi {
 
     private Logger logger = LoggerFactory.getLogger(TemplateRegRestApi.class);
 
@@ -45,8 +43,7 @@ public class TemplateRegRestApi {
     @RequestMapping(path="/addTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> addTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getUuid(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(this.getSessionUser());
             return new ResponseEntity<>(this.templateRegService.addTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while addTemplateReg ", ExceptionUtil.getRootCause(ex));
@@ -65,8 +62,7 @@ public class TemplateRegRestApi {
     @RequestMapping(path="/updateTemplateReg", method=RequestMethod.POST)
     public ResponseEntity<?> updateTemplateReg(@RequestBody TemplateRegRequest payload) {
         try {
-            UserSessionDetail userSessionDetail = (UserSessionDetail) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            payload.setSessionUser(new SessionUser(userSessionDetail.getUuid(), userSessionDetail.getEmail(), userSessionDetail.getUsername()));
+            payload.setSessionUser(this.getSessionUser());
             return new ResponseEntity<>(this.templateRegService.updateTemplateReg(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while updateTemplateReg ", ExceptionUtil.getRootCause(ex));
