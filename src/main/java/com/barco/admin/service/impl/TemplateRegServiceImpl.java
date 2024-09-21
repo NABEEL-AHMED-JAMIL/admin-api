@@ -1,6 +1,5 @@
 package com.barco.admin.service.impl;
 
-import com.barco.admin.service.LookupDataCacheService;
 import com.barco.admin.service.TemplateRegService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.model.dto.request.TemplateRegRequest;
@@ -32,8 +31,6 @@ public class TemplateRegServiceImpl implements TemplateRegService {
     private AppUserRepository appUserRepository;
     @Autowired
     private TemplateRegRepository templateRegRepository;
-    @Autowired
-    private LookupDataCacheService lookupDataCacheService;
 
     public TemplateRegServiceImpl() {}
 
@@ -55,7 +52,7 @@ public class TemplateRegServiceImpl implements TemplateRegService {
         }
         TemplateReg templateReg = this.createTemplateReg(payload);
         this.templateRegRepository.save(templateReg);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, templateReg.getId()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, templateReg.getUuid()), payload);
     }
 
     /**

@@ -31,8 +31,10 @@ public interface EVariableService extends RootService {
 
     public AppResponse uploadEnVariable(FileUploadRequest payload) throws Exception;
 
+    // need to update fetch by tree user
     public AppResponse fetchLinkEVariableWitUser(LinkEURequest payload) throws Exception;
 
+    // need to update by tree user
     public AppResponse linkEVariableWithUser(LinkEURequest payload) throws Exception;
 
 }

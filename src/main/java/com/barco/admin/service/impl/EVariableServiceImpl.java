@@ -4,6 +4,7 @@ import com.barco.admin.service.EVariableService;
 import com.barco.admin.service.LookupDataCacheService;
 import com.barco.common.utility.BarcoUtil;
 import com.barco.common.utility.excel.BulkExcel;
+import com.barco.common.utility.excel.ExcelUtil;
 import com.barco.common.utility.excel.SheetFiled;
 import com.barco.common.utility.validation.RPPValidation;
 import com.barco.model.dto.request.*;
@@ -83,7 +84,7 @@ public class EVariableServiceImpl implements EVariableService {
         envVariables.setUpdatedBy(adminUser.get());
         envVariables.setStatus(APPLICATION_STATUS.ACTIVE);
         envVariables = this.envVariablesRepository.save(envVariables);
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, envVariables.getId().toString()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, envVariables.getUuid()), payload);
     }
 
     /**
@@ -95,17 +96,17 @@ public class EVariableServiceImpl implements EVariableService {
     @Override
     public AppResponse updateEnVariable(EnVariablesRequest payload) throws Exception {
         logger.info("Request updateEnVariable :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getId())) {
+        if (BarcoUtil.isNull(payload.getUuid())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ENV_KEYID_REQUIRED);
         } else if (BarcoUtil.isNull(payload.getEnvKey())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ENV_ENVKEY_REQUIRED);
         }
-        Optional<EnvVariables> envVariables = this.envVariablesRepository.findById(payload.getId());
+        Optional<EnvVariables> envVariables = this.envVariablesRepository.findByUuid(payload.getUuid());
         if (envVariables.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getId().toString()));
-        } else if (!envVariables.get().getEnvKey().equals(payload.getEnvKey()) && this.envVariablesRepository
-            .findByEnvKeyAndStatusNot(payload.getEnvKey(), APPLICATION_STATUS.DELETE).isPresent()) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ENV_ENVKEY_ALREADY_EXIST, payload);
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getUuid()));
+        } else if (!envVariables.get().getEnvKey().equals(payload.getEnvKey()) &&
+             this.envVariablesRepository.findByEnvKeyAndStatusNot(payload.getEnvKey(), APPLICATION_STATUS.DELETE).isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, MessageUtil.ENV_ENVKEY_ALREADY_EXIST);
         }
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         envVariables.get().setEnvKey(payload.getEnvKey());
@@ -114,14 +115,15 @@ public class EVariableServiceImpl implements EVariableService {
         if (!BarcoUtil.isNull(payload.getStatus())) {
             // if status is in-active & delete then we have filter the role and show only those role in user detail
             envVariables.get().setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-            envVariables.get().getAppUserEnvs().stream().map(appUserEnv -> {
+            envVariables.get().getAppUserEnvs().stream()
+            .map(appUserEnv -> {
                 appUserEnv.setStatus(envVariables.get().getStatus());
                 appUserEnv.setUpdatedBy(adminUser.get());
                 return appUserEnv;
             });
         }
         this.envVariablesRepository.save(envVariables.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getId().toString()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, payload.getUuid()), payload);
     }
 
     /**
@@ -147,12 +149,12 @@ public class EVariableServiceImpl implements EVariableService {
     @Override
     public AppResponse fetchEnVariableById(EnVariablesRequest payload) throws Exception {
         logger.info("Request fetchEnVariableById :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getId())) {
+        if (BarcoUtil.isNull(payload.getUuid())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ENV_KEYID_REQUIRED);
         }
-        return this.envVariablesRepository.findById(payload.getId())
+        return this.envVariablesRepository.findByUuid(payload.getUuid())
             .map(variables -> new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_FETCH_SUCCESSFULLY, this.getEnVariablesResponse(variables)))
-            .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getId().toString())));
+            .orElseGet(() -> new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getUuid())));
     }
 
     /**
@@ -169,7 +171,7 @@ public class EVariableServiceImpl implements EVariableService {
         }
         Optional<EnvVariables> envVariables = this.envVariablesRepository.findByEnvKeyAndStatusNot(payload.getEnvKey(), APPLICATION_STATUS.DELETE);
         if (envVariables.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getId().toString()));
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getEnvKey()));
         }
         Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
         Optional<AppUserEnv> appUserEnv = this.appUserEnvRepository.findAppUserEnvByEnvVariablesAndAppUser(envVariables.get(), appUser.get());
@@ -201,15 +203,15 @@ public class EVariableServiceImpl implements EVariableService {
     @Override
     public AppResponse deleteEnVariableById(EnVariablesRequest payload) throws Exception {
         logger.info("Request deleteEnVariableById :- {}.", payload);
-        if (BarcoUtil.isNull(payload.getId())) {
+        if (BarcoUtil.isNull(payload.getUuid())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ENV_KEYID_REQUIRED);
         }
-        Optional<EnvVariables> envVariables = this.envVariablesRepository.findById(payload.getId());
+        Optional<EnvVariables> envVariables = this.envVariablesRepository.findByUuid(payload.getUuid());
         if (envVariables.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getId().toString()));
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getUuid()));
         }
         this.envVariablesRepository.delete(envVariables.get());
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getId().toString()), payload);
+        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_DELETED, payload.getUuid()), payload);
     }
 
     /**
@@ -221,10 +223,10 @@ public class EVariableServiceImpl implements EVariableService {
     @Override
     public AppResponse deleteAllEnVariable(EnVariablesRequest payload) throws Exception {
         logger.info("Request deleteAllEnVariable :- {}", payload);
-        if (BarcoUtil.isNull(payload.getIds())) {
+        if (BarcoUtil.isNull(payload.getUuids())) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.IDS_MISSING);
         }
-        this.envVariablesRepository.deleteAll(this.envVariablesRepository.findAllByIdIn(payload.getIds()));
+        this.envVariablesRepository.deleteAll(this.envVariablesRepository.findAllByUuidIn(payload.getUuids()));
         return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.DATA_DELETED_ALL, payload);
     }
 
@@ -237,7 +239,7 @@ public class EVariableServiceImpl implements EVariableService {
     public ByteArrayOutputStream downloadEnVariableTemplateFile() throws Exception {
         logger.info("Request downloadEnVariableTemplateFile");
         return downloadTemplateFile(this.tempStoreDirectory, this.bulkExcel,
-            this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.EVARIABLE));
+            this.lookupDataCacheService.getSheetFiledMap().get(ExcelUtil.EVARIABLE));
     }
 
     /**
@@ -249,7 +251,7 @@ public class EVariableServiceImpl implements EVariableService {
     @Override
     public ByteArrayOutputStream downloadEnVariable(EnVariablesRequest payload) throws Exception {
         logger.info("Request downloadEnVariable :- {}.", payload);
-        SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.EVARIABLE);
+        SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(ExcelUtil.EVARIABLE);
         XSSFWorkbook workbook = new XSSFWorkbook();
         this.bulkExcel.setWb(workbook);
         XSSFSheet xssfSheet = workbook.createSheet(sheetFiled.getSheetName());
@@ -257,8 +259,8 @@ public class EVariableServiceImpl implements EVariableService {
         AtomicInteger rowCount = new AtomicInteger();
         this.bulkExcel.fillBulkHeader(rowCount.get(), sheetFiled.getColTitle());
         Iterator<EnvVariables> envVariables;
-        if (!BarcoUtil.isNull(payload.getIds()) && !payload.getIds().isEmpty()) {
-            envVariables = this.envVariablesRepository.findAllByIdInAndStatusNotOrderByDateCreatedDesc(payload.getIds(), APPLICATION_STATUS.DELETE).iterator();
+        if (!BarcoUtil.isNull(payload.getUuids()) && !payload.getUuids().isEmpty()) {
+            envVariables = this.envVariablesRepository.findAllByUuidInAndStatusNotOrderByDateCreatedDesc(payload.getUuids(), APPLICATION_STATUS.DELETE).iterator();
         } else {
             envVariables = this.envVariablesRepository.findAllByStatusNotOrderByDateCreatedDesc(APPLICATION_STATUS.DELETE).iterator();
         }
@@ -281,12 +283,9 @@ public class EVariableServiceImpl implements EVariableService {
     @Override
     public AppResponse uploadEnVariable(FileUploadRequest payload) throws Exception {
         logger.info("Request for bulk uploading file!");
-        LookupDataRequest lookupDataRequest = new Gson().fromJson((String) payload.getData(), LookupDataRequest.class);
-        AppResponse validationResponse = this.validateUsername(lookupDataRequest);
-        if (!BarcoUtil.isNull(validationResponse)) {
-            throw new Exception(MessageUtil.USERNAME_MISSING);
-        } else if (!payload.getFile().getContentType().equalsIgnoreCase(this.bulkExcel.SHEET_TYPE)) {
-            logger.info("File Type " + payload.getFile().getContentType());
+        SessionUser sessionUser = (SessionUser) payload.getData();
+        if (!payload.getFile().getContentType().equalsIgnoreCase(ExcelUtil.SHEET_TYPE)) {
+            logger.info("File Type :- {}.", payload.getFile().getContentType());
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.XLSX_FILE_ONLY);
         }
         // fill the stream with file into work-book
@@ -295,13 +294,13 @@ public class EVariableServiceImpl implements EVariableService {
         if (BarcoUtil.isNull(workbook) || workbook.getNumberOfSheets() == 0) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.YOU_UPLOAD_EMPTY_FILE);
         }
-        SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(this.bulkExcel.EVARIABLE);
+        SheetFiled sheetFiled = this.lookupDataCacheService.getSheetFiledMap().get(ExcelUtil.EVARIABLE);
         XSSFSheet sheet = workbook.getSheet(sheetFiled.getSheetName());
         if (BarcoUtil.isNull(sheet)) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.SHEET_NOT_FOUND, sheetFiled.getSheetName()));
         } else if (sheet.getLastRowNum() < 1) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.YOU_CANT_UPLOAD_EMPTY_FILE);
-        } else if (sheet.getLastRowNum() > Long.valueOf(uploadLimit.getLookupValue())) {
+        } else if (sheet.getLastRowNum() > Long.parseLong(uploadLimit.getLookupValue())) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.FILE_SUPPORT_ROW_AT_TIME, uploadLimit.getLookupValue()));
         }
         List<RPPValidation> rppValidationsList = new ArrayList<>();
@@ -339,7 +338,7 @@ public class EVariableServiceImpl implements EVariableService {
         if (!errors.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.TOTAL_INVALID, errors.size()), errors);
         }
-        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(lookupDataRequest.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        Optional<AppUser> appUser = this.appUserRepository.findByUsernameAndStatus(sessionUser.getUsername(), APPLICATION_STATUS.ACTIVE);
         rppValidationsList.forEach(rppValidation -> {
             EnvVariables envVariable = new EnvVariables();
             envVariable.setEnvKey(rppValidation.getName());
@@ -349,7 +348,7 @@ public class EVariableServiceImpl implements EVariableService {
             envVariable.setStatus(APPLICATION_STATUS.ACTIVE);
             this.envVariablesRepository.save(envVariable);
         });
-        return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_SAVED, ""));
+        return new AppResponse(BarcoUtil.SUCCESS, MessageUtil.FILE_UPLOAD);
     }
 
     /***
@@ -366,10 +365,11 @@ public class EVariableServiceImpl implements EVariableService {
         }
         Optional<EnvVariables> envVariables = this.envVariablesRepository.findById(payload.getEnvId());
         if (envVariables.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getEnvId()), payload);
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getEnvId()));
         }
         QueryResponse queryResponse = this.queryService.executeQueryResponse(String.format(QueryService.FETCH_LINK_ENVIRONMENT_VARIABLE_WITH_USER,
-           envVariables.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(), payload.getStartDate().concat(BarcoUtil.START_DATE), payload.getEndDate().concat(BarcoUtil.END_DATE)));
+           envVariables.get().getId(), APPLICATION_STATUS.DELETE.getLookupCode(),
+           payload.getStartDate().concat(BarcoUtil.START_DATE), payload.getEndDate().concat(BarcoUtil.END_DATE)));
         List<LinkRPUResponse> linkRPUResponses = new ArrayList<>();
         if (!BarcoUtil.isNull(queryResponse.getData())) {
             for (HashMap<String, Object> data : (List<HashMap<String, Object>>) queryResponse.getData()) {
@@ -397,11 +397,11 @@ public class EVariableServiceImpl implements EVariableService {
         }
         Optional<EnvVariables> envVariables = this.envVariablesRepository.findById(payload.getEnvId());
         if (envVariables.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getEnvId()), payload);
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getEnvId()));
         }
         Optional<AppUser> appUser = this.appUserRepository.findById(payload.getAppUserId());
         if (appUser.isEmpty()) {
-            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.APPUSER_NOT_FOUND, payload.getAppUserId()), payload);
+            return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.APPUSER_NOT_FOUND, payload.getAppUserId()));
         }
         if (payload.getLinked()) {
             // add operation de-link
