@@ -192,15 +192,9 @@ public class TemplateRegServiceImpl implements TemplateRegService {
      * @throws Exception
      * */
     private TemplateReg updateTemplateRegPayload(TemplateReg templateReg, TemplateRegRequest payload) throws Exception {
-        if (!BarcoUtil.isNull(payload.getTemplateName())) {
-            templateReg.setTemplateName(payload.getTemplateName());
-        }
-        if (!BarcoUtil.isNull(payload.getDescription())) {
-            templateReg.setDescription(payload.getDescription());
-        }
-        if (!BarcoUtil.isNull(payload.getTemplateContent())) {
-            templateReg.setTemplateContent(payload.getTemplateContent());
-        }
+        templateReg.setTemplateName(payload.getTemplateName());
+        templateReg.setDescription(payload.getDescription());
+        templateReg.setTemplateContent(payload.getTemplateContent());
         if (!BarcoUtil.isNull(payload.getStatus())) {
             templateReg.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
         }

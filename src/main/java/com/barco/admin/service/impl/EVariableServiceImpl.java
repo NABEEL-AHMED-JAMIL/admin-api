@@ -105,7 +105,7 @@ public class EVariableServiceImpl implements EVariableService {
         if (envVariables.isEmpty()) {
             return new AppResponse(BarcoUtil.ERROR, String.format(MessageUtil.ENV_NOT_FOUND_WITH_ID, payload.getUuid()));
         } else if (!envVariables.get().getEnvKey().equals(payload.getEnvKey()) &&
-             this.envVariablesRepository.findByEnvKeyAndStatusNot(payload.getEnvKey(), APPLICATION_STATUS.DELETE).isPresent()) {
+            this.envVariablesRepository.findByEnvKeyAndStatusNot(payload.getEnvKey(), APPLICATION_STATUS.DELETE).isPresent()) {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.ENV_ENVKEY_ALREADY_EXIST);
         }
         Optional<AppUser> adminUser = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
@@ -412,34 +412,6 @@ public class EVariableServiceImpl implements EVariableService {
             this.queryService.deleteQuery(String.format(QueryService.DELETE_APP_USER_ENV_BY_ENV_KEY_ID_AND_APP_USER_ID, envVariables.get().getId(), appUser.get().getId()));
         }
         return new AppResponse(BarcoUtil.SUCCESS, String.format(MessageUtil.DATA_UPDATE, ""), payload);
-    }
-
-    /**
-     * Method used to validate the username.
-     * @param payload
-     * @return AppResponse
-     */
-    private AppResponse validateUsername(Object payload) {
-        SessionUser sessionUser = null;
-        // Check if the payload is an instance of RoleRequest or other types
-        if (payload instanceof LookupDataRequest) {
-            LookupDataRequest lookupDataRequest = (LookupDataRequest) payload;
-            sessionUser = lookupDataRequest.getSessionUser();
-        } else {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.INVALID_PAYLOAD_TYPE);
-        }
-        // Ensure sessionUser is not null
-        if (BarcoUtil.isNull(sessionUser)) {
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.SESSION_USER_MISSING);
-        } else if (BarcoUtil.isNull(sessionUser.getUsername())) {
-            // Check if the username is null or empty
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.USERNAME_MISSING);
-        } else if (this.appUserRepository.findByUsernameAndStatus(sessionUser.getUsername(), APPLICATION_STATUS.ACTIVE).isEmpty()) {
-            // Check if the username exists and has an active status
-            return new AppResponse(BarcoUtil.ERROR, MessageUtil.APPUSER_NOT_FOUND);
-        }
-        // Username is valid
-        return (AppResponse) BarcoUtil.NULL;
     }
 
 }

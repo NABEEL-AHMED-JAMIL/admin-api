@@ -309,52 +309,6 @@ public class SettingServiceImpl implements SettingService {
     }
 
     /**
-     * Method use to create the queryInquiry reg
-     * @param payload
-     * @return QueryInquiry
-     * @throws Exception
-     * */
-    private QueryInquiry createQueryInquiry(QueryInquiryRequest payload) throws Exception {
-        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        QueryInquiry queryInquiry = new QueryInquiry();
-        if (appUserOpt.isPresent()) {
-            AppUser appUser = appUserOpt.get();
-            queryInquiry.setName(payload.getName());
-            queryInquiry.setDescription(payload.getDescription());
-            queryInquiry.setQuery(payload.getQuery());
-            queryInquiry.setCreatedBy(appUser);
-            queryInquiry.setUpdatedBy(appUser);
-            queryInquiry.setStatus(APPLICATION_STATUS.ACTIVE);
-        }
-        return queryInquiry;
-    }
-
-    /**
-     * Method use to update the queryInquiry reg
-     * @param queryInquiry
-     * @param payload
-     * @return QueryInquiry
-     * @throws Exception
-     * */
-    private QueryInquiry updateQueryInquiryPayload(QueryInquiry queryInquiry, QueryInquiryRequest payload) throws Exception {
-        if (!BarcoUtil.isNull(payload.getName())) {
-            queryInquiry.setName(payload.getName());
-        }
-        if (!BarcoUtil.isNull(payload.getDescription())) {
-            queryInquiry.setDescription(payload.getDescription());
-        }
-        if (!BarcoUtil.isNull(payload.getQuery())) {
-            queryInquiry.setQuery(payload.getQuery());
-        }
-        if (!BarcoUtil.isNull(payload.getStatus())) {
-            queryInquiry.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
-        }
-        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
-        appUserOpt.ifPresent(queryInquiry::setUpdatedBy);
-        return queryInquiry;
-    }
-
-    /**
      * Method use to validate the payload
      * @param payload
      * @return AppResponse
@@ -369,6 +323,43 @@ public class SettingServiceImpl implements SettingService {
             return new AppResponse(BarcoUtil.ERROR, MessageUtil.QUERY_INQUIRY_QUERY_MISSING);
         }
         return (AppResponse) BarcoUtil.NULL;
+    }
+
+    /**
+     * Method use to create the queryInquiry reg
+     * @param payload
+     * @return QueryInquiry
+     * @throws Exception
+     * */
+    private QueryInquiry createQueryInquiry(QueryInquiryRequest payload) throws Exception {
+        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        QueryInquiry queryInquiry = new QueryInquiry();
+        queryInquiry.setName(payload.getName());
+        queryInquiry.setDescription(payload.getDescription());
+        queryInquiry.setQuery(payload.getQuery());
+        queryInquiry.setCreatedBy(appUserOpt.get());
+        queryInquiry.setUpdatedBy(appUserOpt.get());
+        queryInquiry.setStatus(APPLICATION_STATUS.ACTIVE);
+        return queryInquiry;
+    }
+
+    /**
+     * Method use to update the queryInquiry reg
+     * @param queryInquiry
+     * @param payload
+     * @return QueryInquiry
+     * @throws Exception
+     * */
+    private QueryInquiry updateQueryInquiryPayload(QueryInquiry queryInquiry, QueryInquiryRequest payload) throws Exception {
+        Optional<AppUser> appUserOpt = this.appUserRepository.findByUsernameAndStatus(payload.getSessionUser().getUsername(), APPLICATION_STATUS.ACTIVE);
+        queryInquiry.setName(payload.getName());
+        queryInquiry.setDescription(payload.getDescription());
+        queryInquiry.setQuery(payload.getQuery());
+        if (!BarcoUtil.isNull(payload.getStatus())) {
+            queryInquiry.setStatus(APPLICATION_STATUS.getByLookupCode(payload.getStatus()));
+        }
+        appUserOpt.ifPresent(queryInquiry::setUpdatedBy);
+        return queryInquiry;
     }
 
 }
