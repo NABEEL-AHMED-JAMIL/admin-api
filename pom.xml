@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -12,7 +13,7 @@
 
 	<licenses>
 		<license>
-			<name>New Barco License</name>
+			<name>New ETL License</name>
 			<url>https://github.com/NABEEL-AHMED-JAMIL</url>
 			<distribution>repo</distribution>
 		</license>
@@ -22,23 +23,21 @@
 		<developer>
 			<name>NABEEL AHMED JAMIL</name>
 			<email>nabeel.amd93@gmail.com</email>
-			<organization>Barco</organization>
+			<organization>ETL</organization>
 			<organizationUrl>https://github.com/NABEEL-AHMED-JAMIL</organizationUrl>
 		</developer>
 	</developers>
 
+	<name>admin-api</name>
 	<groupId>com.barco</groupId>
 	<artifactId>admin-api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>admin-api</name>
-	<description>Admin-Api For Barco</description>
+	<version>2.4.2026</version>
+	<description>ETL Admin-Api</description>
 
 	<properties>
 		<java.version>11</java.version>
-		<postgresql.version>42.2.5</postgresql.version>
-		<disruptor.version>3.4.2</disruptor.version>
 		<jpa.version>2.1.8.RELEASE</jpa.version>
-		<swagger.version>2.9.2</swagger.version>
+		<springdoc.version>1.6.15</springdoc.version>
 	</properties>
 
 	<dependencies>
@@ -49,22 +48,50 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<version>${springdoc.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-models</artifactId>
+			<version>2.1.12</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>2.1.12</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>com.barco</groupId>
 			<artifactId>model</artifactId>
-			<version>9.18.2024</version>
-			<classifier>barco-model</classifier>
+			<version>3.1.2026</version>
+			<classifier>etl-model</classifier>
 		</dependency>
 
 		<dependency>
 			<groupId>com.barco</groupId>
 			<artifactId>common</artifactId>
-			<version>9.18.2024</version>
-			<classifier>barco-common-util</classifier>
+			<version>3.1.2026</version>
+			<classifier>etl-common-util</classifier>
 		</dependency>
 
 		<dependency>

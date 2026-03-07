@@ -1,11 +1,13 @@
 package com.barco.admin.config;
 
-import com.barco.admin.filter.AuthTokenFilter;
-import com.barco.common.security.AuthEntryPointJwt;
-import com.barco.model.security.UserDetailsServiceImpl;
+import com.barco.admin.security.EtlAccountDetailsService;
+import com.barco.admin.security.RestAuthenticationEntryPoint;
+import com.barco.admin.security.TokenAuthenticationFilter;
+import com.barco.common.cache.CacheService;
+import com.barco.common.security.jwt.JwtFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,23 +30,65 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebSecurityConfig.class);
 
-    @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+    // Pretty, centralised whitelist for actuator + swagger + openapi
+    private static final String[] PUBLIC_SWAGGER_ACTUATOR = new String[] {
+        "/actuator/**",
+        "/openapi.yml",
+        "/v2/api-docs",
+        "/v2/api-docs/**",
+        "/swagger-resources/**",
+        "/configuration/ui",
+        "/configuration/security",
+        "/swagger-ui.html",
+        "/webjars/**",
+        "/v3/api-docs/**",
+        "/swagger-ui/**"
+    };
 
-    @Bean
-    public AuthTokenFilter authenticationJwtTokenFilter() {
-        return new AuthTokenFilter();
+    @Qualifier("jwtPublicKeyCache")
+    private final CacheService cacheService;
+    private final JwtFactory jwtFactory;
+    private final EtlAccountDetailsService jwtAccountDetailsService;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+
+    public WebSecurityConfig(
+        CacheService cacheService,
+        JwtFactory jwtFactory,
+        EtlAccountDetailsService jwtAccountDetailsService,
+        RestAuthenticationEntryPoint restAuthenticationEntryPoint) {
+        this.cacheService = cacheService;
+        this.jwtFactory = jwtFactory;
+        this.jwtAccountDetailsService = jwtAccountDetailsService;
+        this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
+        LOGGER.info("WebSecurityConfig initialized");
     }
 
+    /**
+     * Method use to add authentication jwt
+     * @return AuthTokenFilter
+     * */
+    @Bean
+    public TokenAuthenticationFilter authenticationJwtTokenFilter() {
+        LOGGER.debug("Creating TokenAuthenticationFilter bean");
+        return new TokenAuthenticationFilter(this.cacheService, this.jwtFactory, this.jwtAccountDetailsService);
+    }
+
+    /**
+     * Method use to add authentication manger builder
+     * @param authenticationManagerBuilder
+     * */
     @Override
     public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
-        authenticationManagerBuilder.userDetailsService(this.userDetailsService).passwordEncoder(passwordEncoder());
+        LOGGER.debug("Configuring AuthenticationManagerBuilder with EtlAccountDetailsService and password encoder");
+        authenticationManagerBuilder.userDetailsService(this.jwtAccountDetailsService).passwordEncoder(passwordEncoder());
     }
 
+    /**
+     * Method use to add authentication manger
+     * @return AuthenticationManager
+     * */
     @Bean
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
@@ -53,6 +97,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     /**
      * method use to encode the password
+     * @return PasswordEncoder
      * */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -65,21 +110,24 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      * */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.cors().and().csrf().disable().exceptionHandling().authenticationEntryPoint(this.unauthorizedHandler).and()
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
-        .antMatchers("/ws/**", "/user/**").permitAll()
-        .antMatchers("/api/v2/**").permitAll().anyRequest().authenticated();
+        LOGGER.info("Configuring HttpSecurity - minimal public whitelist: actuator, swagger, openapi.yml");
+        http.cors()
+            .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and().csrf().disable().exceptionHandling().authenticationEntryPoint(this.restAuthenticationEntryPoint)
+            .and().authorizeRequests()
+                .antMatchers(PUBLIC_SWAGGER_ACTUATOR).permitAll()
+                .anyRequest().authenticated();
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
     /**
-     * method use to configure teh white list url
+     * method use to configure the white list url
      * @param web
      * */
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**",
-            "/configuration/security", "/swagger-ui.html", "/webjars/**");
+        LOGGER.info("Configuring WebSecurity to ignore actuator, swagger and openapi.yml");
+        web.ignoring().antMatchers(PUBLIC_SWAGGER_ACTUATOR);
     }
 
 }
